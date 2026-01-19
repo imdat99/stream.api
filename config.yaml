@@ -1,0 +1,22 @@
+server:
+  port: "8080"
+  mode: "debug" # debug or release
+
+database:
+  dsn: "host=47.84.63.130 user=postgres password=D@tkhong9 dbname=video_db port=5432 sslmode=disable"
+
+redis:
+  addr: "47.84.62.226:6379"
+  password: "pass123"
+  db: 3
+
+jwt:
+  secret: "your_super_secret_jwt_key"
+
+google:
+  client_id: "your_google_client_id"
+  client_secret: "your_google_client_secret"
+  redirect_url: "http://localhost:8080/auth/google/callback"
+
+email:
+  from: "no-reply@picpic.com"

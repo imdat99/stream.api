@@ -1,0 +1,328 @@
+basePath: /
+definitions:
+  model.Plan:
+    properties:
+      cycle:
+        type: string
+      description:
+        type: string
+      duration_limit:
+        type: integer
+      features:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      price:
+        type: number
+      quality_limit:
+        type: string
+      storage_limit:
+        type: integer
+      upload_limit:
+        type: integer
+    type: object
+  model.Video:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      duration:
+        type: integer
+      format:
+        type: string
+      hls_path:
+        type: string
+      hls_token:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      processing_status:
+        type: string
+      size:
+        type: integer
+      status:
+        type: string
+      storage_type:
+        type: string
+      thumbnail:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      url:
+        type: string
+      user_id:
+        type: string
+      views:
+        type: integer
+    type: object
+  payment.CreatePaymentRequest:
+    properties:
+      amount:
+        type: number
+      plan_id:
+        type: string
+    required:
+    - amount
+    - plan_id
+    type: object
+  response.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
+  video.CreateVideoRequest:
+    properties:
+      description:
+        type: string
+      duration:
+        description: Maybe client knows, or we process later
+        type: integer
+      format:
+        type: string
+      size:
+        type: integer
+      title:
+        type: string
+      url:
+        description: The S3 Key or Full URL
+        type: string
+    required:
+    - size
+    - title
+    - url
+    type: object
+  video.UploadURLRequest:
+    properties:
+      content_type:
+        type: string
+      filename:
+        type: string
+      size:
+        type: integer
+    required:
+    - content_type
+    - filename
+    - size
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is the API server for Stream application.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Stream API
+  version: "1.0"
+paths:
+  /payments:
+    post:
+      consumes:
+      - application/json
+      description: Create a new payment
+      parameters:
+      - description: Payment Info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/payment.CreatePaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create Payment
+      tags:
+      - payment
+  /plans:
+    get:
+      description: Get all active plans
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.Plan'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List Plans
+      tags:
+      - plan
+  /videos:
+    get:
+      description: Get paginated videos
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: List Videos
+      tags:
+      - video
+    post:
+      consumes:
+      - application/json
+      description: Create video record after upload
+      parameters:
+      - description: Video Info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/video.CreateVideoRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Video'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Create Video
+      tags:
+      - video
+  /videos/{id}:
+    get:
+      description: Get video details by ID
+      parameters:
+      - description: Video ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Video'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get Video
+      tags:
+      - video
+  /videos/upload-url:
+    post:
+      consumes:
+      - application/json
+      description: Generate presigned URL for video upload
+      parameters:
+      - description: File Info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/video.UploadURLRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: Get Upload URL
+      tags:
+      - video
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

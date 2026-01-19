@@ -1,0 +1,28 @@
+server:
+  port: "8080"
+  mode: "debug" # debug or release
+
+database:
+  dsn: "host=localhost user=postgres password=postgres dbname=picpic port=5432 sslmode=disable"
+
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 0
+
+jwt:
+  secret: "your_super_secret_jwt_key"
+
+google:
+  client_id: "your_google_client_id"
+  client_secret: "your_google_client_secret"
+  redirect_url: "http://localhost:8080/auth/google/callback"
+
+email:
+  from: "no-reply@picpic.com"
+
+aws:
+  region: "us-east-1"
+  bucket: "your-bucket-name"
+  access_key: "your_access_key"
+  secret_key: "your_secret_key"
