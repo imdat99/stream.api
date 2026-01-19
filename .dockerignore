@@ -1,0 +1,36 @@
+# Docker Ignore File
+.git 
+.gitignore 
+README.md 
+*.md 
+*.log 
+.txt 
+.env 
+.env.* 
+.dockerignore 
+Dockerfile
+vendor/ 
+bin/ 
+tmp/ 
+temp/ 
+dist/ 
+coverage/
+
+*.exe 
+*.exe~ 
+*.dll 
+*.so 
+*.dylib
+
+# Loại trừ các file tạm thời và biên dịch
+test/ 
+tests/ 
+*.test 
+*_test.go
+
+# Loại trừ các file cấu hình IDE
+
+.idea/ 
+.vscode/ 
+*.swp 
+*.swo
