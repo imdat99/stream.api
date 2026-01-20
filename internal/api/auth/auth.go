@@ -77,31 +77,12 @@ func (h *handler) Login(c *gin.Context) {
 func (h *handler) Logout(c *gin.Context) {
 	refreshToken, err := c.Cookie("refresh_token")
 	if err == nil {
-		// Attempt to revoke. If parsing fails, we still clear cookies.
-		_, err := h.token.ParseToken(refreshToken)
+		claims, err := h.token.ParseMapToken(refreshToken)
 		if err == nil {
-			// In pkg/token, the Claims struct doesn't expose the map easily (it has UnmarshalJSON but we just get `Claims`).
-			// However `ParseToken` returns `*Claims`.
-			// `Claims` has `RegisteredClaims`.
-			// The refresh token generated in `pkg/token` uses `jwt.MapClaims`.
-			// `ParseToken` expects `Claims` struct.
-			// This might cause an issue if `ParseToken` tries to map `refresh_uuid` (from MapClaims) to `Claims` struct which doesn't have it explicitly as a field,
-			// or if `ParseToken` fails because the claims structure doesn't match.
-			//
-			// FIX needed in pkg/token/jwt.go:
-			// `GenerateTokenPair` creates Refresh Token with `MapClaims`. `ParseToken` uses `Claims` struct.
-			// `Claims` struct doesn't have `refresh_uuid`.
-			//
-			// For now, let's assume we can't easily get the UUID from `ParseToken` if structs mismatch.
-			// But we stored key `refresh_uuid:{uuid}`.
-			// We effectively rely on client sending the cookie.
-			//
-			// Workaround: We really should update `pkg/token` to be consistent or support Refresh Token parsing.
-			// BUT, for Logout, clearing cookies is the most important part for the user.
-			// Revoking in Redis is for security.
-			// If we can't parse, we skip revocation.
+			if refreshUUID, ok := claims["refresh_uuid"].(string); ok {
+				h.cache.Del(c.Request.Context(), "refresh_uuid:"+refreshUUID)
+			}
 		}
-		// Note: Ideally we fix pkg/token later.
 	}
 
 	c.SetCookie("access_token", "", -1, "/", "", false, true)
@@ -147,18 +128,6 @@ func (h *handler) Register(c *gin.Context) {
 }
 
 func (h *handler) ForgotPassword(c *gin.Context) {
-	// Need to export ForgotPasswordRequest in interface or define locally.
-	// It was defined in interface.go as `ForgotPasswordRequest`.
-	// Since we are in package `auth`, we don't need `auth.` prefix if it's in same package.
-	// But `interface.go` is in `internal/api/auth` which IS this package.
-	// This causes import cycle / redeclaration issues if not careful.
-	// If `interface.go` is in package `auth`, then structs are visible.
-	// So I should NOT import `stream.api/internal/api/auth`.
-
-	// FIX: Remove import `stream.api/internal/api/auth`.
-
-	// Re-checking previous file content of `interface.go`... it is package `auth`.
-	// So removal of correfunc (h *handler) ForgotPassword(c *gin.Context) {
 	var req ForgotPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.Error(c, http.StatusBadRequest, err.Error())
