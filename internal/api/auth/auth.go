@@ -60,17 +60,17 @@ func (h *handler) Login(c *gin.Context) {
 	}
 
 	// Verify password (if user has password, google users might not)
-	if user.Password == "" {
+	if user.Password == nil || *user.Password == "" {
 		response.Error(c, http.StatusUnauthorized, "Please login with Google")
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(req.Password)); err != nil {
 		response.Error(c, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
 
-	h.generateAndSetTokens(c, user.ID, user.Email, user.Role)
+	h.generateAndSetTokens(c, user.ID, user.Email, *user.Role)
 	response.Success(c, gin.H{"user": user})
 }
 
@@ -111,12 +111,14 @@ func (h *handler) Register(c *gin.Context) {
 		return
 	}
 
+	password := string(hashedPassword)
+	role := "USER"
 	newUser := &model.User{
 		ID:       uuid.New().String(),
 		Email:    req.Email,
-		Password: string(hashedPassword),
-		Username: req.Username,
-		Role:     "USER",
+		Password: &password,
+		Username: &req.Username,
+		Role:     &role,
 	}
 
 	if err := u.WithContext(c.Request.Context()).Create(newUser); err != nil {
@@ -226,23 +228,24 @@ func (h *handler) GoogleCallback(c *gin.Context) {
 	u := query.User
 	user, err := u.WithContext(c.Request.Context()).Where(u.Email.Eq(googleUser.Email)).First()
 	if err != nil {
+		role := "USER"
 		user = &model.User{
 			ID:       uuid.New().String(),
 			Email:    googleUser.Email,
-			Username: googleUser.Name,
-			GoogleID: googleUser.ID,
-			Avatar:   googleUser.Picture,
-			Role:     "USER",
+			Username: &googleUser.Name,
+			GoogleID: &googleUser.ID,
+			Avatar:   &googleUser.Picture,
+			Role:     &role,
 		}
 		if err := u.WithContext(c.Request.Context()).Create(user); err != nil {
 			response.Fail(c, "Failed to create user")
 			return
 		}
-	} else if user.GoogleID == "" {
+	} else if user.GoogleID == nil || *user.GoogleID == "" {
 		u.WithContext(c.Request.Context()).Where(u.ID.Eq(user.ID)).Update(u.GoogleID, googleUser.ID)
 	}
 
-	h.generateAndSetTokens(c, user.ID, user.Email, user.Role)
+	h.generateAndSetTokens(c, user.ID, user.Email, *user.Role)
 	response.Success(c, gin.H{"user": user})
 }
 

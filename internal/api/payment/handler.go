@@ -52,13 +52,16 @@ func (h *Handler) CreatePayment(c *gin.Context) {
 	// In a real scenario, we would contact Stripe/PayPal here to create a session
 	// For now, we just create a "PENDING" payment record.
 
+	status := "PENDING"
+	provider := "STRIPE"
+
 	payment := &model.Payment{
 		ID:       uuid.New().String(),
 		UserID:   userID,
-		PlanID:   req.PlanID,
+		PlanID:   &req.PlanID,
 		Amount:   req.Amount,
-		Status:   "PENDING",
-		Provider: "STRIPE", // Defaulting to Stripe for this example
+		Status:   &status,
+		Provider: &provider, // Defaulting to Stripe for this example
 	}
 
 	p := query.Payment

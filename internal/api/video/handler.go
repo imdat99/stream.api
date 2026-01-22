@@ -86,21 +86,41 @@ func (h *Handler) CreateVideo(c *gin.Context) {
 
 	userID := c.GetString("userID")
 
+	status := "PUBLIC"
+	storageType := "S3"
+
 	video := &model.Video{
 		ID:          uuid.New().String(),
 		UserID:      userID,
+		Name:        req.Title,
 		Title:       req.Title,
-		Description: req.Description,
+		Description: &req.Description,
 		URL:         req.URL,
 		Size:        req.Size,
 		Duration:    req.Duration,
 		Format:      req.Format,
-		Status:      "PUBLIC",
-		StorageType: "S3",
+		Status:      &status,
+		StorageType: &storageType,
 	}
 
-	v := query.Video
-	if err := v.WithContext(c.Request.Context()).Create(video); err != nil {
+	q := query.Q
+	err := q.Transaction(func(tx *query.Query) error {
+		if err := tx.Video.WithContext(c.Request.Context()).Create(video); err != nil {
+			return err
+		}
+
+		// Atomic update: StorageUsed = StorageUsed + video.Size
+		// We use UpdateSimple with Add to ensure atomicity at database level: UPDATE users SET storage_used = storage_used + ?
+		if _, err := tx.User.WithContext(c.Request.Context()).
+			Where(tx.User.ID.Eq(userID)).
+			UpdateSimple(tx.User.StorageUsed.Add(video.Size)); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		h.logger.Error("Failed to create video record", "error", err)
 		response.Error(c, http.StatusInternalServerError, "Failed to create video")
 		return
@@ -156,6 +176,12 @@ func (h *Handler) ListVideos(c *gin.Context) {
 func (h *Handler) GetVideo(c *gin.Context) {
 	id := c.Param("id")
 	v := query.Video
+
+	// Atomically increment views: UPDATE videos SET views = views + 1 WHERE id = ?
+	// We intentionally ignore errors here (like record not found) because the subsequent fetch will handle 404s,
+	// and we don't want to fail the read if writing the view count fails for some transient reason.
+	v.WithContext(c.Request.Context()).Where(v.ID.Eq(id)).UpdateSimple(v.Views.Add(1))
+
 	video, err := v.WithContext(c.Request.Context()).Where(v.ID.Eq(id)).First()
 	if err != nil {
 		response.Error(c, http.StatusNotFound, "Video not found")

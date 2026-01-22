@@ -119,7 +119,7 @@ func (m *AuthMiddleware) Handle() gin.HandlerFunc {
 			// If we want new Access we can regenerate pair and update tokens.
 			// Updating refresh token extends session (Slide expiration).
 
-			newTd, err := m.token.GenerateTokenPair(userID, userObj.Email, userObj.Role)
+			newTd, err := m.token.GenerateTokenPair(userID, userObj.Email, *userObj.Role)
 			if err == nil {
 				// Delete old refresh token from Redis?
 				m.cache.Del(ctx, redisKey)
@@ -140,7 +140,7 @@ func (m *AuthMiddleware) Handle() gin.HandlerFunc {
 			return
 		}
 
-		if strings.ToLower(user.Role) == "block" {
+		if user.Role != nil && strings.ToLower(*user.Role) == "block" {
 			response.Error(c, http.StatusForbidden, "Forbidden: User is blocked")
 			return
 		}
