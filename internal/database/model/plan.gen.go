@@ -8,17 +8,18 @@ const TableNamePlan = "plan"
 
 // Plan mapped from table <plan>
 type Plan struct {
-	ID            string  `gorm:"column:id;primaryKey;default:gen_random_uuid()" json:"id"`
-	Name          string  `gorm:"column:name;not null" json:"name"`
-	Description   string  `gorm:"column:description" json:"description"`
-	Price         float64 `gorm:"column:price;not null" json:"price"`
-	Cycle         string  `gorm:"column:cycle;not null" json:"cycle"`
-	StorageLimit  int64   `gorm:"column:storage_limit;not null" json:"storage_limit"`
-	UploadLimit   int32   `gorm:"column:upload_limit;not null" json:"upload_limit"`
-	DurationLimit int32   `gorm:"column:duration_limit;not null" json:"duration_limit"`
-	QualityLimit  string  `gorm:"column:quality_limit;not null" json:"quality_limit"`
-	Features      string  `gorm:"column:features" json:"features"`
-	IsActive      bool    `gorm:"column:is_active;not null;default:true" json:"is_active"`
+	ID            string  `gorm:"column:id;type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	Name          string  `gorm:"column:name;type:text;not null" json:"name"`
+	Description   *string `gorm:"column:description;type:text" json:"description"`
+	Price         float64 `gorm:"column:price;type:numeric(65,30);not null" json:"price"`
+	Cycle         string  `gorm:"column:cycle;type:character varying(20);not null" json:"cycle"`
+	StorageLimit  int64   `gorm:"column:storage_limit;type:bigint;not null" json:"storage_limit"`
+	UploadLimit   int32   `gorm:"column:upload_limit;type:integer;not null" json:"upload_limit"`
+	DurationLimit int32   `gorm:"column:duration_limit;type:integer;not null" json:"duration_limit"`
+	QualityLimit  string  `gorm:"column:quality_limit;type:text;not null" json:"quality_limit"`
+	Features      *string `gorm:"column:features;type:text[]" json:"features"`
+	IsActive      *bool   `gorm:"column:is_active;type:boolean;not null;default:true" json:"is_active"`
+	Version       *int64  `gorm:"column:version;type:bigint;not null;default:1;version" json:"-"`
 }
 
 // TableName Plan's table name

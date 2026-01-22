@@ -12,24 +12,25 @@ const TableNameVideo = "video"
 
 // Video mapped from table <video>
 type Video struct {
-	ID               string    `gorm:"column:id;primaryKey;default:gen_random_uuid()" json:"id"`
-	Name             string    `gorm:"column:name;not null" json:"name"`
-	Title            string    `gorm:"column:title;not null" json:"title"`
-	Description      string    `gorm:"column:description" json:"description"`
-	URL              string    `gorm:"column:url;not null" json:"url"`
-	Thumbnail        string    `gorm:"column:thumbnail" json:"thumbnail"`
-	HlsToken         string    `gorm:"column:hls_token" json:"hls_token"`
-	HlsPath          string    `gorm:"column:hls_path" json:"hls_path"`
-	Duration         int32     `gorm:"column:duration;not null" json:"duration"`
-	Size             int64     `gorm:"column:size;not null" json:"size"`
-	StorageType      string    `gorm:"column:storage_type;not null;default:tiktok_avatar" json:"storage_type"`
-	Format           string    `gorm:"column:format;not null" json:"format"`
-	Status           string    `gorm:"column:status;not null;default:PUBLIC" json:"status"`
-	ProcessingStatus string    `gorm:"column:processing_status;not null;default:PENDING" json:"processing_status"`
-	Views            int32     `gorm:"column:views;not null" json:"views"`
-	UserID           string    `gorm:"column:user_id;not null" json:"user_id"`
-	CreatedAt        time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt        time.Time `gorm:"column:updated_at;not null" json:"updated_at"`
+	ID               string     `gorm:"column:id;type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	Name             string     `gorm:"column:name;type:text;not null" json:"name"`
+	Title            string     `gorm:"column:title;type:text;not null" json:"title"`
+	Description      *string    `gorm:"column:description;type:text" json:"description"`
+	URL              string     `gorm:"column:url;type:text;not null" json:"url"`
+	Thumbnail        *string    `gorm:"column:thumbnail;type:text" json:"thumbnail"`
+	HlsToken         *string    `gorm:"column:hls_token;type:text" json:"hls_token"`
+	HlsPath          *string    `gorm:"column:hls_path;type:text" json:"hls_path"`
+	Duration         int32      `gorm:"column:duration;type:integer;not null" json:"duration"`
+	Size             int64      `gorm:"column:size;type:bigint;not null" json:"size"`
+	StorageType      *string    `gorm:"column:storage_type;type:character varying(20);not null;default:tiktok_avatar" json:"storage_type"`
+	Format           string     `gorm:"column:format;type:text;not null" json:"format"`
+	Status           *string    `gorm:"column:status;type:character varying(20);not null;default:PUBLIC" json:"status"`
+	ProcessingStatus *string    `gorm:"column:processing_status;type:character varying(20);not null;default:PENDING" json:"processing_status"`
+	Views            int32      `gorm:"column:views;type:integer;not null" json:"views"`
+	UserID           string     `gorm:"column:user_id;type:uuid;not null" json:"user_id"`
+	CreatedAt        *time.Time `gorm:"column:created_at;type:timestamp(3) without time zone;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt        time.Time  `gorm:"column:updated_at;type:timestamp(3) without time zone;not null" json:"updated_at"`
+	Version          *int64     `gorm:"column:version;type:bigint;not null;default:1;version" json:"-"`
 }
 
 // TableName Video's table name

@@ -38,6 +38,7 @@ func newPayment(db *gorm.DB, opts ...gen.DOOption) payment {
 	_payment.TransactionID = field.NewString(tableName, "transaction_id")
 	_payment.CreatedAt = field.NewTime(tableName, "created_at")
 	_payment.UpdatedAt = field.NewTime(tableName, "updated_at")
+	_payment.Version = field.NewInt64(tableName, "version")
 
 	_payment.fillFieldMap()
 
@@ -58,6 +59,7 @@ type payment struct {
 	TransactionID field.String
 	CreatedAt     field.Time
 	UpdatedAt     field.Time
+	Version       field.Int64
 
 	fieldMap map[string]field.Expr
 }
@@ -84,6 +86,7 @@ func (p *payment) updateTableName(table string) *payment {
 	p.TransactionID = field.NewString(table, "transaction_id")
 	p.CreatedAt = field.NewTime(table, "created_at")
 	p.UpdatedAt = field.NewTime(table, "updated_at")
+	p.Version = field.NewInt64(table, "version")
 
 	p.fillFieldMap()
 
@@ -108,7 +111,7 @@ func (p *payment) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (p *payment) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 10)
+	p.fieldMap = make(map[string]field.Expr, 11)
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["user_id"] = p.UserID
 	p.fieldMap["plan_id"] = p.PlanID
@@ -119,6 +122,7 @@ func (p *payment) fillFieldMap() {
 	p.fieldMap["transaction_id"] = p.TransactionID
 	p.fieldMap["created_at"] = p.CreatedAt
 	p.fieldMap["updated_at"] = p.UpdatedAt
+	p.fieldMap["version"] = p.Version
 }
 
 func (p payment) clone(db *gorm.DB) payment {

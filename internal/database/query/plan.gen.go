@@ -39,6 +39,7 @@ func newPlan(db *gorm.DB, opts ...gen.DOOption) plan {
 	_plan.QualityLimit = field.NewString(tableName, "quality_limit")
 	_plan.Features = field.NewString(tableName, "features")
 	_plan.IsActive = field.NewBool(tableName, "is_active")
+	_plan.Version = field.NewInt64(tableName, "version")
 
 	_plan.fillFieldMap()
 
@@ -60,6 +61,7 @@ type plan struct {
 	QualityLimit  field.String
 	Features      field.String
 	IsActive      field.Bool
+	Version       field.Int64
 
 	fieldMap map[string]field.Expr
 }
@@ -87,6 +89,7 @@ func (p *plan) updateTableName(table string) *plan {
 	p.QualityLimit = field.NewString(table, "quality_limit")
 	p.Features = field.NewString(table, "features")
 	p.IsActive = field.NewBool(table, "is_active")
+	p.Version = field.NewInt64(table, "version")
 
 	p.fillFieldMap()
 
@@ -111,7 +114,7 @@ func (p *plan) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (p *plan) fillFieldMap() {
-	p.fieldMap = make(map[string]field.Expr, 11)
+	p.fieldMap = make(map[string]field.Expr, 12)
 	p.fieldMap["id"] = p.ID
 	p.fieldMap["name"] = p.Name
 	p.fieldMap["description"] = p.Description
@@ -123,6 +126,7 @@ func (p *plan) fillFieldMap() {
 	p.fieldMap["quality_limit"] = p.QualityLimit
 	p.fieldMap["features"] = p.Features
 	p.fieldMap["is_active"] = p.IsActive
+	p.fieldMap["version"] = p.Version
 }
 
 func (p plan) clone(db *gorm.DB) plan {

@@ -12,16 +12,17 @@ const TableNamePayment = "payment"
 
 // Payment mapped from table <payment>
 type Payment struct {
-	ID            string    `gorm:"column:id;primaryKey;default:gen_random_uuid()" json:"id"`
-	UserID        string    `gorm:"column:user_id;not null" json:"user_id"`
-	PlanID        string    `gorm:"column:plan_id" json:"plan_id"`
-	Amount        float64   `gorm:"column:amount;not null" json:"amount"`
-	Currency      string    `gorm:"column:currency;not null;default:USD" json:"currency"`
-	Status        string    `gorm:"column:status;not null;default:PENDING" json:"status"`
-	Provider      string    `gorm:"column:provider;not null;default:STRIPE" json:"provider"`
-	TransactionID string    `gorm:"column:transaction_id" json:"transaction_id"`
-	CreatedAt     time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt     time.Time `gorm:"column:updated_at;not null" json:"updated_at"`
+	ID            string     `gorm:"column:id;type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	UserID        string     `gorm:"column:user_id;type:uuid;not null" json:"user_id"`
+	PlanID        *string    `gorm:"column:plan_id;type:uuid" json:"plan_id"`
+	Amount        float64    `gorm:"column:amount;type:numeric(65,30);not null" json:"amount"`
+	Currency      *string    `gorm:"column:currency;type:text;not null;default:USD" json:"currency"`
+	Status        *string    `gorm:"column:status;type:character varying(20);not null;default:PENDING" json:"status"`
+	Provider      *string    `gorm:"column:provider;type:character varying(20);not null;default:STRIPE" json:"provider"`
+	TransactionID *string    `gorm:"column:transaction_id;type:text" json:"transaction_id"`
+	CreatedAt     *time.Time `gorm:"column:created_at;type:timestamp(3) without time zone;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt     time.Time  `gorm:"column:updated_at;type:timestamp(3) without time zone;not null" json:"updated_at"`
+	Version       *int64     `gorm:"column:version;type:bigint;not null;default:1;version" json:"-"`
 }
 
 // TableName Payment's table name

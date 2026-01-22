@@ -12,17 +12,18 @@ const TableNameUser = "user"
 
 // User mapped from table <user>
 type User struct {
-	ID          string    `gorm:"column:id;primaryKey;default:gen_random_uuid()" json:"id"`
-	Email       string    `gorm:"column:email;not null" json:"email"`
-	Password    string    `gorm:"column:password" json:"-"`
-	Username    string    `gorm:"column:username" json:"username"`
-	Avatar      string    `gorm:"column:avatar" json:"avatar"`
-	Role        string    `gorm:"column:role;not null;default:USER" json:"role"`
-	GoogleID    string    `gorm:"column:google_id" json:"google_id"`
-	StorageUsed int64     `gorm:"column:storage_used;not null" json:"storage_used"`
-	PlanID      string    `gorm:"column:plan_id" json:"plan_id"`
-	CreatedAt   time.Time `gorm:"column:created_at;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt   time.Time `gorm:"column:updated_at;not null" json:"updated_at"`
+	ID          string     `gorm:"column:id;type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	Email       string     `gorm:"column:email;type:text;not null;uniqueIndex:user_email_key,priority:1" json:"email"`
+	Password    *string    `gorm:"column:password;type:text" json:"-"`
+	Username    *string    `gorm:"column:username;type:text" json:"username"`
+	Avatar      *string    `gorm:"column:avatar;type:text" json:"avatar"`
+	Role        *string    `gorm:"column:role;type:character varying(20);not null;default:USER" json:"role"`
+	GoogleID    *string    `gorm:"column:google_id;type:text;uniqueIndex:user_google_id_key,priority:1" json:"google_id"`
+	StorageUsed int64      `gorm:"column:storage_used;type:bigint;not null" json:"storage_used"`
+	PlanID      *string    `gorm:"column:plan_id;type:uuid" json:"plan_id"`
+	CreatedAt   *time.Time `gorm:"column:created_at;type:timestamp(3) without time zone;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt   time.Time  `gorm:"column:updated_at;type:timestamp(3) without time zone;not null" json:"updated_at"`
+	Version     *int64     `gorm:"column:version;type:bigint;not null;default:1;version" json:"-"`
 }
 
 // TableName User's table name
