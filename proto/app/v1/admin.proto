@@ -1,0 +1,399 @@
+syntax = "proto3";
+
+package stream.app.v1;
+
+option go_package = "stream.api/internal/gen/proto/app/v1;appv1";
+
+import "app/v1/common.proto";
+
+service AdminService {
+  rpc GetAdminDashboard(GetAdminDashboardRequest) returns (GetAdminDashboardResponse);
+  rpc ListAdminUsers(ListAdminUsersRequest) returns (ListAdminUsersResponse);
+  rpc GetAdminUser(GetAdminUserRequest) returns (GetAdminUserResponse);
+  rpc CreateAdminUser(CreateAdminUserRequest) returns (CreateAdminUserResponse);
+  rpc UpdateAdminUser(UpdateAdminUserRequest) returns (UpdateAdminUserResponse);
+  rpc UpdateAdminUserRole(UpdateAdminUserRoleRequest) returns (UpdateAdminUserRoleResponse);
+  rpc DeleteAdminUser(DeleteAdminUserRequest) returns (MessageResponse);
+  rpc ListAdminVideos(ListAdminVideosRequest) returns (ListAdminVideosResponse);
+  rpc GetAdminVideo(GetAdminVideoRequest) returns (GetAdminVideoResponse);
+  rpc CreateAdminVideo(CreateAdminVideoRequest) returns (CreateAdminVideoResponse);
+  rpc UpdateAdminVideo(UpdateAdminVideoRequest) returns (UpdateAdminVideoResponse);
+  rpc DeleteAdminVideo(DeleteAdminVideoRequest) returns (MessageResponse);
+  rpc ListAdminPayments(ListAdminPaymentsRequest) returns (ListAdminPaymentsResponse);
+  rpc GetAdminPayment(GetAdminPaymentRequest) returns (GetAdminPaymentResponse);
+  rpc CreateAdminPayment(CreateAdminPaymentRequest) returns (CreateAdminPaymentResponse);
+  rpc UpdateAdminPayment(UpdateAdminPaymentRequest) returns (UpdateAdminPaymentResponse);
+  rpc ListAdminPlans(ListAdminPlansRequest) returns (ListAdminPlansResponse);
+  rpc CreateAdminPlan(CreateAdminPlanRequest) returns (CreateAdminPlanResponse);
+  rpc UpdateAdminPlan(UpdateAdminPlanRequest) returns (UpdateAdminPlanResponse);
+  rpc DeleteAdminPlan(DeleteAdminPlanRequest) returns (DeleteAdminPlanResponse);
+  rpc ListAdminAdTemplates(ListAdminAdTemplatesRequest) returns (ListAdminAdTemplatesResponse);
+  rpc GetAdminAdTemplate(GetAdminAdTemplateRequest) returns (GetAdminAdTemplateResponse);
+  rpc CreateAdminAdTemplate(CreateAdminAdTemplateRequest) returns (CreateAdminAdTemplateResponse);
+  rpc UpdateAdminAdTemplate(UpdateAdminAdTemplateRequest) returns (UpdateAdminAdTemplateResponse);
+  rpc DeleteAdminAdTemplate(DeleteAdminAdTemplateRequest) returns (MessageResponse);
+  rpc ListAdminJobs(ListAdminJobsRequest) returns (ListAdminJobsResponse);
+  rpc GetAdminJob(GetAdminJobRequest) returns (GetAdminJobResponse);
+  rpc GetAdminJobLogs(GetAdminJobLogsRequest) returns (GetAdminJobLogsResponse);
+  rpc CreateAdminJob(CreateAdminJobRequest) returns (CreateAdminJobResponse);
+  rpc CancelAdminJob(CancelAdminJobRequest) returns (CancelAdminJobResponse);
+  rpc RetryAdminJob(RetryAdminJobRequest) returns (RetryAdminJobResponse);
+  rpc ListAdminAgents(ListAdminAgentsRequest) returns (ListAdminAgentsResponse);
+  rpc RestartAdminAgent(RestartAdminAgentRequest) returns (AdminAgentCommandResponse);
+  rpc UpdateAdminAgent(UpdateAdminAgentRequest) returns (AdminAgentCommandResponse);
+}
+
+message GetAdminDashboardRequest {}
+
+message GetAdminDashboardResponse {
+  AdminDashboard dashboard = 1;
+}
+
+message ListAdminUsersRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  optional string search = 3;
+  optional string role = 4;
+}
+
+message ListAdminUsersResponse {
+  repeated AdminUser users = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+}
+
+message GetAdminUserRequest {
+  string id = 1;
+}
+
+message GetAdminUserResponse {
+  AdminUserDetail user = 1;
+}
+
+message CreateAdminUserRequest {
+  string email = 1;
+  optional string username = 2;
+  string password = 3;
+  optional string role = 4;
+  optional string plan_id = 5;
+}
+
+message CreateAdminUserResponse {
+  AdminUser user = 1;
+}
+
+message UpdateAdminUserRequest {
+  string id = 1;
+  optional string email = 2;
+  optional string username = 3;
+  optional string password = 4;
+  optional string role = 5;
+  optional string plan_id = 6;
+}
+
+message UpdateAdminUserResponse {
+  AdminUser user = 1;
+}
+
+message UpdateAdminUserRoleRequest {
+  string id = 1;
+  string role = 2;
+}
+
+message UpdateAdminUserRoleResponse {
+  string message = 1;
+  string role = 2;
+}
+
+message DeleteAdminUserRequest {
+  string id = 1;
+}
+
+message ListAdminVideosRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  optional string search = 3;
+  optional string user_id = 4;
+  optional string status = 5;
+}
+
+message ListAdminVideosResponse {
+  repeated AdminVideo videos = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+}
+
+message GetAdminVideoRequest {
+  string id = 1;
+}
+
+message GetAdminVideoResponse {
+  AdminVideo video = 1;
+}
+
+message CreateAdminVideoRequest {
+  string user_id = 1;
+  string title = 2;
+  optional string description = 3;
+  string url = 4;
+  int64 size = 5;
+  int32 duration = 6;
+  optional string format = 7;
+  optional string status = 8;
+  optional string ad_template_id = 9;
+}
+
+message CreateAdminVideoResponse {
+  AdminVideo video = 1;
+}
+
+message UpdateAdminVideoRequest {
+  string id = 1;
+  string user_id = 2;
+  string title = 3;
+  optional string description = 4;
+  string url = 5;
+  int64 size = 6;
+  int32 duration = 7;
+  optional string format = 8;
+  optional string status = 9;
+  optional string ad_template_id = 10;
+}
+
+message UpdateAdminVideoResponse {
+  AdminVideo video = 1;
+}
+
+message DeleteAdminVideoRequest {
+  string id = 1;
+}
+
+message ListAdminPaymentsRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  optional string user_id = 3;
+  optional string status = 4;
+}
+
+message ListAdminPaymentsResponse {
+  repeated AdminPayment payments = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+}
+
+message GetAdminPaymentRequest {
+  string id = 1;
+}
+
+message GetAdminPaymentResponse {
+  AdminPayment payment = 1;
+}
+
+message CreateAdminPaymentRequest {
+  string user_id = 1;
+  string plan_id = 2;
+  int32 term_months = 3;
+  string payment_method = 4;
+  optional double topup_amount = 5;
+}
+
+message CreateAdminPaymentResponse {
+  AdminPayment payment = 1;
+  PlanSubscription subscription = 2;
+  double wallet_balance = 3;
+  string invoice_id = 4;
+}
+
+message UpdateAdminPaymentRequest {
+  string id = 1;
+  string status = 2;
+}
+
+message UpdateAdminPaymentResponse {
+  AdminPayment payment = 1;
+}
+
+message ListAdminPlansRequest {}
+
+message ListAdminPlansResponse {
+  repeated AdminPlan plans = 1;
+}
+
+message CreateAdminPlanRequest {
+  string name = 1;
+  optional string description = 2;
+  repeated string features = 3;
+  double price = 4;
+  string cycle = 5;
+  int64 storage_limit = 6;
+  int32 upload_limit = 7;
+  optional bool is_active = 8;
+}
+
+message CreateAdminPlanResponse {
+  AdminPlan plan = 1;
+}
+
+message UpdateAdminPlanRequest {
+  string id = 1;
+  string name = 2;
+  optional string description = 3;
+  repeated string features = 4;
+  double price = 5;
+  string cycle = 6;
+  int64 storage_limit = 7;
+  int32 upload_limit = 8;
+  optional bool is_active = 9;
+}
+
+message UpdateAdminPlanResponse {
+  AdminPlan plan = 1;
+}
+
+message DeleteAdminPlanRequest {
+  string id = 1;
+}
+
+message DeleteAdminPlanResponse {
+  string message = 1;
+  string mode = 2;
+}
+
+message ListAdminAdTemplatesRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  optional string user_id = 3;
+  optional string search = 4;
+}
+
+message ListAdminAdTemplatesResponse {
+  repeated AdminAdTemplate templates = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+}
+
+message GetAdminAdTemplateRequest {
+  string id = 1;
+}
+
+message GetAdminAdTemplateResponse {
+  AdminAdTemplate template = 1;
+}
+
+message CreateAdminAdTemplateRequest {
+  string user_id = 1;
+  string name = 2;
+  optional string description = 3;
+  string vast_tag_url = 4;
+  optional string ad_format = 5;
+  optional int64 duration = 6;
+  optional bool is_active = 7;
+  optional bool is_default = 8;
+}
+
+message CreateAdminAdTemplateResponse {
+  AdminAdTemplate template = 1;
+}
+
+message UpdateAdminAdTemplateRequest {
+  string id = 1;
+  string user_id = 2;
+  string name = 3;
+  optional string description = 4;
+  string vast_tag_url = 5;
+  optional string ad_format = 6;
+  optional int64 duration = 7;
+  optional bool is_active = 8;
+  optional bool is_default = 9;
+}
+
+message UpdateAdminAdTemplateResponse {
+  AdminAdTemplate template = 1;
+}
+
+message DeleteAdminAdTemplateRequest {
+  string id = 1;
+}
+
+message ListAdminJobsRequest {
+  int32 offset = 1;
+  int32 limit = 2;
+  optional string agent_id = 3;
+}
+
+message ListAdminJobsResponse {
+  repeated AdminJob jobs = 1;
+  int64 total = 2;
+  int32 offset = 3;
+  int32 limit = 4;
+  bool has_more = 5;
+}
+
+message GetAdminJobRequest {
+  string id = 1;
+}
+
+message GetAdminJobResponse {
+  AdminJob job = 1;
+}
+
+message GetAdminJobLogsRequest {
+  string id = 1;
+}
+
+message GetAdminJobLogsResponse {
+  string logs = 1;
+}
+
+message CreateAdminJobRequest {
+  string command = 1;
+  optional string image = 2;
+  map<string, string> env = 3;
+  int32 priority = 4;
+  optional string user_id = 5;
+  optional string name = 6;
+  int64 time_limit = 7;
+}
+
+message CreateAdminJobResponse {
+  AdminJob job = 1;
+}
+
+message CancelAdminJobRequest {
+  string id = 1;
+}
+
+message CancelAdminJobResponse {
+  string status = 1;
+  string job_id = 2;
+}
+
+message RetryAdminJobRequest {
+  string id = 1;
+}
+
+message RetryAdminJobResponse {
+  AdminJob job = 1;
+}
+
+message ListAdminAgentsRequest {}
+
+message ListAdminAgentsResponse {
+  repeated AdminAgent agents = 1;
+}
+
+message RestartAdminAgentRequest {
+  string id = 1;
+}
+
+message UpdateAdminAgentRequest {
+  string id = 1;
+}
+
+message AdminAgentCommandResponse {
+  string status = 1;
+}

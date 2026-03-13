@@ -16,49 +16,89 @@ import (
 )
 
 var (
-	Q       = new(Query)
-	Payment *payment
-	Plan    *plan
-	User    *user
-	Video   *video
+	Q                 = new(Query)
+	AdTemplate        *adTemplate
+	Domain            *domain
+	Job               *job
+	Notification      *notification
+	Payment           *payment
+	Plan              *plan
+	PlanSubscription  *planSubscription
+	User              *user
+	UserPreference    *userPreference
+	Video             *video
+	VideoAdConfig     *videoAdConfig
+	WalletTransaction *walletTransaction
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
+	AdTemplate = &Q.AdTemplate
+	Domain = &Q.Domain
+	Job = &Q.Job
+	Notification = &Q.Notification
 	Payment = &Q.Payment
 	Plan = &Q.Plan
+	PlanSubscription = &Q.PlanSubscription
 	User = &Q.User
+	UserPreference = &Q.UserPreference
 	Video = &Q.Video
+	VideoAdConfig = &Q.VideoAdConfig
+	WalletTransaction = &Q.WalletTransaction
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:      db,
-		Payment: newPayment(db, opts...),
-		Plan:    newPlan(db, opts...),
-		User:    newUser(db, opts...),
-		Video:   newVideo(db, opts...),
+		db:                db,
+		AdTemplate:        newAdTemplate(db, opts...),
+		Domain:            newDomain(db, opts...),
+		Job:               newJob(db, opts...),
+		Notification:      newNotification(db, opts...),
+		Payment:           newPayment(db, opts...),
+		Plan:              newPlan(db, opts...),
+		PlanSubscription:  newPlanSubscription(db, opts...),
+		User:              newUser(db, opts...),
+		UserPreference:    newUserPreference(db, opts...),
+		Video:             newVideo(db, opts...),
+		VideoAdConfig:     newVideoAdConfig(db, opts...),
+		WalletTransaction: newWalletTransaction(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	Payment payment
-	Plan    plan
-	User    user
-	Video   video
+	AdTemplate        adTemplate
+	Domain            domain
+	Job               job
+	Notification      notification
+	Payment           payment
+	Plan              plan
+	PlanSubscription  planSubscription
+	User              user
+	UserPreference    userPreference
+	Video             video
+	VideoAdConfig     videoAdConfig
+	WalletTransaction walletTransaction
 }
 
 func (q *Query) Available() bool { return q.db != nil }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:      db,
-		Payment: q.Payment.clone(db),
-		Plan:    q.Plan.clone(db),
-		User:    q.User.clone(db),
-		Video:   q.Video.clone(db),
+		db:                db,
+		AdTemplate:        q.AdTemplate.clone(db),
+		Domain:            q.Domain.clone(db),
+		Job:               q.Job.clone(db),
+		Notification:      q.Notification.clone(db),
+		Payment:           q.Payment.clone(db),
+		Plan:              q.Plan.clone(db),
+		PlanSubscription:  q.PlanSubscription.clone(db),
+		User:              q.User.clone(db),
+		UserPreference:    q.UserPreference.clone(db),
+		Video:             q.Video.clone(db),
+		VideoAdConfig:     q.VideoAdConfig.clone(db),
+		WalletTransaction: q.WalletTransaction.clone(db),
 	}
 }
 
@@ -72,27 +112,51 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:      db,
-		Payment: q.Payment.replaceDB(db),
-		Plan:    q.Plan.replaceDB(db),
-		User:    q.User.replaceDB(db),
-		Video:   q.Video.replaceDB(db),
+		db:                db,
+		AdTemplate:        q.AdTemplate.replaceDB(db),
+		Domain:            q.Domain.replaceDB(db),
+		Job:               q.Job.replaceDB(db),
+		Notification:      q.Notification.replaceDB(db),
+		Payment:           q.Payment.replaceDB(db),
+		Plan:              q.Plan.replaceDB(db),
+		PlanSubscription:  q.PlanSubscription.replaceDB(db),
+		User:              q.User.replaceDB(db),
+		UserPreference:    q.UserPreference.replaceDB(db),
+		Video:             q.Video.replaceDB(db),
+		VideoAdConfig:     q.VideoAdConfig.replaceDB(db),
+		WalletTransaction: q.WalletTransaction.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	Payment IPaymentDo
-	Plan    IPlanDo
-	User    IUserDo
-	Video   IVideoDo
+	AdTemplate        IAdTemplateDo
+	Domain            IDomainDo
+	Job               IJobDo
+	Notification      INotificationDo
+	Payment           IPaymentDo
+	Plan              IPlanDo
+	PlanSubscription  IPlanSubscriptionDo
+	User              IUserDo
+	UserPreference    IUserPreferenceDo
+	Video             IVideoDo
+	VideoAdConfig     IVideoAdConfigDo
+	WalletTransaction IWalletTransactionDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		Payment: q.Payment.WithContext(ctx),
-		Plan:    q.Plan.WithContext(ctx),
-		User:    q.User.WithContext(ctx),
-		Video:   q.Video.WithContext(ctx),
+		AdTemplate:        q.AdTemplate.WithContext(ctx),
+		Domain:            q.Domain.WithContext(ctx),
+		Job:               q.Job.WithContext(ctx),
+		Notification:      q.Notification.WithContext(ctx),
+		Payment:           q.Payment.WithContext(ctx),
+		Plan:              q.Plan.WithContext(ctx),
+		PlanSubscription:  q.PlanSubscription.WithContext(ctx),
+		User:              q.User.WithContext(ctx),
+		UserPreference:    q.UserPreference.WithContext(ctx),
+		Video:             q.Video.WithContext(ctx),
+		VideoAdConfig:     q.VideoAdConfig.WithContext(ctx),
+		WalletTransaction: q.WalletTransaction.WithContext(ctx),
 	}
 }
 

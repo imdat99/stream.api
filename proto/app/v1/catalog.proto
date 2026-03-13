@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package stream.app.v1;
+
+option go_package = "stream.api/internal/gen/proto/app/v1;appv1";
+
+import "app/v1/common.proto";
+
+service DomainsService {
+  rpc ListDomains(ListDomainsRequest) returns (ListDomainsResponse);
+  rpc CreateDomain(CreateDomainRequest) returns (CreateDomainResponse);
+  rpc DeleteDomain(DeleteDomainRequest) returns (MessageResponse);
+}
+
+service AdTemplatesService {
+  rpc ListAdTemplates(ListAdTemplatesRequest) returns (ListAdTemplatesResponse);
+  rpc CreateAdTemplate(CreateAdTemplateRequest) returns (CreateAdTemplateResponse);
+  rpc UpdateAdTemplate(UpdateAdTemplateRequest) returns (UpdateAdTemplateResponse);
+  rpc DeleteAdTemplate(DeleteAdTemplateRequest) returns (MessageResponse);
+}
+
+service PlansService {
+  rpc ListPlans(ListPlansRequest) returns (ListPlansResponse);
+}
+
+message ListDomainsRequest {}
+
+message ListDomainsResponse {
+  repeated Domain domains = 1;
+}
+
+message CreateDomainRequest {
+  string name = 1;
+}
+
+message CreateDomainResponse {
+  Domain domain = 1;
+}
+
+message DeleteDomainRequest {
+  string id = 1;
+}
+
+message ListAdTemplatesRequest {}
+
+message ListAdTemplatesResponse {
+  repeated AdTemplate templates = 1;
+}
+
+message CreateAdTemplateRequest {
+  string name = 1;
+  optional string description = 2;
+  string vast_tag_url = 3;
+  optional string ad_format = 4;
+  optional int32 duration = 5;
+  optional bool is_active = 6;
+  optional bool is_default = 7;
+}
+
+message CreateAdTemplateResponse {
+  AdTemplate template = 1;
+}
+
+message UpdateAdTemplateRequest {
+  string id = 1;
+  string name = 2;
+  optional string description = 3;
+  string vast_tag_url = 4;
+  optional string ad_format = 5;
+  optional int32 duration = 6;
+  optional bool is_active = 7;
+  optional bool is_default = 8;
+}
+
+message UpdateAdTemplateResponse {
+  AdTemplate template = 1;
+}
+
+message DeleteAdTemplateRequest {
+  string id = 1;
+}
+
+message ListPlansRequest {}
+
+message ListPlansResponse {
+  repeated Plan plans = 1;
+}

@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package stream.app.v1;
+
+option go_package = "stream.api/internal/gen/proto/app/v1;appv1";
+
+import "app/v1/common.proto";
+
+service PaymentsService {
+  rpc CreatePayment(CreatePaymentRequest) returns (CreatePaymentResponse);
+  rpc ListPaymentHistory(ListPaymentHistoryRequest) returns (ListPaymentHistoryResponse);
+  rpc TopupWallet(TopupWalletRequest) returns (TopupWalletResponse);
+  rpc DownloadInvoice(DownloadInvoiceRequest) returns (DownloadInvoiceResponse);
+}
+
+message CreatePaymentRequest {
+  string plan_id = 1;
+  int32 term_months = 2;
+  string payment_method = 3;
+  optional double topup_amount = 4;
+}
+
+message CreatePaymentResponse {
+  Payment payment = 1;
+  PlanSubscription subscription = 2;
+  double wallet_balance = 3;
+  string invoice_id = 4;
+  string message = 5;
+}
+
+message ListPaymentHistoryRequest {}
+
+message ListPaymentHistoryResponse {
+  repeated PaymentHistoryItem payments = 1;
+}
+
+message TopupWalletRequest {
+  double amount = 1;
+}
+
+message TopupWalletResponse {
+  WalletTransaction wallet_transaction = 1;
+  double wallet_balance = 2;
+  string invoice_id = 3;
+}
+
+message DownloadInvoiceRequest {
+  string id = 1;
+}
+
+message DownloadInvoiceResponse {
+  string filename = 1;
+  string content_type = 2;
+  string content = 3;
+}

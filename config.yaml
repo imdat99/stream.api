@@ -20,3 +20,6 @@ google:
 
 email:
   from: "no-reply@picpic.com"
+
+internal:
+  marker: "your-secret-marker"

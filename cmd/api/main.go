@@ -3,38 +3,20 @@ package main
 import (
 	"context"
 	"log"
-	"net/http"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"stream.api/internal/app"
 	"stream.api/internal/config"
 	"stream.api/internal/database/query"
+	videoruntime "stream.api/internal/video/runtime"
 	"stream.api/pkg/cache"
 	"stream.api/pkg/database"
 	"stream.api/pkg/logger"
 	"stream.api/pkg/token"
 )
 
-// @title           Stream API
-// @version         1.0
-// @description     This is the API server for Stream application.
-// @termsOfService  http://swagger.io/terms/
-
-// @contact.name    API Support
-// @contact.url     http://www.swagger.io/support
-// @contact.email   support@swagger.io
-
-// @license.name    Apache 2.0
-// @license.url     http://www.apache.org/licenses/LICENSE-2.0.html
-
-// @host            localhost:8080
-// @BasePath        /
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
 func main() {
 	// 1. Load Config
 	cfg, err := config.LoadConfig()
@@ -52,6 +34,8 @@ func main() {
 	// Initialize generated query
 	query.SetDefault(db)
 
+	// TODO: Tách database migration ra luồng riêng nếu cần.
+
 	// 3. Connect Redis (Cache Interface)
 	rdb, err := cache.NewRedisCache(cfg.Redis.Addr, cfg.Redis.Password, cfg.Redis.DB)
 	if err != nil {
@@ -63,39 +47,30 @@ func main() {
 	tokenProvider := token.NewJWTProvider(cfg.JWT.Secret)
 	appLogger := logger.NewLogger(cfg.Server.Mode)
 
-	// 5. Setup Router
-	r := app.SetupRouter(cfg, db, rdb, tokenProvider, appLogger)
+	module, err := videoruntime.NewModule(context.Background(), cfg, db, rdb, tokenProvider, appLogger)
+	if err != nil {
+		log.Fatalf("Failed to setup gRPC runtime module: %v", err)
+	}
 
-	// 5. Run Server with Graceful Shutdown
-	srv := &http.Server{
-		Addr:    ":" + cfg.Server.Port,
-		Handler: r,
+	grpcListener, err := net.Listen("tcp", ":"+cfg.Server.GRPCPort)
+	if err != nil {
+		log.Fatalf("Failed to listen on gRPC port %s: %v", cfg.Server.GRPCPort, err)
 	}
 
 	go func() {
-		log.Printf("Starting server on port %s", cfg.Server.Port)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Failed to run server: %v", err)
+		log.Printf("Starting gRPC server on port %s", cfg.Server.GRPCPort)
+		if err := module.ServeGRPC(grpcListener); err != nil {
+			log.Fatalf("Failed to run gRPC server: %v", err)
 		}
 	}()
 
-	// Wait for interrupt signal to gracefully shutdown the server with
-	// a timeout of 5 seconds.
 	quit := make(chan os.Signal, 1)
-	// kill (no param) default send syscall.SIGTERM
-	// kill -2 is syscall.SIGINT
-	// kill -9 is syscall.SIGKILL but can't be caught, so don't need to add it
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutting down server...")
+	log.Println("Shutting down gRPC server...")
 
-	// The context is used to inform the server it has 5 seconds to finish
-	// the request it is currently handling
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server forced to shutdown: ", err)
-	}
+	module.Shutdown()
+	_ = grpcListener.Close()
 
 	log.Println("Server exiting")
 }

@@ -37,7 +37,7 @@ func newPlan(db *gorm.DB, opts ...gen.DOOption) plan {
 	_plan.UploadLimit = field.NewInt32(tableName, "upload_limit")
 	_plan.DurationLimit = field.NewInt32(tableName, "duration_limit")
 	_plan.QualityLimit = field.NewString(tableName, "quality_limit")
-	_plan.Features = field.NewString(tableName, "features")
+	_plan.Features = field.NewField(tableName, "features")
 	_plan.IsActive = field.NewBool(tableName, "is_active")
 	_plan.Version = field.NewInt64(tableName, "version")
 
@@ -59,7 +59,7 @@ type plan struct {
 	UploadLimit   field.Int32
 	DurationLimit field.Int32
 	QualityLimit  field.String
-	Features      field.String
+	Features      field.Field
 	IsActive      field.Bool
 	Version       field.Int64
 
@@ -87,7 +87,7 @@ func (p *plan) updateTableName(table string) *plan {
 	p.UploadLimit = field.NewInt32(table, "upload_limit")
 	p.DurationLimit = field.NewInt32(table, "duration_limit")
 	p.QualityLimit = field.NewString(table, "quality_limit")
-	p.Features = field.NewString(table, "features")
+	p.Features = field.NewField(table, "features")
 	p.IsActive = field.NewBool(table, "is_active")
 	p.Version = field.NewInt64(table, "version")
 

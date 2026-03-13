@@ -1,0 +1,306 @@
+syntax = "proto3";
+
+package stream.app.v1;
+
+option go_package = "stream.api/internal/gen/proto/app/v1;appv1";
+
+import "google/protobuf/timestamp.proto";
+
+message MessageResponse {
+  string message = 1;
+}
+
+message User {
+  string id = 1;
+  string email = 2;
+  optional string username = 3;
+  optional string avatar = 4;
+  optional string role = 5;
+  optional string google_id = 6;
+  int64 storage_used = 7;
+  optional string plan_id = 8;
+  google.protobuf.Timestamp plan_started_at = 9;
+  google.protobuf.Timestamp plan_expires_at = 10;
+  optional int32 plan_term_months = 11;
+  optional string plan_payment_method = 12;
+  bool plan_expiring_soon = 13;
+  double wallet_balance = 14;
+  string language = 15;
+  string locale = 16;
+  google.protobuf.Timestamp created_at = 17;
+  google.protobuf.Timestamp updated_at = 18;
+}
+
+message Preferences {
+  bool email_notifications = 1;
+  bool push_notifications = 2;
+  bool marketing_notifications = 3;
+  bool telegram_notifications = 4;
+  bool autoplay = 5;
+  bool loop = 6;
+  bool muted = 7;
+  bool show_controls = 8;
+  bool pip = 9;
+  bool airplay = 10;
+  bool chromecast = 11;
+  string language = 12;
+  string locale = 13;
+}
+
+message Notification {
+  string id = 1;
+  string type = 2;
+  string title = 3;
+  string message = 4;
+  bool read = 5;
+  optional string action_url = 6;
+  optional string action_label = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+message Domain {
+  string id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+message AdTemplate {
+  string id = 1;
+  string name = 2;
+  optional string description = 3;
+  string vast_tag_url = 4;
+  string ad_format = 5;
+  optional int32 duration = 6;
+  bool is_active = 7;
+  bool is_default = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+message Plan {
+  string id = 1;
+  string name = 2;
+  optional string description = 3;
+  double price = 4;
+  string cycle = 5;
+  int64 storage_limit = 6;
+  int32 upload_limit = 7;
+  int32 duration_limit = 8;
+  string quality_limit = 9;
+  repeated string features = 10;
+  bool is_active = 11;
+}
+
+message Payment {
+  string id = 1;
+  string user_id = 2;
+  optional string plan_id = 3;
+  double amount = 4;
+  string currency = 5;
+  string status = 6;
+  string provider = 7;
+  optional string transaction_id = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+message PlanSubscription {
+  string id = 1;
+  string user_id = 2;
+  string payment_id = 3;
+  string plan_id = 4;
+  int32 term_months = 5;
+  string payment_method = 6;
+  double wallet_amount = 7;
+  double topup_amount = 8;
+  google.protobuf.Timestamp started_at = 9;
+  google.protobuf.Timestamp expires_at = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+message WalletTransaction {
+  string id = 1;
+  string user_id = 2;
+  string type = 3;
+  double amount = 4;
+  string currency = 5;
+  optional string note = 6;
+  optional string payment_id = 7;
+  optional string plan_id = 8;
+  optional int32 term_months = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message PaymentHistoryItem {
+  string id = 1;
+  double amount = 2;
+  string currency = 3;
+  string status = 4;
+  optional string plan_id = 5;
+  optional string plan_name = 6;
+  string invoice_id = 7;
+  string kind = 8;
+  optional int32 term_months = 9;
+  optional string payment_method = 10;
+  google.protobuf.Timestamp expires_at = 11;
+  google.protobuf.Timestamp created_at = 12;
+}
+
+message Video {
+  string id = 1;
+  string user_id = 2;
+  string title = 3;
+  optional string description = 4;
+  string url = 5;
+  string status = 6;
+  int64 size = 7;
+  int32 duration = 8;
+  string format = 9;
+  optional string thumbnail = 10;
+  optional string processing_status = 11;
+  optional string storage_type = 12;
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+}
+
+message AdminDashboard {
+  int64 total_users = 1;
+  int64 total_videos = 2;
+  int64 total_storage_used = 3;
+  int64 total_payments = 4;
+  double total_revenue = 5;
+  int64 active_subscriptions = 6;
+  int64 total_ad_templates = 7;
+  int64 new_users_today = 8;
+  int64 new_videos_today = 9;
+}
+
+message AdminUser {
+  string id = 1;
+  string email = 2;
+  optional string username = 3;
+  optional string avatar = 4;
+  optional string role = 5;
+  optional string plan_id = 6;
+  optional string plan_name = 7;
+  int64 storage_used = 8;
+  int64 video_count = 9;
+  double wallet_balance = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+message AdminUserDetail {
+  AdminUser user = 1;
+  optional PlanSubscription subscription = 2;
+}
+
+message AdminVideo {
+  string id = 1;
+  string user_id = 2;
+  string title = 3;
+  optional string description = 4;
+  string url = 5;
+  string status = 6;
+  int64 size = 7;
+  int32 duration = 8;
+  string format = 9;
+  optional string owner_email = 10;
+  optional string ad_template_id = 11;
+  optional string ad_template_name = 12;
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+}
+
+message AdminPayment {
+  string id = 1;
+  string user_id = 2;
+  optional string plan_id = 3;
+  double amount = 4;
+  string currency = 5;
+  string status = 6;
+  string provider = 7;
+  optional string transaction_id = 8;
+  optional string user_email = 9;
+  optional string plan_name = 10;
+  string invoice_id = 11;
+  optional int32 term_months = 12;
+  optional string payment_method = 13;
+  optional string expires_at = 14;
+  optional double wallet_amount = 15;
+  optional double topup_amount = 16;
+  google.protobuf.Timestamp created_at = 17;
+  google.protobuf.Timestamp updated_at = 18;
+}
+
+message AdminPlan {
+  string id = 1;
+  string name = 2;
+  optional string description = 3;
+  repeated string features = 4;
+  double price = 5;
+  string cycle = 6;
+  int64 storage_limit = 7;
+  int32 upload_limit = 8;
+  int32 duration_limit = 9;
+  string quality_limit = 10;
+  bool is_active = 11;
+  int64 user_count = 12;
+  int64 payment_count = 13;
+  int64 subscription_count = 14;
+}
+
+message AdminAdTemplate {
+  string id = 1;
+  string user_id = 2;
+  string name = 3;
+  optional string description = 4;
+  string vast_tag_url = 5;
+  string ad_format = 6;
+  optional int64 duration = 7;
+  bool is_active = 8;
+  bool is_default = 9;
+  optional string owner_email = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}
+
+message AdminJob {
+  string id = 1;
+  string status = 2;
+  int32 priority = 3;
+  string user_id = 4;
+  string name = 5;
+  int64 time_limit = 6;
+  string input_url = 7;
+  string output_url = 8;
+  int64 total_duration = 9;
+  int64 current_time = 10;
+  double progress = 11;
+  optional string agent_id = 12;
+  string logs = 13;
+  string config = 14;
+  bool cancelled = 15;
+  int32 retry_count = 16;
+  int32 max_retries = 17;
+  google.protobuf.Timestamp created_at = 18;
+  google.protobuf.Timestamp updated_at = 19;
+}
+
+message AdminAgent {
+  string id = 1;
+  string name = 2;
+  string platform = 3;
+  string backend = 4;
+  string version = 5;
+  int32 capacity = 6;
+  string status = 7;
+  double cpu = 8;
+  double ram = 9;
+  google.protobuf.Timestamp last_heartbeat = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp updated_at = 12;
+}

@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package video
 
 import "github.com/gin-gonic/gin"
@@ -8,6 +11,8 @@ type VideoHandler interface {
 	CreateVideo(c *gin.Context)
 	ListVideos(c *gin.Context)
 	GetVideo(c *gin.Context)
+	UpdateVideo(c *gin.Context)
+	DeleteVideo(c *gin.Context)
 }
 
 // UploadURLRequest defines the payload for requesting an upload URL
@@ -25,4 +30,18 @@ type CreateVideoRequest struct {
 	Size        int64  `json:"size" binding:"required"`
 	Duration    int32  `json:"duration"` // Maybe client knows, or we process later
 	Format      string `json:"format"`
+}
+
+type UpdateVideoRequest struct {
+	Title        string  `json:"title" binding:"required"`
+	Description  string  `json:"description"`
+	AdTemplateID *string `json:"ad_template_id,omitempty"`
+}
+
+type VideoAdConfigPayload struct {
+	AdTemplateID string `json:"ad_template_id"`
+	TemplateName string `json:"template_name,omitempty"`
+	VASTTagURL   string `json:"vast_tag_url,omitempty"`
+	AdFormat     string `json:"ad_format,omitempty"`
+	Duration     *int   `json:"duration,omitempty"`
 }

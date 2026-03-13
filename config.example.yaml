@@ -1,5 +1,6 @@
 server:
   port: "8080"
+  grpc_port: "9000"
   mode: "debug" # debug or release
 
 database:
@@ -17,6 +18,20 @@ google:
   client_id: "your_google_client_id"
   client_secret: "your_google_client_secret"
   redirect_url: "http://localhost:8080/auth/google/callback"
+  state_ttl_minutes: 10
+
+frontend:
+  base_url: "http://localhost:5173"
+  google_auth_finalize_path: "/auth/google/finalize"
+
+internal:
+  marker: "your_shared_internal_auth_marker"
+
+cors:
+  allow_origins:
+    - "http://localhost:5173"
+    - "http://localhost:8080"
+    - "http://localhost:8081"
 
 email:
   from: "no-reply@picpic.com"
@@ -26,3 +41,10 @@ aws:
   bucket: "your-bucket-name"
   access_key: "your_access_key"
   secret_key: "your_secret_key"
+
+render:
+  agent_secret: "your_render_agent_secret"
+  enable_metrics: true
+  enable_tracing: false
+  otlp_endpoint: ""
+  service_name: "stream-api-render"

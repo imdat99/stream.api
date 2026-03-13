@@ -12,13 +12,30 @@ type Config struct {
 	Redis    RedisConfig
 	JWT      JWTConfig
 	Google   GoogleConfig
+	Frontend FrontendConfig
+	CORS     CORSConfig
 	Email    EmailConfig
 	AWS      AWSConfig
+	Render   RenderConfig
+	Internal InternalAuthConfig
 }
 
 type ServerConfig struct {
-	Port string `mapstructure:"port"`
-	Mode string `mapstructure:"mode"` // e.g., "debug", "release"
+	Port     string `mapstructure:"port"`
+	GRPCPort string `mapstructure:"grpc_port"`
+	Mode     string `mapstructure:"mode"` // e.g., "debug", "release"
+}
+
+type RenderConfig struct {
+	AgentSecret   string `mapstructure:"agent_secret"`
+	EnableMetrics bool   `mapstructure:"enable_metrics"`
+	EnableTracing bool   `mapstructure:"enable_tracing"`
+	OTLPEndpoint  string `mapstructure:"otlp_endpoint"`
+	ServiceName   string `mapstructure:"service_name"`
+}
+
+type InternalAuthConfig struct {
+	Marker string `mapstructure:"marker"`
 }
 
 type DatabaseConfig struct {
@@ -36,9 +53,19 @@ type JWTConfig struct {
 }
 
 type GoogleConfig struct {
-	ClientID     string `mapstructure:"client_id"`
-	ClientSecret string `mapstructure:"client_secret"`
-	RedirectURL  string `mapstructure:"redirect_url"`
+	ClientID       string `mapstructure:"client_id"`
+	ClientSecret   string `mapstructure:"client_secret"`
+	RedirectURL    string `mapstructure:"redirect_url"`
+	StateTTLMinute int    `mapstructure:"state_ttl_minutes"`
+}
+
+type FrontendConfig struct {
+	BaseURL                string `mapstructure:"base_url"`
+	GoogleAuthFinalizePath string `mapstructure:"google_auth_finalize_path"`
+}
+
+type CORSConfig struct {
+	AllowOrigins []string `mapstructure:"allow_origins"`
 }
 
 type EmailConfig struct {
@@ -60,8 +87,16 @@ func LoadConfig() (*Config, error) {
 
 	// Set defaults
 	v.SetDefault("server.port", "8080")
+	v.SetDefault("server.grpc_port", "9000")
 	v.SetDefault("server.mode", "debug")
 	v.SetDefault("redis.db", 0)
+	v.SetDefault("render.enable_metrics", true)
+	v.SetDefault("render.enable_tracing", false)
+	v.SetDefault("render.service_name", "stream-api-render")
+	v.SetDefault("google.state_ttl_minutes", 10)
+	v.SetDefault("frontend.google_auth_finalize_path", "/auth/google/finalize")
+	v.SetDefault("internal.marker", "")
+	v.SetDefault("cors.allow_origins", []string{"http://localhost:5173", "http://localhost:8080", "http://localhost:8081"})
 
 	// Environment variable settings
 	v.SetEnvPrefix("APP")

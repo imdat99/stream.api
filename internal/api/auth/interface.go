@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 package auth
 
 import "github.com/gin-gonic/gin"
@@ -11,6 +14,11 @@ type AuthHandler interface {
 	ResetPassword(c *gin.Context)
 	LoginGoogle(c *gin.Context)
 	GoogleCallback(c *gin.Context)
+	GetMe(c *gin.Context)
+	UpdateMe(c *gin.Context)
+	ChangePassword(c *gin.Context)
+	DeleteMe(c *gin.Context)
+	ClearMyData(c *gin.Context)
 }
 
 // LoginRequest defines the payload for login
@@ -35,4 +43,16 @@ type ForgotPasswordRequest struct {
 type ResetPasswordRequest struct {
 	Token       string `json:"token" binding:"required"`
 	NewPassword string `json:"new_password" binding:"required,min=6"`
+}
+
+type UpdateMeRequest struct {
+	Username *string `json:"username"`
+	Email    *string `json:"email"`
+	Language *string `json:"language"`
+	Locale   *string `json:"locale"`
+}
+
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required,min=6"`
 }

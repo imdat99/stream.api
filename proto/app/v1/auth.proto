@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package stream.app.v1;
+
+option go_package = "stream.api/internal/gen/proto/app/v1;appv1";
+
+import "app/v1/common.proto";
+
+service AuthService {
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc Logout(LogoutRequest) returns (MessageResponse);
+  rpc ChangePassword(ChangePasswordRequest) returns (MessageResponse);
+  rpc ForgotPassword(ForgotPasswordRequest) returns (MessageResponse);
+  rpc ResetPassword(ResetPasswordRequest) returns (MessageResponse);
+  rpc GetGoogleLoginUrl(GetGoogleLoginUrlRequest) returns (GetGoogleLoginUrlResponse);
+  rpc CompleteGoogleLogin(CompleteGoogleLoginRequest) returns (CompleteGoogleLoginResponse);
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  User user = 1;
+}
+
+message RegisterRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message RegisterResponse {
+  User user = 1;
+}
+
+message LogoutRequest {}
+
+message ChangePasswordRequest {
+  string current_password = 1;
+  string new_password = 2;
+}
+
+message ForgotPasswordRequest {
+  string email = 1;
+}
+
+message ResetPasswordRequest {
+  string token = 1;
+  string new_password = 2;
+}
+
+message GetGoogleLoginUrlRequest {}
+
+message GetGoogleLoginUrlResponse {
+  string url = 1;
+}
+
+message CompleteGoogleLoginRequest {
+  string code = 1;
+}
+
+message CompleteGoogleLoginResponse {
+  User user = 1;
+}

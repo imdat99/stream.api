@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package stream.app.v1;
+
+option go_package = "stream.api/internal/gen/proto/app/v1;appv1";
+
+import "app/v1/common.proto";
+
+service AccountService {
+  rpc GetMe(GetMeRequest) returns (GetMeResponse);
+  rpc UpdateMe(UpdateMeRequest) returns (UpdateMeResponse);
+  rpc DeleteMe(DeleteMeRequest) returns (MessageResponse);
+  rpc ClearMyData(ClearMyDataRequest) returns (MessageResponse);
+}
+
+service PreferencesService {
+  rpc GetPreferences(GetPreferencesRequest) returns (GetPreferencesResponse);
+  rpc UpdatePreferences(UpdatePreferencesRequest) returns (UpdatePreferencesResponse);
+}
+
+service UsageService {
+  rpc GetUsage(GetUsageRequest) returns (GetUsageResponse);
+}
+
+service NotificationsService {
+  rpc ListNotifications(ListNotificationsRequest) returns (ListNotificationsResponse);
+  rpc MarkNotificationRead(MarkNotificationReadRequest) returns (MessageResponse);
+  rpc MarkAllNotificationsRead(MarkAllNotificationsReadRequest) returns (MessageResponse);
+  rpc DeleteNotification(DeleteNotificationRequest) returns (MessageResponse);
+  rpc ClearNotifications(ClearNotificationsRequest) returns (MessageResponse);
+}
+
+message GetMeRequest {}
+
+message GetMeResponse {
+  User user = 1;
+}
+
+message UpdateMeRequest {
+  optional string username = 1;
+  optional string email = 2;
+  optional string language = 3;
+  optional string locale = 4;
+}
+
+message UpdateMeResponse {
+  User user = 1;
+}
+
+message DeleteMeRequest {}
+
+message ClearMyDataRequest {}
+
+message GetPreferencesRequest {}
+
+message GetPreferencesResponse {
+  Preferences preferences = 1;
+}
+
+message UpdatePreferencesRequest {
+  optional bool email_notifications = 1;
+  optional bool push_notifications = 2;
+  optional bool marketing_notifications = 3;
+  optional bool telegram_notifications = 4;
+  optional bool autoplay = 5;
+  optional bool loop = 6;
+  optional bool muted = 7;
+  optional bool show_controls = 8;
+  optional bool pip = 9;
+  optional bool airplay = 10;
+  optional bool chromecast = 11;
+  optional string language = 12;
+  optional string locale = 13;
+}
+
+message UpdatePreferencesResponse {
+  Preferences preferences = 1;
+}
+
+message GetUsageRequest {}
+
+message GetUsageResponse {
+  string user_id = 1;
+  int64 total_videos = 2;
+  int64 total_storage = 3;
+}
+
+message ListNotificationsRequest {}
+
+message ListNotificationsResponse {
+  repeated Notification notifications = 1;
+}
+
+message MarkNotificationReadRequest {
+  string id = 1;
+}
+
+message MarkAllNotificationsReadRequest {}
+
+message DeleteNotificationRequest {
+  string id = 1;
+}
+
+message ClearNotificationsRequest {}
