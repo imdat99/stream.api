@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 	"time"
 
@@ -79,20 +78,63 @@ func (s *appServices) ListPaymentHistory(ctx context.Context, req *appv1.ListPay
 		Status        *string    `gorm:"column:status"`
 		PlanID        *string    `gorm:"column:plan_id"`
 		PlanName      *string    `gorm:"column:plan_name"`
+		InvoiceID     string     `gorm:"column:invoice_id"`
+		Kind          string     `gorm:"column:kind"`
 		TermMonths    *int32     `gorm:"column:term_months"`
 		PaymentMethod *string    `gorm:"column:payment_method"`
 		ExpiresAt     *time.Time `gorm:"column:expires_at"`
 		CreatedAt     *time.Time `gorm:"column:created_at"`
 	}
 
+	baseQuery := `
+		WITH history AS (
+			SELECT
+				p.id AS id,
+				p.amount AS amount,
+				p.currency AS currency,
+				p.status AS status,
+				p.plan_id AS plan_id,
+				pl.name AS plan_name,
+				p.id AS invoice_id,
+				? AS kind,
+				ps.term_months AS term_months,
+				ps.payment_method AS payment_method,
+				ps.expires_at AS expires_at,
+				p.created_at AS created_at
+			FROM payment AS p
+			LEFT JOIN plan AS pl ON pl.id = p.plan_id
+			LEFT JOIN plan_subscriptions AS ps ON ps.payment_id = p.id
+			WHERE p.user_id = ?
+			UNION ALL
+			SELECT
+				wt.id AS id,
+				wt.amount AS amount,
+				wt.currency AS currency,
+				'SUCCESS' AS status,
+				NULL AS plan_id,
+				NULL AS plan_name,
+				wt.id AS invoice_id,
+				? AS kind,
+				NULL AS term_months,
+				NULL AS payment_method,
+				NULL AS expires_at,
+				wt.created_at AS created_at
+			FROM wallet_transactions AS wt
+			WHERE wt.user_id = ? AND wt.type = ? AND wt.payment_id IS NULL
+		)
+	`
+
+	var total int64
+	if err := s.db.WithContext(ctx).
+		Raw(baseQuery+`SELECT COUNT(*) FROM history`, paymentKindSubscription, result.UserID, paymentKindWalletTopup, result.UserID, walletTransactionTypeTopup).
+		Scan(&total).Error; err != nil {
+		s.logger.Error("Failed to count payment history", "error", err)
+		return nil, status.Error(codes.Internal, "Failed to fetch payment history")
+	}
+
 	var rows []paymentHistoryRow
 	if err := s.db.WithContext(ctx).
-		Table("payment AS p").
-		Select("p.id, p.amount, p.currency, p.status, p.plan_id, pl.name AS plan_name, ps.term_months, ps.payment_method, ps.expires_at, p.created_at").
-		Joins("LEFT JOIN plan AS pl ON pl.id = p.plan_id").
-		Joins("LEFT JOIN plan_subscriptions AS ps ON ps.payment_id = p.id").
-		Where("p.user_id = ?", result.UserID).
-		Order("p.created_at DESC").
+		Raw(baseQuery+`SELECT * FROM history ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`, paymentKindSubscription, result.UserID, paymentKindWalletTopup, result.UserID, walletTransactionTypeTopup, limit, offset).
 		Scan(&rows).Error; err != nil {
 		s.logger.Error("Failed to fetch payment history", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to fetch payment history")
@@ -107,8 +149,8 @@ func (s *appServices) ListPaymentHistory(ctx context.Context, req *appv1.ListPay
 			Status:        normalizePaymentStatus(row.Status),
 			PlanId:        row.PlanID,
 			PlanName:      row.PlanName,
-			InvoiceId:     buildInvoiceID(row.ID),
-			Kind:          paymentKindSubscription,
+			InvoiceId:     buildInvoiceID(row.InvoiceID),
+			Kind:          row.Kind,
 			TermMonths:    row.TermMonths,
 			PaymentMethod: normalizeOptionalPaymentMethod(row.PaymentMethod),
 			ExpiresAt:     timeToProto(row.ExpiresAt),
@@ -116,53 +158,16 @@ func (s *appServices) ListPaymentHistory(ctx context.Context, req *appv1.ListPay
 		})
 	}
 
-	var topups []model.WalletTransaction
-	if err := s.db.WithContext(ctx).
-		Where("user_id = ? AND type = ? AND payment_id IS NULL", result.UserID, walletTransactionTypeTopup).
-		Order("created_at DESC").
-		Find(&topups).Error; err != nil {
-		s.logger.Error("Failed to fetch wallet topups", "error", err)
-		return nil, status.Error(codes.Internal, "Failed to fetch payment history")
-	}
-
-	for _, topup := range topups {
-		items = append(items, &appv1.PaymentHistoryItem{
-			Id:        topup.ID,
-			Amount:    topup.Amount,
-			Currency:  normalizeCurrency(topup.Currency),
-			Status:    "success",
-			InvoiceId: buildInvoiceID(topup.ID),
-			Kind:      paymentKindWalletTopup,
-			CreatedAt: timeToProto(topup.CreatedAt),
-		})
-	}
-
-	sort.Slice(items, func(i, j int) bool {
-		left := time.Time{}
-		right := time.Time{}
-		if items[i].CreatedAt != nil {
-			left = items[i].CreatedAt.AsTime()
-		}
-		if items[j].CreatedAt != nil {
-			right = items[j].CreatedAt.AsTime()
-		}
-		if right.Equal(left) {
-			return items[i].GetId() > items[j].GetId()
-		}
-		return right.After(left)
-	})
-
-	total := int64(len(items))
 	hasPrev := page > 1 && total > 0
-	if offset >= len(items) {
-		return &appv1.ListPaymentHistoryResponse{Payments: []*appv1.PaymentHistoryItem{}, Total: total, Page: page, Limit: limit, HasPrev: hasPrev, HasNext: false}, nil
-	}
-	end := offset + int(limit)
-	if end > len(items) {
-		end = len(items)
-	}
-	hasNext := end < len(items)
-	return &appv1.ListPaymentHistoryResponse{Payments: items[offset:end], Total: total, Page: page, Limit: limit, HasPrev: hasPrev, HasNext: hasNext}, nil
+	hasNext := int64(offset)+int64(len(items)) < total
+	return &appv1.ListPaymentHistoryResponse{
+		Payments: items,
+		Total:    total,
+		Page:     page,
+		Limit:    limit,
+		HasPrev:  hasPrev,
+		HasNext:  hasNext,
+	}, nil
 }
 
 func (s *appServices) TopupWallet(ctx context.Context, req *appv1.TopupWalletRequest) (*appv1.TopupWalletResponse, error) {
