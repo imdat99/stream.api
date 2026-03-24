@@ -9,6 +9,7 @@ package appv1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -107,6 +108,7 @@ type UpdateMeRequest struct {
 	Email         *string                `protobuf:"bytes,2,opt,name=email,proto3,oneof" json:"email,omitempty"`
 	Language      *string                `protobuf:"bytes,3,opt,name=language,proto3,oneof" json:"language,omitempty"`
 	Locale        *string                `protobuf:"bytes,4,opt,name=locale,proto3,oneof" json:"locale,omitempty"`
+	TelegramId    *string                `protobuf:"bytes,5,opt,name=telegram_id,json=telegramId,proto3,oneof" json:"telegram_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -165,6 +167,13 @@ func (x *UpdateMeRequest) GetLanguage() string {
 func (x *UpdateMeRequest) GetLocale() string {
 	if x != nil && x.Locale != nil {
 		return *x.Locale
+	}
+	return ""
+}
+
+func (x *UpdateMeRequest) GetTelegramId() string {
+	if x != nil && x.TelegramId != nil {
+		return *x.TelegramId
 	}
 	return ""
 }
@@ -889,19 +898,22 @@ var File_app_v1_account_proto protoreflect.FileDescriptor
 
 const file_app_v1_account_proto_rawDesc = "" +
 	"\n" +
-	"\x14app/v1/account.proto\x12\rstream.app.v1\x1a\x13app/v1/common.proto\"\x0e\n" +
+	"\x14app/v1/account.proto\x12\rstream.app.v1\x1a\x1egoogle/protobuf/wrappers.proto\x1a\x13app/v1/common.proto\"\x0e\n" +
 	"\fGetMeRequest\"8\n" +
 	"\rGetMeResponse\x12'\n" +
-	"\x04user\x18\x01 \x01(\v2\x13.stream.app.v1.UserR\x04user\"\xba\x01\n" +
+	"\x04user\x18\x01 \x01(\v2\x13.stream.app.v1.UserR\x04user\"\xf0\x01\n" +
 	"\x0fUpdateMeRequest\x12\x1f\n" +
 	"\busername\x18\x01 \x01(\tH\x00R\busername\x88\x01\x01\x12\x19\n" +
 	"\x05email\x18\x02 \x01(\tH\x01R\x05email\x88\x01\x01\x12\x1f\n" +
 	"\blanguage\x18\x03 \x01(\tH\x02R\blanguage\x88\x01\x01\x12\x1b\n" +
-	"\x06locale\x18\x04 \x01(\tH\x03R\x06locale\x88\x01\x01B\v\n" +
+	"\x06locale\x18\x04 \x01(\tH\x03R\x06locale\x88\x01\x01\x12$\n" +
+	"\vtelegram_id\x18\x05 \x01(\tH\x04R\n" +
+	"telegramId\x88\x01\x01B\v\n" +
 	"\t_usernameB\b\n" +
 	"\x06_emailB\v\n" +
 	"\t_languageB\t\n" +
-	"\a_locale\";\n" +
+	"\a_localeB\x0e\n" +
+	"\f_telegram_id\";\n" +
 	"\x10UpdateMeResponse\x12'\n" +
 	"\x04user\x18\x01 \x01(\v2\x13.stream.app.v1.UserR\x04user\"\x11\n" +
 	"\x0fDeleteMeRequest\"\x14\n" +
@@ -956,12 +968,13 @@ const file_app_v1_account_proto_rawDesc = "" +
 	"\x1fMarkAllNotificationsReadRequest\"+\n" +
 	"\x19DeleteNotificationRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x1b\n" +
-	"\x19ClearNotificationsRequest2\xbf\x02\n" +
+	"\x19ClearNotificationsRequest2\x83\x03\n" +
 	"\x0eAccountService\x12B\n" +
 	"\x05GetMe\x12\x1b.stream.app.v1.GetMeRequest\x1a\x1c.stream.app.v1.GetMeResponse\x12K\n" +
 	"\bUpdateMe\x12\x1e.stream.app.v1.UpdateMeRequest\x1a\x1f.stream.app.v1.UpdateMeResponse\x12J\n" +
 	"\bDeleteMe\x12\x1e.stream.app.v1.DeleteMeRequest\x1a\x1e.stream.app.v1.MessageResponse\x12P\n" +
-	"\vClearMyData\x12!.stream.app.v1.ClearMyDataRequest\x1a\x1e.stream.app.v1.MessageResponse2\xdb\x01\n" +
+	"\vClearMyData\x12!.stream.app.v1.ClearMyDataRequest\x1a\x1e.stream.app.v1.MessageResponse\x12B\n" +
+	"\vGetUserById\x12\x1c.google.protobuf.StringValue\x1a\x13.stream.app.v1.User\"\x002\xdb\x01\n" +
 	"\x12PreferencesService\x12]\n" +
 	"\x0eGetPreferences\x12$.stream.app.v1.GetPreferencesRequest\x1a%.stream.app.v1.GetPreferencesResponse\x12f\n" +
 	"\x11UpdatePreferences\x12'.stream.app.v1.UpdatePreferencesRequest\x1a(.stream.app.v1.UpdatePreferencesResponse2[\n" +
@@ -1009,7 +1022,8 @@ var file_app_v1_account_proto_goTypes = []any{
 	(*User)(nil),                            // 18: stream.app.v1.User
 	(*Preferences)(nil),                     // 19: stream.app.v1.Preferences
 	(*Notification)(nil),                    // 20: stream.app.v1.Notification
-	(*MessageResponse)(nil),                 // 21: stream.app.v1.MessageResponse
+	(*wrapperspb.StringValue)(nil),          // 21: google.protobuf.StringValue
+	(*MessageResponse)(nil),                 // 22: stream.app.v1.MessageResponse
 }
 var file_app_v1_account_proto_depIdxs = []int32{
 	18, // 0: stream.app.v1.GetMeResponse.user:type_name -> stream.app.v1.User
@@ -1021,28 +1035,30 @@ var file_app_v1_account_proto_depIdxs = []int32{
 	2,  // 6: stream.app.v1.AccountService.UpdateMe:input_type -> stream.app.v1.UpdateMeRequest
 	4,  // 7: stream.app.v1.AccountService.DeleteMe:input_type -> stream.app.v1.DeleteMeRequest
 	5,  // 8: stream.app.v1.AccountService.ClearMyData:input_type -> stream.app.v1.ClearMyDataRequest
-	6,  // 9: stream.app.v1.PreferencesService.GetPreferences:input_type -> stream.app.v1.GetPreferencesRequest
-	8,  // 10: stream.app.v1.PreferencesService.UpdatePreferences:input_type -> stream.app.v1.UpdatePreferencesRequest
-	10, // 11: stream.app.v1.UsageService.GetUsage:input_type -> stream.app.v1.GetUsageRequest
-	12, // 12: stream.app.v1.NotificationsService.ListNotifications:input_type -> stream.app.v1.ListNotificationsRequest
-	14, // 13: stream.app.v1.NotificationsService.MarkNotificationRead:input_type -> stream.app.v1.MarkNotificationReadRequest
-	15, // 14: stream.app.v1.NotificationsService.MarkAllNotificationsRead:input_type -> stream.app.v1.MarkAllNotificationsReadRequest
-	16, // 15: stream.app.v1.NotificationsService.DeleteNotification:input_type -> stream.app.v1.DeleteNotificationRequest
-	17, // 16: stream.app.v1.NotificationsService.ClearNotifications:input_type -> stream.app.v1.ClearNotificationsRequest
-	1,  // 17: stream.app.v1.AccountService.GetMe:output_type -> stream.app.v1.GetMeResponse
-	3,  // 18: stream.app.v1.AccountService.UpdateMe:output_type -> stream.app.v1.UpdateMeResponse
-	21, // 19: stream.app.v1.AccountService.DeleteMe:output_type -> stream.app.v1.MessageResponse
-	21, // 20: stream.app.v1.AccountService.ClearMyData:output_type -> stream.app.v1.MessageResponse
-	7,  // 21: stream.app.v1.PreferencesService.GetPreferences:output_type -> stream.app.v1.GetPreferencesResponse
-	9,  // 22: stream.app.v1.PreferencesService.UpdatePreferences:output_type -> stream.app.v1.UpdatePreferencesResponse
-	11, // 23: stream.app.v1.UsageService.GetUsage:output_type -> stream.app.v1.GetUsageResponse
-	13, // 24: stream.app.v1.NotificationsService.ListNotifications:output_type -> stream.app.v1.ListNotificationsResponse
-	21, // 25: stream.app.v1.NotificationsService.MarkNotificationRead:output_type -> stream.app.v1.MessageResponse
-	21, // 26: stream.app.v1.NotificationsService.MarkAllNotificationsRead:output_type -> stream.app.v1.MessageResponse
-	21, // 27: stream.app.v1.NotificationsService.DeleteNotification:output_type -> stream.app.v1.MessageResponse
-	21, // 28: stream.app.v1.NotificationsService.ClearNotifications:output_type -> stream.app.v1.MessageResponse
-	17, // [17:29] is the sub-list for method output_type
-	5,  // [5:17] is the sub-list for method input_type
+	21, // 9: stream.app.v1.AccountService.GetUserById:input_type -> google.protobuf.StringValue
+	6,  // 10: stream.app.v1.PreferencesService.GetPreferences:input_type -> stream.app.v1.GetPreferencesRequest
+	8,  // 11: stream.app.v1.PreferencesService.UpdatePreferences:input_type -> stream.app.v1.UpdatePreferencesRequest
+	10, // 12: stream.app.v1.UsageService.GetUsage:input_type -> stream.app.v1.GetUsageRequest
+	12, // 13: stream.app.v1.NotificationsService.ListNotifications:input_type -> stream.app.v1.ListNotificationsRequest
+	14, // 14: stream.app.v1.NotificationsService.MarkNotificationRead:input_type -> stream.app.v1.MarkNotificationReadRequest
+	15, // 15: stream.app.v1.NotificationsService.MarkAllNotificationsRead:input_type -> stream.app.v1.MarkAllNotificationsReadRequest
+	16, // 16: stream.app.v1.NotificationsService.DeleteNotification:input_type -> stream.app.v1.DeleteNotificationRequest
+	17, // 17: stream.app.v1.NotificationsService.ClearNotifications:input_type -> stream.app.v1.ClearNotificationsRequest
+	1,  // 18: stream.app.v1.AccountService.GetMe:output_type -> stream.app.v1.GetMeResponse
+	3,  // 19: stream.app.v1.AccountService.UpdateMe:output_type -> stream.app.v1.UpdateMeResponse
+	22, // 20: stream.app.v1.AccountService.DeleteMe:output_type -> stream.app.v1.MessageResponse
+	22, // 21: stream.app.v1.AccountService.ClearMyData:output_type -> stream.app.v1.MessageResponse
+	18, // 22: stream.app.v1.AccountService.GetUserById:output_type -> stream.app.v1.User
+	7,  // 23: stream.app.v1.PreferencesService.GetPreferences:output_type -> stream.app.v1.GetPreferencesResponse
+	9,  // 24: stream.app.v1.PreferencesService.UpdatePreferences:output_type -> stream.app.v1.UpdatePreferencesResponse
+	11, // 25: stream.app.v1.UsageService.GetUsage:output_type -> stream.app.v1.GetUsageResponse
+	13, // 26: stream.app.v1.NotificationsService.ListNotifications:output_type -> stream.app.v1.ListNotificationsResponse
+	22, // 27: stream.app.v1.NotificationsService.MarkNotificationRead:output_type -> stream.app.v1.MessageResponse
+	22, // 28: stream.app.v1.NotificationsService.MarkAllNotificationsRead:output_type -> stream.app.v1.MessageResponse
+	22, // 29: stream.app.v1.NotificationsService.DeleteNotification:output_type -> stream.app.v1.MessageResponse
+	22, // 30: stream.app.v1.NotificationsService.ClearNotifications:output_type -> stream.app.v1.MessageResponse
+	18, // [18:31] is the sub-list for method output_type
+	5,  // [5:18] is the sub-list for method input_type
 	5,  // [5:5] is the sub-list for extension type_name
 	5,  // [5:5] is the sub-list for extension extendee
 	0,  // [0:5] is the sub-list for field type_name

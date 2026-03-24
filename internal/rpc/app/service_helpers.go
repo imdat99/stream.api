@@ -20,8 +20,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	authapi "stream.api/internal/api/auth"
-	paymentapi "stream.api/internal/api/payment"
 	"stream.api/internal/database/model"
 	appv1 "stream.api/internal/gen/proto/app/v1"
 	"stream.api/internal/middleware"
@@ -78,6 +76,7 @@ func buildAdminJob(job *domain.Job) *appv1.AdminJob {
 		MaxRetries:    int32(job.MaxRetries),
 		CreatedAt:     timestamppb.New(job.CreatedAt),
 		UpdatedAt:     timestamppb.New(job.UpdatedAt),
+		VideoId:       stringPointerOrNil(job.VideoID),
 	}
 }
 func buildAdminAgent(agent *services.AgentWithStats) *appv1.AdminAgent {
@@ -131,43 +130,150 @@ func (s *appServices) ensurePlanExists(ctx context.Context, planID *string) erro
 	}
 	return nil
 }
-func (s *appServices) saveAdminVideoAdConfig(ctx context.Context, tx *gorm.DB, videoID, userID string, adTemplateID *string) error {
-	if adTemplateID == nil {
+func referralUserEligible(user *model.User) bool {
+	if user == nil || user.ReferralEligible == nil {
+		return true
+	}
+	return *user.ReferralEligible
+}
+
+func effectiveReferralRewardBps(value *int32) int32 {
+	if value == nil {
+		return defaultReferralRewardBps
+	}
+	if *value < 0 {
+		return 0
+	}
+	if *value > 10000 {
+		return 10000
+	}
+	return *value
+}
+
+func referralRewardBpsToPercent(value int32) float64 {
+	return float64(value) / 100
+}
+
+func referralRewardProcessed(user *model.User) bool {
+	if user == nil {
+		return false
+	}
+	if user.ReferralRewardGrantedAt != nil {
+		return true
+	}
+	if user.ReferralRewardPaymentID != nil && strings.TrimSpace(*user.ReferralRewardPaymentID) != "" {
+		return true
+	}
+	return false
+}
+
+func sameTrimmedStringFold(left *string, right string) bool {
+	if left == nil {
+		return false
+	}
+	return strings.EqualFold(strings.TrimSpace(*left), strings.TrimSpace(right))
+}
+
+func (s *appServices) buildReferralShareLink(username *string) *string {
+	trimmed := strings.TrimSpace(stringValue(username))
+	if trimmed == "" {
 		return nil
 	}
+	path := "/ref/" + url.PathEscape(trimmed)
+	base := strings.TrimRight(strings.TrimSpace(s.frontendBaseURL), "/")
+	if base == "" {
+		return &path
+	}
+	link := base + path
+	return &link
+}
+
+func (s *appServices) loadReferralUsersByUsername(ctx context.Context, username string) ([]model.User, error) {
+	trimmed := strings.TrimSpace(username)
+	if trimmed == "" {
+		return nil, nil
+	}
+	var users []model.User
+	if err := s.db.WithContext(ctx).
+		Where("LOWER(username) = LOWER(?)", trimmed).
+		Order("created_at ASC, id ASC").
+		Limit(2).
+		Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (s *appServices) resolveReferralUserByUsername(ctx context.Context, username string) (*model.User, error) {
+	users, err := s.loadReferralUsersByUsername(ctx, username)
+	if err != nil {
+		return nil, err
+	}
+	if len(users) != 1 {
+		return nil, nil
+	}
+	return &users[0], nil
+}
+
+func (s *appServices) loadReferralUserByUsernameStrict(ctx context.Context, username string) (*model.User, error) {
+	trimmed := strings.TrimSpace(username)
+	if trimmed == "" {
+		return nil, status.Error(codes.InvalidArgument, "Referral username is required")
+	}
+	users, err := s.loadReferralUsersByUsername(ctx, trimmed)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to resolve referral user")
+	}
+	if len(users) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Referral user not found")
+	}
+	if len(users) > 1 {
+		return nil, status.Error(codes.InvalidArgument, "Referral username is ambiguous")
+	}
+	return &users[0], nil
+}
+
+func (s *appServices) resolveSignupReferrerID(ctx context.Context, refUsername string, newUsername string) (*string, error) {
+	trimmedRefUsername := strings.TrimSpace(refUsername)
+	if trimmedRefUsername == "" || strings.EqualFold(trimmedRefUsername, strings.TrimSpace(newUsername)) {
+		return nil, nil
+	}
+	referrer, err := s.resolveReferralUserByUsername(ctx, trimmedRefUsername)
+	if err != nil {
+		return nil, err
+	}
+	if referrer == nil {
+		return nil, nil
+	}
+	return &referrer.ID, nil
+}
+func (s *appServices) saveAdminVideoAdConfig(ctx context.Context, tx *gorm.DB, video *model.Video, userID string, adTemplateID *string) error {
+	if video == nil || adTemplateID == nil {
+		return nil
+	}
+
 	trimmed := strings.TrimSpace(*adTemplateID)
 	if trimmed == "" {
-		return tx.Where("video_id = ? AND user_id = ?", videoID, userID).Delete(&model.VideoAdConfig{}).Error
+		if err := tx.WithContext(ctx).Model(&model.Video{}).Where("id = ?", video.ID).Update("ad_id", nil).Error; err != nil {
+			return err
+		}
+		video.AdID = nil
+		return nil
 	}
 
 	var template model.AdTemplate
-	if err := tx.WithContext(ctx).Where("id = ? AND user_id = ?", trimmed, userID).First(&template).Error; err != nil {
+	if err := tx.WithContext(ctx).Select("id").Where("id = ? AND user_id = ?", trimmed, userID).First(&template).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("Ad template not found")
 		}
 		return err
 	}
 
-	var existing model.VideoAdConfig
-	if err := tx.WithContext(ctx).Where("video_id = ? AND user_id = ?", videoID, userID).First(&existing).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return tx.Create(&model.VideoAdConfig{
-				VideoID:      videoID,
-				UserID:       userID,
-				AdTemplateID: template.ID,
-				VastTagURL:   template.VastTagURL,
-				AdFormat:     template.AdFormat,
-				Duration:     template.Duration,
-			}).Error
-		}
+	if err := tx.WithContext(ctx).Model(&model.Video{}).Where("id = ?", video.ID).Update("ad_id", template.ID).Error; err != nil {
 		return err
 	}
-
-	existing.AdTemplateID = template.ID
-	existing.VastTagURL = template.VastTagURL
-	existing.AdFormat = template.AdFormat
-	existing.Duration = template.Duration
-	return tx.Save(&existing).Error
+	video.AdID = &template.ID
+	return nil
 }
 func (s *appServices) buildAdminUser(ctx context.Context, user *model.User) (*appv1.AdminUser, error) {
 	if user == nil {
@@ -187,8 +293,8 @@ func (s *appServices) buildAdminUser(ctx context.Context, user *model.User) (*ap
 		WalletBalance: 0,
 	}
 
-	var videoCount int64
-	if err := s.db.WithContext(ctx).Model(&model.Video{}).Where("user_id = ?", user.ID).Count(&videoCount).Error; err != nil {
+	videoCount, err := s.loadAdminUserVideoCount(ctx, user.ID)
+	if err != nil {
 		return nil, err
 	}
 	payload.VideoCount = videoCount
@@ -199,16 +305,64 @@ func (s *appServices) buildAdminUser(ctx context.Context, user *model.User) (*ap
 	}
 	payload.WalletBalance = walletBalance
 
-	if user.PlanID != nil && strings.TrimSpace(*user.PlanID) != "" {
-		var plan model.Plan
-		if err := s.db.WithContext(ctx).Select("id, name").Where("id = ?", *user.PlanID).First(&plan).Error; err == nil {
-			payload.PlanName = nullableTrimmedString(&plan.Name)
-		} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
-		}
+	planName, err := s.loadAdminPlanName(ctx, user.PlanID)
+	if err != nil {
+		return nil, err
 	}
+	payload.PlanName = planName
 
 	return payload, nil
+}
+
+func (s *appServices) buildAdminUserDetail(ctx context.Context, user *model.User, subscription *model.PlanSubscription) (*appv1.AdminUserDetail, error) {
+	payload, err := s.buildAdminUser(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	referral, err := s.buildAdminUserReferralInfo(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	return &appv1.AdminUserDetail{
+		User:         payload,
+		Subscription: toProtoPlanSubscription(subscription),
+		Referral:     referral,
+	}, nil
+}
+
+func (s *appServices) buildAdminUserReferralInfo(ctx context.Context, user *model.User) (*appv1.AdminUserReferralInfo, error) {
+	if user == nil {
+		return nil, nil
+	}
+
+	var referrer *appv1.ReferralUserSummary
+	if user.ReferredByUserID != nil && strings.TrimSpace(*user.ReferredByUserID) != "" {
+		loadedReferrer, err := s.loadReferralUserSummary(ctx, strings.TrimSpace(*user.ReferredByUserID))
+		if err != nil {
+			return nil, err
+		}
+		referrer = loadedReferrer
+	}
+
+	bps := effectiveReferralRewardBps(user.ReferralRewardBps)
+	referral := &appv1.AdminUserReferralInfo{
+		Referrer:             referrer,
+		ReferralEligible:     referralUserEligible(user),
+		EffectiveRewardPercent: referralRewardBpsToPercent(bps),
+		RewardOverridePercent: func() *float64 {
+			if user.ReferralRewardBps == nil {
+				return nil
+			}
+			value := referralRewardBpsToPercent(*user.ReferralRewardBps)
+			return &value
+		}(),
+		ShareLink:        s.buildReferralShareLink(user.Username),
+		RewardGranted:    referralRewardProcessed(user),
+		RewardGrantedAt:  timeToProto(user.ReferralRewardGrantedAt),
+		RewardPaymentId:  nullableTrimmedString(user.ReferralRewardPaymentID),
+		RewardAmount:     user.ReferralRewardAmount,
+	}
+	return referral, nil
 }
 func (s *appServices) buildAdminVideo(ctx context.Context, video *model.Video) (*appv1.AdminVideo, error) {
 	if video == nil {
@@ -219,40 +373,39 @@ func (s *appServices) buildAdminVideo(ctx context.Context, video *model.Video) (
 	if statusValue == "" {
 		statusValue = "ready"
 	}
+	jobID, err := s.loadLatestVideoJobID(ctx, video.ID)
+	if err != nil {
+		return nil, err
+	}
 
 	payload := &appv1.AdminVideo{
-		Id:          video.ID,
-		UserId:      video.UserID,
-		Title:       video.Title,
-		Description: nullableTrimmedString(video.Description),
-		Url:         video.URL,
-		Status:      strings.ToLower(statusValue),
-		Size:        video.Size,
-		Duration:    video.Duration,
-		Format:      video.Format,
-		CreatedAt:   timeToProto(video.CreatedAt),
-		UpdatedAt:   timestamppb.New(video.UpdatedAt.UTC()),
+		Id:               video.ID,
+		UserId:           video.UserID,
+		Title:            video.Title,
+		Description:      nullableTrimmedString(video.Description),
+		Url:              video.URL,
+		Status:           strings.ToLower(statusValue),
+		Size:             video.Size,
+		Duration:         video.Duration,
+		Format:           video.Format,
+		CreatedAt:        timeToProto(video.CreatedAt),
+		UpdatedAt:        timestamppb.New(video.UpdatedAt.UTC()),
+		ProcessingStatus: nullableTrimmedString(video.ProcessingStatus),
+		JobId:            jobID,
 	}
 
-	var user model.User
-	if err := s.db.WithContext(ctx).Select("id, email").Where("id = ?", video.UserID).First(&user).Error; err == nil {
-		payload.OwnerEmail = nullableTrimmedString(&user.Email)
-	} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	ownerEmail, err := s.loadAdminUserEmail(ctx, video.UserID)
+	if err != nil {
 		return nil, err
 	}
+	payload.OwnerEmail = ownerEmail
 
-	var adConfig model.VideoAdConfig
-	if err := s.db.WithContext(ctx).Where("video_id = ?", video.ID).First(&adConfig).Error; err == nil {
-		payload.AdTemplateId = nullableTrimmedString(&adConfig.AdTemplateID)
-		var template model.AdTemplate
-		if err := s.db.WithContext(ctx).Select("id, name").Where("id = ?", adConfig.AdTemplateID).First(&template).Error; err == nil {
-			payload.AdTemplateName = nullableTrimmedString(&template.Name)
-		} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
-		}
-	} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	adTemplateID, adTemplateName, err := s.loadAdminVideoAdTemplateDetails(ctx, video)
+	if err != nil {
 		return nil, err
 	}
+	payload.AdTemplateId = adTemplateID
+	payload.AdTemplateName = adTemplateName
 
 	return payload, nil
 }
@@ -261,17 +414,12 @@ func (s *appServices) buildAdminPayment(ctx context.Context, payment *model.Paym
 		return nil, nil
 	}
 
-	currency := normalizeCurrency(payment.Currency)
-	if strings.TrimSpace(currency) == "" {
-		currency = "USD"
-	}
-
 	payload := &appv1.AdminPayment{
 		Id:            payment.ID,
 		UserId:        payment.UserID,
 		PlanId:        nullableTrimmedString(payment.PlanID),
 		Amount:        payment.Amount,
-		Currency:      currency,
+		Currency:      normalizeCurrency(payment.Currency),
 		Status:        normalizePaymentStatus(payment.Status),
 		Provider:      strings.ToUpper(stringValue(payment.Provider)),
 		TransactionId: nullableTrimmedString(payment.TransactionID),
@@ -280,37 +428,143 @@ func (s *appServices) buildAdminPayment(ctx context.Context, payment *model.Paym
 		UpdatedAt:     timestamppb.New(payment.UpdatedAt.UTC()),
 	}
 
-	var user model.User
-	if err := s.db.WithContext(ctx).Select("id, email").Where("id = ?", payment.UserID).First(&user).Error; err == nil {
-		payload.UserEmail = nullableTrimmedString(&user.Email)
-	} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	userEmail, err := s.loadAdminUserEmail(ctx, payment.UserID)
+	if err != nil {
 		return nil, err
 	}
+	payload.UserEmail = userEmail
 
-	if payment.PlanID != nil && strings.TrimSpace(*payment.PlanID) != "" {
-		var plan model.Plan
-		if err := s.db.WithContext(ctx).Select("id, name").Where("id = ?", *payment.PlanID).First(&plan).Error; err == nil {
-			payload.PlanName = nullableTrimmedString(&plan.Name)
-		} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, err
-		}
-	}
-
-	var subscription model.PlanSubscription
-	if err := s.db.WithContext(ctx).Where("payment_id = ?", payment.ID).Order("created_at DESC").First(&subscription).Error; err == nil {
-		payload.TermMonths = &subscription.TermMonths
-		payload.PaymentMethod = nullableTrimmedString(&subscription.PaymentMethod)
-		expiresAt := subscription.ExpiresAt.UTC().Format(time.RFC3339)
-		payload.ExpiresAt = nullableTrimmedString(&expiresAt)
-		payload.WalletAmount = &subscription.WalletAmount
-		payload.TopupAmount = &subscription.TopupAmount
-	} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	planName, err := s.loadAdminPlanName(ctx, payment.PlanID)
+	if err != nil {
 		return nil, err
 	}
+	payload.PlanName = planName
+
+	termMonths, paymentMethod, expiresAt, walletAmount, topupAmount, err := s.loadAdminPaymentSubscriptionDetails(ctx, payment.ID)
+	if err != nil {
+		return nil, err
+	}
+	payload.TermMonths = termMonths
+	payload.PaymentMethod = paymentMethod
+	payload.ExpiresAt = expiresAt
+	payload.WalletAmount = walletAmount
+	payload.TopupAmount = topupAmount
 
 	return payload, nil
 }
-func (s *appServices) loadPlanUsageCounts(ctx context.Context, planID string) (int64, int64, int64, error) {
+func (s *appServices) loadAdminUserVideoCount(ctx context.Context, userID string) (int64, error) {
+	var videoCount int64
+	if err := s.db.WithContext(ctx).Model(&model.Video{}).Where("user_id = ?", userID).Count(&videoCount).Error; err != nil {
+		return 0, err
+	}
+	return videoCount, nil
+}
+
+func (s *appServices) loadAdminUserEmail(ctx context.Context, userID string) (*string, error) {
+	var user model.User
+	if err := s.db.WithContext(ctx).Select("id, email").Where("id = ?", userID).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return nullableTrimmedString(&user.Email), nil
+}
+
+func (s *appServices) loadReferralUserSummary(ctx context.Context, userID string) (*appv1.ReferralUserSummary, error) {
+	if strings.TrimSpace(userID) == "" {
+		return nil, nil
+	}
+	var user model.User
+	if err := s.db.WithContext(ctx).Select("id, email, username").Where("id = ?", userID).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &appv1.ReferralUserSummary{
+		Id:       user.ID,
+		Email:    user.Email,
+		Username: nullableTrimmedString(user.Username),
+	}, nil
+}
+
+func (s *appServices) loadAdminPlanName(ctx context.Context, planID *string) (*string, error) {
+	if planID == nil || strings.TrimSpace(*planID) == "" {
+		return nil, nil
+	}
+	var plan model.Plan
+	if err := s.db.WithContext(ctx).Select("id, name").Where("id = ?", *planID).First(&plan).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return nullableTrimmedString(&plan.Name), nil
+}
+
+func (s *appServices) loadAdminVideoAdTemplateDetails(ctx context.Context, video *model.Video) (*string, *string, error) {
+	if video == nil {
+		return nil, nil, nil
+	}
+	adTemplateID := nullableTrimmedString(video.AdID)
+	if adTemplateID == nil {
+		return nil, nil, nil
+	}
+	adTemplateName, err := s.loadAdminAdTemplateName(ctx, *adTemplateID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return adTemplateID, adTemplateName, nil
+}
+
+func (s *appServices) loadAdminAdTemplateName(ctx context.Context, adTemplateID string) (*string, error) {
+	var template model.AdTemplate
+	if err := s.db.WithContext(ctx).Select("id, name").Where("id = ?", adTemplateID).First(&template).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return nullableTrimmedString(&template.Name), nil
+}
+
+func (s *appServices) loadLatestVideoJobID(ctx context.Context, videoID string) (*string, error) {
+	videoID = strings.TrimSpace(videoID)
+	if videoID == "" {
+		return nil, nil
+	}
+
+	var job model.Job
+	if err := s.db.WithContext(ctx).
+		Where("config::jsonb ->> 'video_id' = ?", videoID).
+		Order("created_at DESC").
+		First(&job).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return stringPointerOrNil(job.ID), nil
+}
+
+func (s *appServices) loadAdminPaymentSubscriptionDetails(ctx context.Context, paymentID string) (*int32, *string, *string, *float64, *float64, error) {
+	var subscription model.PlanSubscription
+	if err := s.db.WithContext(ctx).Where("payment_id = ?", paymentID).Order("created_at DESC").First(&subscription).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil, nil, nil, nil, nil
+		}
+		return nil, nil, nil, nil, nil, err
+	}
+	termMonths := subscription.TermMonths
+	paymentMethod := nullableTrimmedString(&subscription.PaymentMethod)
+	expiresAt := subscription.ExpiresAt.UTC().Format(time.RFC3339)
+	walletAmount := subscription.WalletAmount
+	topupAmount := subscription.TopupAmount
+	return &termMonths, paymentMethod, nullableTrimmedString(&expiresAt), &walletAmount, &topupAmount, nil
+}
+
+func (s *appServices) loadAdminPlanUsageCounts(ctx context.Context, planID string) (int64, int64, int64, error) {
 	var userCount int64
 	if err := s.db.WithContext(ctx).Model(&model.User{}).Where("plan_id = ?", planID).Count(&userCount).Error; err != nil {
 		return 0, 0, 0, err
@@ -346,14 +600,6 @@ func validateAdminPlanInput(name, cycle string, price float64, storageLimit int6
 	}
 	return ""
 }
-func normalizeAdminAdFormatValue(value string) string {
-	switch strings.TrimSpace(strings.ToLower(value)) {
-	case "mid-roll", "post-roll":
-		return strings.TrimSpace(strings.ToLower(value))
-	default:
-		return "pre-roll"
-	}
-}
 func validateAdminAdTemplateInput(userID, name, vastTagURL, adFormat string, duration *int64) string {
 	if strings.TrimSpace(userID) == "" {
 		return "User ID is required"
@@ -361,9 +607,18 @@ func validateAdminAdTemplateInput(userID, name, vastTagURL, adFormat string, dur
 	if strings.TrimSpace(name) == "" || strings.TrimSpace(vastTagURL) == "" {
 		return "Name and VAST URL are required"
 	}
-	format := normalizeAdminAdFormatValue(adFormat)
+	format := normalizeAdFormat(adFormat)
 	if format == "mid-roll" && (duration == nil || *duration <= 0) {
 		return "Duration is required for mid-roll templates"
+	}
+	return ""
+}
+func validateAdminPlayerConfigInput(userID, name string) string {
+	if strings.TrimSpace(userID) == "" {
+		return "User ID is required"
+	}
+	if strings.TrimSpace(name) == "" {
+		return "Name is required"
 	}
 	return ""
 }
@@ -374,12 +629,19 @@ func (s *appServices) unsetAdminDefaultTemplates(ctx context.Context, tx *gorm.D
 	}
 	return query.Update("is_default", false).Error
 }
+func (s *appServices) unsetAdminDefaultPlayerConfigs(ctx context.Context, tx *gorm.DB, userID, excludeID string) error {
+	query := tx.WithContext(ctx).Model(&model.PlayerConfig{}).Where("user_id = ?", userID)
+	if excludeID != "" {
+		query = query.Where("id <> ?", excludeID)
+	}
+	return query.Update("is_default", false).Error
+}
 func (s *appServices) buildAdminPlan(ctx context.Context, plan *model.Plan) (*appv1.AdminPlan, error) {
 	if plan == nil {
 		return nil, nil
 	}
 
-	userCount, paymentCount, subscriptionCount, err := s.loadPlanUsageCounts(ctx, plan.ID)
+	userCount, paymentCount, subscriptionCount, err := s.loadAdminPlanUsageCounts(ctx, plan.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -421,19 +683,51 @@ func (s *appServices) buildAdminAdTemplate(ctx context.Context, item *model.AdTe
 		UpdatedAt:   timeToProto(item.UpdatedAt),
 	}
 
-	var user model.User
-	if err := s.db.WithContext(ctx).Select("id, email").Where("id = ?", item.UserID).First(&user).Error; err == nil {
-		payload.OwnerEmail = nullableTrimmedString(&user.Email)
-	} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	ownerEmail, err := s.loadAdminUserEmail(ctx, item.UserID)
+	if err != nil {
 		return nil, err
 	}
+	payload.OwnerEmail = ownerEmail
+
+	return payload, nil
+}
+func (s *appServices) buildAdminPlayerConfig(ctx context.Context, item *model.PlayerConfig) (*appv1.AdminPlayerConfig, error) {
+	if item == nil {
+		return nil, nil
+	}
+
+	payload := &appv1.AdminPlayerConfig{
+		Id:            item.ID,
+		UserId:        item.UserID,
+		Name:          item.Name,
+		Description:   nullableTrimmedString(item.Description),
+		Autoplay:      item.Autoplay,
+		Loop:          item.Loop,
+		Muted:         item.Muted,
+		ShowControls:  boolValue(item.ShowControls),
+		Pip:           boolValue(item.Pip),
+		Airplay:       boolValue(item.Airplay),
+		Chromecast:    boolValue(item.Chromecast),
+		IsActive:      boolValue(item.IsActive),
+		IsDefault:     item.IsDefault,
+		CreatedAt:     timeToProto(item.CreatedAt),
+		UpdatedAt:     timeToProto(&item.UpdatedAt),
+		EncrytionM3U8: boolValue(item.EncrytionM3u8),
+		LogoUrl:       nullableTrimmedString(item.LogoURL),
+	}
+
+	ownerEmail, err := s.loadAdminUserEmail(ctx, item.UserID)
+	if err != nil {
+		return nil, err
+	}
+	payload.OwnerEmail = ownerEmail
 
 	return payload, nil
 }
 func (s *appServices) authenticate(ctx context.Context) (*middleware.AuthResult, error) {
 	return s.authenticator.Authenticate(ctx)
 }
-func statusErrorWithBody(ctx context.Context, grpcCode codes.Code, httpCode int, message string, data interface{}) error {
+func statusErrorWithBody(ctx context.Context, grpcCode codes.Code, httpCode int, message string, data any) error {
 	body := apiErrorBody{
 		Code:    httpCode,
 		Message: message,
@@ -444,6 +738,225 @@ func statusErrorWithBody(ctx context.Context, grpcCode codes.Code, httpCode int,
 		_ = grpc.SetTrailer(ctx, metadata.Pairs("x-error-body", string(encoded)))
 	}
 	return status.Error(grpcCode, message)
+}
+
+func (s *appServices) loadPaymentPlanForUser(ctx context.Context, planID string) (*model.Plan, error) {
+	var planRecord model.Plan
+	if err := s.db.WithContext(ctx).Where("id = ?", planID).First(&planRecord).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.NotFound, "Plan not found")
+		}
+		s.logger.Error("Failed to load plan", "error", err)
+		return nil, status.Error(codes.Internal, "Failed to create payment")
+	}
+	if planRecord.IsActive == nil || !*planRecord.IsActive {
+		return nil, status.Error(codes.InvalidArgument, "Plan is not active")
+	}
+	return &planRecord, nil
+}
+
+func (s *appServices) loadPaymentPlanForAdmin(ctx context.Context, planID string) (*model.Plan, error) {
+	var planRecord model.Plan
+	if err := s.db.WithContext(ctx).Where("id = ?", planID).First(&planRecord).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.InvalidArgument, "Plan not found")
+		}
+		return nil, status.Error(codes.Internal, "Failed to create payment")
+	}
+	if planRecord.IsActive == nil || !*planRecord.IsActive {
+		return nil, status.Error(codes.InvalidArgument, "Plan is not active")
+	}
+	return &planRecord, nil
+}
+
+func (s *appServices) loadPaymentUserForAdmin(ctx context.Context, userID string) (*model.User, error) {
+	var user model.User
+	if err := s.db.WithContext(ctx).Where("id = ?", userID).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.InvalidArgument, "User not found")
+		}
+		return nil, status.Error(codes.Internal, "Failed to create payment")
+	}
+	return &user, nil
+}
+
+func (s *appServices) executePaymentFlow(ctx context.Context, input paymentExecutionInput) (*paymentExecutionResult, error) {
+	totalAmount := input.Plan.Price * float64(input.TermMonths)
+	if totalAmount < 0 {
+		return nil, status.Error(codes.InvalidArgument, "Amount must be greater than or equal to 0")
+	}
+
+	statusValue := "SUCCESS"
+	provider := "INTERNAL"
+	currency := normalizeCurrency(nil)
+	transactionID := buildTransactionID("sub")
+	now := time.Now().UTC()
+	paymentRecord := &model.Payment{
+		ID:            uuid.New().String(),
+		UserID:        input.UserID,
+		PlanID:        &input.Plan.ID,
+		Amount:        totalAmount,
+		Currency:      &currency,
+		Status:        &statusValue,
+		Provider:      &provider,
+		TransactionID: &transactionID,
+	}
+	invoiceID := buildInvoiceID(paymentRecord.ID)
+
+	result := &paymentExecutionResult{
+		Payment:   paymentRecord,
+		InvoiceID: invoiceID,
+	}
+
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if _, err := lockUserForUpdate(ctx, tx, input.UserID); err != nil {
+			return err
+		}
+
+		newExpiry, err := loadPaymentExpiry(ctx, tx, input.UserID, input.TermMonths, now)
+		if err != nil {
+			return err
+		}
+		currentWalletBalance, err := model.GetWalletBalance(ctx, tx, input.UserID)
+		if err != nil {
+			return err
+		}
+		validatedTopupAmount, err := validatePaymentFunding(ctx, input, totalAmount, currentWalletBalance)
+		if err != nil {
+			return err
+		}
+		if err := tx.Create(paymentRecord).Error; err != nil {
+			return err
+		}
+		if err := createPaymentWalletTransactions(tx, input, paymentRecord, totalAmount, validatedTopupAmount, currency); err != nil {
+			return err
+		}
+		subscription := buildPaymentSubscription(input, paymentRecord, totalAmount, validatedTopupAmount, now, newExpiry)
+		if err := tx.Create(subscription).Error; err != nil {
+			return err
+		}
+		if err := tx.Model(&model.User{}).Where("id = ?", input.UserID).Update("plan_id", input.Plan.ID).Error; err != nil {
+			return err
+		}
+		notification := buildSubscriptionNotification(input.UserID, paymentRecord.ID, invoiceID, input.Plan, subscription)
+		if err := tx.Create(notification).Error; err != nil {
+			return err
+		}
+		if _, err := s.maybeGrantReferralReward(ctx, tx, input, paymentRecord, subscription); err != nil {
+			return err
+		}
+		walletBalance, err := model.GetWalletBalance(ctx, tx, input.UserID)
+		if err != nil {
+			return err
+		}
+		result.Subscription = subscription
+		result.WalletBalance = walletBalance
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func loadPaymentExpiry(ctx context.Context, tx *gorm.DB, userID string, termMonths int32, now time.Time) (time.Time, error) {
+	currentSubscription, err := model.GetLatestPlanSubscription(ctx, tx, userID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return time.Time{}, err
+	}
+	baseExpiry := now
+	if currentSubscription != nil && currentSubscription.ExpiresAt.After(baseExpiry) {
+		baseExpiry = currentSubscription.ExpiresAt.UTC()
+	}
+	return baseExpiry.AddDate(0, int(termMonths), 0), nil
+}
+
+func validatePaymentFunding(ctx context.Context, input paymentExecutionInput, totalAmount, currentWalletBalance float64) (float64, error) {
+	shortfall := maxFloat(totalAmount-currentWalletBalance, 0)
+	if input.PaymentMethod == paymentMethodWallet && shortfall > 0 {
+		return 0, statusErrorWithBody(ctx, codes.InvalidArgument, http.StatusBadRequest, "Insufficient wallet balance", map[string]any{
+			"payment_method": input.PaymentMethod,
+			"wallet_balance": currentWalletBalance,
+			"total_amount":   totalAmount,
+			"shortfall":      shortfall,
+		})
+	}
+	if input.PaymentMethod != paymentMethodTopup {
+		return 0, nil
+	}
+	if input.TopupAmount == nil {
+		return 0, statusErrorWithBody(ctx, codes.InvalidArgument, http.StatusBadRequest, "Top-up amount is required when payment method is topup", map[string]any{
+			"payment_method": input.PaymentMethod,
+			"wallet_balance": currentWalletBalance,
+			"total_amount":   totalAmount,
+			"shortfall":      shortfall,
+		})
+	}
+	topupAmount := maxFloat(*input.TopupAmount, 0)
+	if topupAmount <= 0 {
+		return 0, statusErrorWithBody(ctx, codes.InvalidArgument, http.StatusBadRequest, "Top-up amount must be greater than 0", map[string]any{
+			"payment_method": input.PaymentMethod,
+			"wallet_balance": currentWalletBalance,
+			"total_amount":   totalAmount,
+			"shortfall":      shortfall,
+		})
+	}
+	if topupAmount < shortfall {
+		return 0, statusErrorWithBody(ctx, codes.InvalidArgument, http.StatusBadRequest, "Top-up amount must be greater than or equal to the required shortfall", map[string]any{
+			"payment_method": input.PaymentMethod,
+			"wallet_balance": currentWalletBalance,
+			"total_amount":   totalAmount,
+			"shortfall":      shortfall,
+			"topup_amount":   topupAmount,
+		})
+	}
+	return topupAmount, nil
+}
+
+func createPaymentWalletTransactions(tx *gorm.DB, input paymentExecutionInput, paymentRecord *model.Payment, totalAmount, topupAmount float64, currency string) error {
+	if input.PaymentMethod == paymentMethodTopup {
+		topupTransaction := &model.WalletTransaction{
+			ID:         uuid.New().String(),
+			UserID:     input.UserID,
+			Type:       walletTransactionTypeTopup,
+			Amount:     topupAmount,
+			Currency:   model.StringPtr(currency),
+			Note:       model.StringPtr(fmt.Sprintf("Wallet top-up for %s (%d months)", input.Plan.Name, input.TermMonths)),
+			PaymentID:  &paymentRecord.ID,
+			PlanID:     &input.Plan.ID,
+			TermMonths: int32Ptr(input.TermMonths),
+		}
+		if err := tx.Create(topupTransaction).Error; err != nil {
+			return err
+		}
+	}
+	debitTransaction := &model.WalletTransaction{
+		ID:         uuid.New().String(),
+		UserID:     input.UserID,
+		Type:       walletTransactionTypeSubscriptionDebit,
+		Amount:     -totalAmount,
+		Currency:   model.StringPtr(currency),
+		Note:       model.StringPtr(fmt.Sprintf("Subscription payment for %s (%d months)", input.Plan.Name, input.TermMonths)),
+		PaymentID:  &paymentRecord.ID,
+		PlanID:     &input.Plan.ID,
+		TermMonths: int32Ptr(input.TermMonths),
+	}
+	return tx.Create(debitTransaction).Error
+}
+
+func buildPaymentSubscription(input paymentExecutionInput, paymentRecord *model.Payment, totalAmount, topupAmount float64, now, newExpiry time.Time) *model.PlanSubscription {
+	return &model.PlanSubscription{
+		ID:            uuid.New().String(),
+		UserID:        input.UserID,
+		PaymentID:     paymentRecord.ID,
+		PlanID:        input.Plan.ID,
+		TermMonths:    input.TermMonths,
+		PaymentMethod: input.PaymentMethod,
+		WalletAmount:  totalAmount,
+		TopupAmount:   topupAmount,
+		StartedAt:     now,
+		ExpiresAt:     newExpiry,
+	}
 }
 func (s *appServices) issueSessionCookies(ctx context.Context, user *model.User) error {
 	if user == nil {
@@ -469,18 +982,6 @@ func (s *appServices) issueSessionCookies(ctx context.Context, user *model.User)
 
 	return nil
 }
-func cookieValueFromHeader(cookieHeader string, name string) string {
-	cookieHeader = strings.TrimSpace(cookieHeader)
-	if cookieHeader == "" {
-		return ""
-	}
-	request := &http.Request{Header: http.Header{"Cookie": []string{cookieHeader}}}
-	cookie, err := request.Cookie(name)
-	if err != nil {
-		return ""
-	}
-	return cookie.Value
-}
 func buildTokenCookie(name string, value string, maxAge int) string {
 	return (&http.Cookie{
 		Name:     name,
@@ -489,9 +990,6 @@ func buildTokenCookie(name string, value string, maxAge int) string {
 		MaxAge:   maxAge,
 		HttpOnly: true,
 	}).String()
-}
-func clearCookieHeader(name string) string {
-	return (&http.Cookie{Name: name, Value: "", Path: "/", MaxAge: -1, HttpOnly: true}).String()
 }
 func messageResponse(message string) *appv1.MessageResponse {
 	return &appv1.MessageResponse{Message: message}
@@ -504,6 +1002,31 @@ func ensurePaidPlan(user *model.User) error {
 		return status.Error(codes.PermissionDenied, adTemplateUpgradeRequiredMessage)
 	}
 	return nil
+}
+func playerConfigActionAllowed(user *model.User, configCount int64, action string) error {
+	if user == nil {
+		return status.Error(codes.Unauthenticated, "Unauthorized")
+	}
+	if user.PlanID != nil && strings.TrimSpace(*user.PlanID) != "" {
+		return nil
+	}
+
+	switch action {
+	case "create":
+		if configCount > 0 {
+			return status.Error(codes.FailedPrecondition, playerConfigFreePlanLimitMessage)
+		}
+		return nil
+	case "delete":
+		return nil
+	case "update", "set-default", "toggle-active":
+		if configCount > 1 {
+			return status.Error(codes.FailedPrecondition, playerConfigFreePlanReconciliationMessage)
+		}
+		return nil
+	default:
+		return nil
+	}
 }
 func safeRole(role *string) string {
 	if role == nil || strings.TrimSpace(*role) == "" {
@@ -528,13 +1051,17 @@ func stringPointerOrNil(value string) *string {
 	}
 	return &trimmed
 }
-func toProtoVideo(item *model.Video) *appv1.Video {
+func toProtoVideo(item *model.Video, jobID ...string) *appv1.Video {
 	if item == nil {
 		return nil
 	}
 	statusValue := stringValue(item.Status)
 	if statusValue == "" {
 		statusValue = "ready"
+	}
+	var linkedJobID *string
+	if len(jobID) > 0 {
+		linkedJobID = stringPointerOrNil(jobID[0])
 	}
 	return &appv1.Video{
 		Id:               item.ID,
@@ -551,8 +1078,24 @@ func toProtoVideo(item *model.Video) *appv1.Video {
 		StorageType:      item.StorageType,
 		CreatedAt:        timeToProto(item.CreatedAt),
 		UpdatedAt:        timestamppb.New(item.UpdatedAt.UTC()),
+		JobId:            linkedJobID,
 	}
 }
+
+func (s *appServices) buildVideo(ctx context.Context, video *model.Video) (*appv1.Video, error) {
+	if video == nil {
+		return nil, nil
+	}
+	jobID, err := s.loadLatestVideoJobID(ctx, video.ID)
+	if err != nil {
+		return nil, err
+	}
+	if jobID != nil {
+		return toProtoVideo(video, *jobID), nil
+	}
+	return toProtoVideo(video), nil
+}
+
 func normalizeVideoStatusValue(value string) string {
 	switch strings.ToLower(strings.TrimSpace(value)) {
 	case "processing", "pending":
@@ -591,7 +1134,7 @@ func extractObjectKey(rawURL string) string {
 	}
 	return strings.TrimPrefix(parsed.Path, "/")
 }
-func toProtoUserPayload(user *authapi.UserPayload) *appv1.User {
+func protoUserFromPayload(user *userPayload) *appv1.User {
 	if user == nil {
 		return nil
 	}
@@ -616,30 +1159,8 @@ func toProtoUserPayload(user *authapi.UserPayload) *appv1.User {
 		UpdatedAt:         timestamppb.New(user.UpdatedAt),
 	}
 }
-func toProtoUser(user *authapi.UserPayload) *appv1.User {
-	if user == nil {
-		return nil
-	}
-	return &appv1.User{
-		Id:                user.ID,
-		Email:             user.Email,
-		Username:          user.Username,
-		Avatar:            user.Avatar,
-		Role:              user.Role,
-		GoogleId:          user.GoogleID,
-		StorageUsed:       user.StorageUsed,
-		PlanId:            user.PlanID,
-		PlanStartedAt:     timeToProto(user.PlanStartedAt),
-		PlanExpiresAt:     timeToProto(user.PlanExpiresAt),
-		PlanTermMonths:    user.PlanTermMonths,
-		PlanPaymentMethod: user.PlanPaymentMethod,
-		PlanExpiringSoon:  user.PlanExpiringSoon,
-		WalletBalance:     user.WalletBalance,
-		Language:          user.Language,
-		Locale:            user.Locale,
-		CreatedAt:         timeToProto(user.CreatedAt),
-		UpdatedAt:         timestamppb.New(user.UpdatedAt),
-	}
+func toProtoUser(user *userPayload) *appv1.User {
+	return protoUserFromPayload(user)
 }
 func toProtoPreferences(pref *model.UserPreference) *appv1.Preferences {
 	if pref == nil {
@@ -650,13 +1171,6 @@ func toProtoPreferences(pref *model.UserPreference) *appv1.Preferences {
 		PushNotifications:      boolValue(pref.PushNotifications),
 		MarketingNotifications: pref.MarketingNotifications,
 		TelegramNotifications:  pref.TelegramNotifications,
-		Autoplay:               pref.Autoplay,
-		Loop:                   pref.Loop,
-		Muted:                  pref.Muted,
-		ShowControls:           boolValue(pref.ShowControls),
-		Pip:                    boolValue(pref.Pip),
-		Airplay:                boolValue(pref.Airplay),
-		Chromecast:             boolValue(pref.Chromecast),
 		Language:               model.StringValue(pref.Language),
 		Locale:                 model.StringValue(pref.Locale),
 	}
@@ -699,6 +1213,54 @@ func toProtoAdTemplate(item *model.AdTemplate) *appv1.AdTemplate {
 		IsDefault:   item.IsDefault,
 		CreatedAt:   timeToProto(item.CreatedAt),
 		UpdatedAt:   timeToProto(item.UpdatedAt),
+	}
+}
+func toProtoPlayerConfig(item *model.PlayerConfig) *appv1.PlayerConfig {
+	if item == nil {
+		return nil
+	}
+	return &appv1.PlayerConfig{
+		Id:            item.ID,
+		Name:          item.Name,
+		Description:   item.Description,
+		Autoplay:      item.Autoplay,
+		Loop:          item.Loop,
+		Muted:         item.Muted,
+		ShowControls:  boolValue(item.ShowControls),
+		Pip:           boolValue(item.Pip),
+		Airplay:       boolValue(item.Airplay),
+		Chromecast:    boolValue(item.Chromecast),
+		IsActive:      boolValue(item.IsActive),
+		IsDefault:     item.IsDefault,
+		CreatedAt:     timeToProto(item.CreatedAt),
+		UpdatedAt:     timeToProto(&item.UpdatedAt),
+		EncrytionM3U8: boolValue(item.EncrytionM3u8),
+		LogoUrl:       nullableTrimmedString(item.LogoURL),
+	}
+}
+func toProtoAdminPlayerConfig(item *model.PlayerConfig, ownerEmail *string) *appv1.AdminPlayerConfig {
+	if item == nil {
+		return nil
+	}
+	return &appv1.AdminPlayerConfig{
+		Id:            item.ID,
+		UserId:        item.UserID,
+		Name:          item.Name,
+		Description:   item.Description,
+		Autoplay:      item.Autoplay,
+		Loop:          item.Loop,
+		Muted:         item.Muted,
+		ShowControls:  boolValue(item.ShowControls),
+		Pip:           boolValue(item.Pip),
+		Airplay:       boolValue(item.Airplay),
+		Chromecast:    boolValue(item.Chromecast),
+		IsActive:      boolValue(item.IsActive),
+		IsDefault:     item.IsDefault,
+		OwnerEmail:    ownerEmail,
+		CreatedAt:     timeToProto(item.CreatedAt),
+		UpdatedAt:     timeToProto(&item.UpdatedAt),
+		EncrytionM3U8: boolValue(item.EncrytionM3u8),
+		LogoUrl:       nullableTrimmedString(item.LogoURL),
 	}
 }
 func toProtoPlan(item *model.Plan) *appv1.Plan {
@@ -773,25 +1335,6 @@ func toProtoWalletTransaction(item *model.WalletTransaction) *appv1.WalletTransa
 		UpdatedAt:  timeToProto(item.UpdatedAt),
 	}
 }
-func toProtoPaymentHistoryItem(item *paymentapi.PaymentHistoryItem) *appv1.PaymentHistoryItem {
-	if item == nil {
-		return nil
-	}
-	return &appv1.PaymentHistoryItem{
-		Id:            item.ID,
-		Amount:        item.Amount,
-		Currency:      item.Currency,
-		Status:        item.Status,
-		PlanId:        item.PlanID,
-		PlanName:      item.PlanName,
-		InvoiceId:     item.InvoiceID,
-		Kind:          item.Kind,
-		TermMonths:    item.TermMonths,
-		PaymentMethod: item.PaymentMethod,
-		ExpiresAt:     timeToProto(item.ExpiresAt),
-		CreatedAt:     timeToProto(item.CreatedAt),
-	}
-}
 func timeToProto(value *time.Time) *timestamppb.Timestamp {
 	if value == nil {
 		return nil
@@ -822,15 +1365,6 @@ func int64PtrToInt32Ptr(value *int64) *int32 {
 	return &converted
 }
 func int32Ptr(value int32) *int32 {
-	return &value
-}
-func nullableInt64(value *int64) int64 {
-	if value == nil {
-		return 0
-	}
-	return *value
-}
-func nullableInt64Ptr(value int64) *int64 {
 	return &value
 }
 func protoStringValue(value *string) string {
@@ -897,8 +1431,18 @@ func normalizeAdFormat(value string) string {
 func adTemplateIsActive(value *bool) bool {
 	return value == nil || *value
 }
+func playerConfigIsActive(value *bool) bool {
+	return value == nil || *value
+}
 func unsetDefaultTemplates(tx *gorm.DB, userID, excludeID string) error {
 	query := tx.Model(&model.AdTemplate{}).Where("user_id = ?", userID)
+	if excludeID != "" {
+		query = query.Where("id <> ?", excludeID)
+	}
+	return query.Update("is_default", false).Error
+}
+func unsetDefaultPlayerConfigs(tx *gorm.DB, userID, excludeID string) error {
+	query := tx.Model(&model.PlayerConfig{}).Where("user_id = ?", userID)
 	if excludeID != "" {
 		query = query.Where("id <> ?", excludeID)
 	}
@@ -1053,7 +1597,7 @@ func buildSubscriptionNotification(userID, paymentID, invoiceID string, planReco
 		Type:    "billing.subscription",
 		Title:   "Subscription activated",
 		Message: fmt.Sprintf("Your subscription to %s is active until %s.", planRecord.Name, subscription.ExpiresAt.UTC().Format("2006-01-02")),
-		Metadata: model.StringPtr(mustMarshalJSON(map[string]interface{}{
+		Metadata: model.StringPtr(mustMarshalJSON(map[string]any{
 			"payment_id":      paymentID,
 			"invoice_id":      invoiceID,
 			"plan_id":         planRecord.ID,
@@ -1065,11 +1609,127 @@ func buildSubscriptionNotification(userID, paymentID, invoiceID string, planReco
 		})),
 	}
 }
+
+func buildReferralRewardNotification(userID string, rewardAmount float64, referee *model.User, paymentRecord *model.Payment) *model.Notification {
+	refereeLabel := strings.TrimSpace(referee.Email)
+	if username := strings.TrimSpace(stringValue(referee.Username)); username != "" {
+		refereeLabel = "@" + username
+	}
+	return &model.Notification{
+		ID:      uuid.New().String(),
+		UserID:  userID,
+		Type:    "billing.referral_reward",
+		Title:   "Referral reward granted",
+		Message: fmt.Sprintf("You received %.2f USD from %s's first subscription.", rewardAmount, refereeLabel),
+		Metadata: model.StringPtr(mustMarshalJSON(map[string]any{
+			"payment_id": paymentRecord.ID,
+			"referee_id": referee.ID,
+			"amount":     rewardAmount,
+		})),
+	}
+}
+
+func (s *appServices) maybeGrantReferralReward(ctx context.Context, tx *gorm.DB, input paymentExecutionInput, paymentRecord *model.Payment, subscription *model.PlanSubscription) (*referralRewardResult, error) {
+	if paymentRecord == nil || subscription == nil || input.Plan == nil {
+		return &referralRewardResult{}, nil
+	}
+	if subscription.PaymentMethod != paymentMethodWallet && subscription.PaymentMethod != paymentMethodTopup {
+		return &referralRewardResult{}, nil
+	}
+
+	referee, err := lockUserForUpdate(ctx, tx, input.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if referee.ReferredByUserID == nil || strings.TrimSpace(*referee.ReferredByUserID) == "" {
+		return &referralRewardResult{}, nil
+	}
+	if referralRewardProcessed(referee) {
+		return &referralRewardResult{}, nil
+	}
+
+	var subscriptionCount int64
+	if err := tx.WithContext(ctx).
+		Model(&model.PlanSubscription{}).
+		Where("user_id = ?", referee.ID).
+		Count(&subscriptionCount).Error; err != nil {
+		return nil, err
+	}
+	if subscriptionCount != 1 {
+		return &referralRewardResult{}, nil
+	}
+
+	referrer, err := lockUserForUpdate(ctx, tx, strings.TrimSpace(*referee.ReferredByUserID))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &referralRewardResult{}, nil
+		}
+		return nil, err
+	}
+	if referrer.ID == referee.ID || !referralUserEligible(referrer) {
+		return &referralRewardResult{}, nil
+	}
+
+	bps := effectiveReferralRewardBps(referrer.ReferralRewardBps)
+	if bps <= 0 {
+		return &referralRewardResult{}, nil
+	}
+	baseAmount := input.Plan.Price * float64(input.TermMonths)
+	if baseAmount <= 0 {
+		return &referralRewardResult{}, nil
+	}
+	rewardAmount := baseAmount * float64(bps) / 10000
+	if rewardAmount <= 0 {
+		return &referralRewardResult{}, nil
+	}
+
+	currency := normalizeCurrency(paymentRecord.Currency)
+	rewardTransaction := &model.WalletTransaction{
+		ID:        uuid.New().String(),
+		UserID:    referrer.ID,
+		Type:      walletTransactionTypeReferralReward,
+		Amount:    rewardAmount,
+		Currency:  model.StringPtr(currency),
+		Note:      model.StringPtr(fmt.Sprintf("Referral reward for %s first subscription", referee.Email)),
+		PaymentID: &paymentRecord.ID,
+		PlanID:    &input.Plan.ID,
+	}
+	if err := tx.Create(rewardTransaction).Error; err != nil {
+		return nil, err
+	}
+	if err := tx.Create(buildReferralRewardNotification(referrer.ID, rewardAmount, referee, paymentRecord)).Error; err != nil {
+		return nil, err
+	}
+
+	now := time.Now().UTC()
+	updates := map[string]any{
+		"referral_reward_granted_at": now,
+		"referral_reward_payment_id": paymentRecord.ID,
+		"referral_reward_amount":     rewardAmount,
+	}
+	if err := tx.WithContext(ctx).Model(&model.User{}).Where("id = ?", referee.ID).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+	referee.ReferralRewardGrantedAt = &now
+	referee.ReferralRewardPaymentID = &paymentRecord.ID
+	referee.ReferralRewardAmount = &rewardAmount
+	return &referralRewardResult{Granted: true, Amount: rewardAmount}, nil
+}
 func isAllowedTermMonths(value int32) bool {
 	_, ok := allowedTermMonths[value]
 	return ok
 }
 func lockUserForUpdate(ctx context.Context, tx *gorm.DB, userID string) (*model.User, error) {
+	if tx.Dialector.Name() == "sqlite" {
+		res := tx.WithContext(ctx).Exec("UPDATE user SET id = id WHERE id = ?", userID)
+		if res.Error != nil {
+			return nil, res.Error
+		}
+		if res.RowsAffected == 0 {
+			return nil, gorm.ErrRecordNotFound
+		}
+	}
+
 	var user model.User
 	if err := tx.WithContext(ctx).
 		Clauses(clause.Locking{Strength: "UPDATE"}).
@@ -1091,7 +1751,7 @@ func formatOptionalTimestamp(value *time.Time) string {
 	}
 	return value.UTC().Format(time.RFC3339)
 }
-func mustMarshalJSON(value interface{}) string {
+func mustMarshalJSON(value any) string {
 	encoded, err := json.Marshal(value)
 	if err != nil {
 		return "{}"

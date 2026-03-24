@@ -62,7 +62,7 @@ func (a *Authenticator) Authenticate(ctx context.Context) (*AuthResult, error) {
 		return nil, status.Error(codes.Unauthenticated, "Unauthorized")
 	}
 
-	user, err = a.syncSubscriptionState(ctx, user)
+	user, err = a.applyPostAuthSubscriptionState(ctx, user)
 	if err != nil {
 		a.logger.Error("Failed to sync subscription state", "error", err, "user_id", actor.UserID)
 		return nil, status.Error(codes.Internal, "Failed to load user subscription state")
@@ -79,7 +79,7 @@ func (a *Authenticator) Authenticate(ctx context.Context) (*AuthResult, error) {
 }
 
 func (a *Authenticator) RequireActor(ctx context.Context) (*Actor, error) {
-	md, err := a.requireTrustedMetadata(ctx)
+	md, err := a.RequireTrustedMetadata(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -98,11 +98,11 @@ func (a *Authenticator) RequireActor(ctx context.Context) (*Actor, error) {
 }
 
 func (a *Authenticator) RequireInternalCall(ctx context.Context) error {
-	_, err := a.requireTrustedMetadata(ctx)
+	_, err := a.RequireTrustedMetadata(ctx)
 	return err
 }
 
-func (a *Authenticator) requireTrustedMetadata(ctx context.Context) (metadata.MD, error) {
+func (a *Authenticator) RequireTrustedMetadata(ctx context.Context) (metadata.MD, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "Missing actor metadata")
@@ -124,79 +124,110 @@ func firstMetadataValue(md metadata.MD, key string) string {
 	return values[0]
 }
 
-func (a *Authenticator) syncSubscriptionState(ctx context.Context, user *model.User) (*model.User, error) {
-	subscription, err := model.GetLatestPlanSubscription(ctx, a.db, user.ID)
+func (a *Authenticator) applyPostAuthSubscriptionState(ctx context.Context, user *model.User) (*model.User, error) {
+	subscription, err := a.loadLatestSubscriptionForPostAuth(ctx, user)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return user, nil
-		}
 		return nil, err
+	}
+	if subscription == nil {
+		return user, nil
 	}
 
 	now := time.Now().UTC()
 	if err := a.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var lockedSubscription model.PlanSubscription
-		if err := tx.WithContext(ctx).
-			Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("id = ?", subscription.ID).
-			First(&lockedSubscription).Error; err != nil {
+		lockedSubscription, err := a.lockSubscriptionForPostAuth(ctx, tx, subscription.ID)
+		if err != nil {
 			return err
 		}
-
 		if lockedSubscription.ExpiresAt.After(now) {
-			if user.PlanID == nil || strings.TrimSpace(*user.PlanID) != lockedSubscription.PlanID {
-				if err := tx.WithContext(ctx).
-					Model(&model.User{}).
-					Where("id = ?", user.ID).
-					Update("plan_id", lockedSubscription.PlanID).Error; err != nil {
-					return err
-				}
-				user.PlanID = &lockedSubscription.PlanID
-			}
-
-			reminderDays, reminderField := reminderFieldForSubscription(&lockedSubscription, now)
-			if reminderField != "" {
-				sentAt := now
-				notification := &model.Notification{
-					ID:          uuidString(),
-					UserID:      user.ID,
-					Type:        "billing.subscription_expiring",
-					Title:       "Plan expiring soon",
-					Message:     reminderMessage(reminderDays),
-					ActionURL:   model.StringPtr("/settings/billing"),
-					ActionLabel: model.StringPtr("Renew plan"),
-					Metadata:    model.StringPtr(mustMarshalAuthJSON(map[string]interface{}{"plan_id": lockedSubscription.PlanID, "expires_at": lockedSubscription.ExpiresAt.UTC().Format(time.RFC3339), "reminder_days": reminderDays})),
-				}
-				if err := tx.WithContext(ctx).Create(notification).Error; err != nil {
-					return err
-				}
-				if err := tx.WithContext(ctx).
-					Model(&model.PlanSubscription{}).
-					Where("id = ?", lockedSubscription.ID).
-					Update(reminderField, sentAt).Error; err != nil {
-					return err
-				}
-			}
-
-			return nil
+			return a.applyActiveSubscriptionPostAuth(ctx, tx, user, lockedSubscription, now)
 		}
-
-		if user.PlanID != nil && strings.TrimSpace(*user.PlanID) != "" {
-			if err := tx.WithContext(ctx).
-				Model(&model.User{}).
-				Where("id = ?", user.ID).
-				Update("plan_id", nil).Error; err != nil {
-				return err
-			}
-			user.PlanID = nil
-		}
-
-		return nil
+		return a.clearExpiredPlanPostAuth(ctx, tx, user)
 	}); err != nil {
 		return nil, err
 	}
 
 	return user, nil
+}
+
+func (a *Authenticator) loadLatestSubscriptionForPostAuth(ctx context.Context, user *model.User) (*model.PlanSubscription, error) {
+	subscription, err := model.GetLatestPlanSubscription(ctx, a.db, user.ID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return subscription, nil
+}
+
+func (a *Authenticator) lockSubscriptionForPostAuth(ctx context.Context, tx *gorm.DB, subscriptionID string) (*model.PlanSubscription, error) {
+	var lockedSubscription model.PlanSubscription
+	if err := tx.WithContext(ctx).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("id = ?", subscriptionID).
+		First(&lockedSubscription).Error; err != nil {
+		return nil, err
+	}
+	return &lockedSubscription, nil
+}
+
+func (a *Authenticator) applyActiveSubscriptionPostAuth(ctx context.Context, tx *gorm.DB, user *model.User, subscription *model.PlanSubscription, now time.Time) error {
+	if user.PlanID == nil || strings.TrimSpace(*user.PlanID) != subscription.PlanID {
+		if err := tx.WithContext(ctx).
+			Model(&model.User{}).
+			Where("id = ?", user.ID).
+			Update("plan_id", subscription.PlanID).Error; err != nil {
+			return err
+		}
+		user.PlanID = &subscription.PlanID
+	}
+
+	return a.maybeCreateSubscriptionReminderPostAuth(ctx, tx, user, subscription, now)
+}
+
+func (a *Authenticator) maybeCreateSubscriptionReminderPostAuth(ctx context.Context, tx *gorm.DB, user *model.User, subscription *model.PlanSubscription, now time.Time) error {
+	reminderDays, reminderField := reminderFieldForSubscription(subscription, now)
+	if reminderField == "" {
+		return nil
+	}
+
+	sentAt := now
+	notification := &model.Notification{
+		ID:          uuidString(),
+		UserID:      user.ID,
+		Type:        "billing.subscription_expiring",
+		Title:       "Plan expiring soon",
+		Message:     reminderMessage(reminderDays),
+		ActionURL:   model.StringPtr("/settings/billing"),
+		ActionLabel: model.StringPtr("Renew plan"),
+		Metadata: model.StringPtr(mustMarshalAuthJSON(map[string]any{
+			"plan_id":       subscription.PlanID,
+			"expires_at":    subscription.ExpiresAt.UTC().Format(time.RFC3339),
+			"reminder_days": reminderDays,
+		})),
+	}
+	if err := tx.WithContext(ctx).Create(notification).Error; err != nil {
+		return err
+	}
+	return tx.WithContext(ctx).
+		Model(&model.PlanSubscription{}).
+		Where("id = ?", subscription.ID).
+		Update(reminderField, sentAt).Error
+}
+
+func (a *Authenticator) clearExpiredPlanPostAuth(ctx context.Context, tx *gorm.DB, user *model.User) error {
+	if user.PlanID == nil || strings.TrimSpace(*user.PlanID) == "" {
+		return nil
+	}
+	if err := tx.WithContext(ctx).
+		Model(&model.User{}).
+		Where("id = ?", user.ID).
+		Update("plan_id", nil).Error; err != nil {
+		return err
+	}
+	user.PlanID = nil
+	return nil
 }
 
 func reminderFieldForSubscription(subscription *model.PlanSubscription, now time.Time) (int, string) {
@@ -234,7 +265,7 @@ func reminderMessage(days int) string {
 	}
 }
 
-func mustMarshalAuthJSON(value interface{}) string {
+func mustMarshalAuthJSON(value any) string {
 	encoded, err := json.Marshal(value)
 	if err != nil {
 		return "{}"

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"sort"
 	"strings"
 	"time"
@@ -13,7 +12,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
-	paymentapi "stream.api/internal/api/payment"
 	"stream.api/internal/database/model"
 	"stream.api/internal/database/query"
 	appv1 "stream.api/internal/gen/proto/app/v1"
@@ -38,177 +36,17 @@ func (s *appServices) CreatePayment(ctx context.Context, req *appv1.CreatePaymen
 		return nil, status.Error(codes.InvalidArgument, "Payment method must be wallet or topup")
 	}
 
-	var planRecord model.Plan
-	if err := s.db.WithContext(ctx).Where("id = ?", planID).First(&planRecord).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, status.Error(codes.NotFound, "Plan not found")
-		}
-		s.logger.Error("Failed to load plan", "error", err)
-		return nil, status.Error(codes.Internal, "Failed to create payment")
-	}
-	if planRecord.IsActive == nil || !*planRecord.IsActive {
-		return nil, status.Error(codes.InvalidArgument, "Plan is not active")
+	planRecord, err := s.loadPaymentPlanForUser(ctx, planID)
+	if err != nil {
+		return nil, err
 	}
 
-	totalAmount := planRecord.Price * float64(req.GetTermMonths())
-	if totalAmount < 0 {
-		return nil, status.Error(codes.InvalidArgument, "Amount must be greater than or equal to 0")
-	}
-
-	statusValue := "SUCCESS"
-	provider := "INTERNAL"
-	currency := normalizeCurrency(nil)
-	transactionID := buildTransactionID("sub")
-	now := time.Now().UTC()
-
-	paymentRecord := &model.Payment{
-		ID:            uuid.New().String(),
+	resultValue, err := s.executePaymentFlow(ctx, paymentExecutionInput{
 		UserID:        result.UserID,
-		PlanID:        &planRecord.ID,
-		Amount:        totalAmount,
-		Currency:      &currency,
-		Status:        &statusValue,
-		Provider:      &provider,
-		TransactionID: &transactionID,
-	}
-
-	invoiceID := buildInvoiceID(paymentRecord.ID)
-	var subscription *model.PlanSubscription
-	var walletBalance float64
-
-	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if _, err := lockUserForUpdate(ctx, tx, result.UserID); err != nil {
-			return err
-		}
-
-		currentSubscription, err := model.GetLatestPlanSubscription(ctx, tx, result.UserID)
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
-
-		baseExpiry := now
-		if currentSubscription != nil && currentSubscription.ExpiresAt.After(baseExpiry) {
-			baseExpiry = currentSubscription.ExpiresAt.UTC()
-		}
-		newExpiry := baseExpiry.AddDate(0, int(req.GetTermMonths()), 0)
-
-		currentWalletBalance, err := model.GetWalletBalance(ctx, tx, result.UserID)
-		if err != nil {
-			return err
-		}
-		shortfall := maxFloat(totalAmount-currentWalletBalance, 0)
-
-		if paymentMethod == paymentMethodWallet && shortfall > 0 {
-			return statusErrorWithBody(ctx, codes.InvalidArgument, http.StatusBadRequest, "Insufficient wallet balance", map[string]interface{}{
-				"payment_method": paymentMethod,
-				"wallet_balance": currentWalletBalance,
-				"total_amount":   totalAmount,
-				"shortfall":      shortfall,
-			})
-		}
-
-		topupAmount := 0.0
-		if paymentMethod == paymentMethodTopup {
-			if req.TopupAmount == nil {
-				return statusErrorWithBody(ctx, codes.InvalidArgument, http.StatusBadRequest, "Top-up amount is required when payment method is topup", map[string]interface{}{
-					"payment_method": paymentMethod,
-					"wallet_balance": currentWalletBalance,
-					"total_amount":   totalAmount,
-					"shortfall":      shortfall,
-				})
-			}
-
-			topupAmount = maxFloat(req.GetTopupAmount(), 0)
-			if topupAmount <= 0 {
-				return statusErrorWithBody(ctx, codes.InvalidArgument, http.StatusBadRequest, "Top-up amount must be greater than 0", map[string]interface{}{
-					"payment_method": paymentMethod,
-					"wallet_balance": currentWalletBalance,
-					"total_amount":   totalAmount,
-					"shortfall":      shortfall,
-				})
-			}
-			if topupAmount < shortfall {
-				return statusErrorWithBody(ctx, codes.InvalidArgument, http.StatusBadRequest, "Top-up amount must be greater than or equal to the required shortfall", map[string]interface{}{
-					"payment_method": paymentMethod,
-					"wallet_balance": currentWalletBalance,
-					"total_amount":   totalAmount,
-					"shortfall":      shortfall,
-					"topup_amount":   topupAmount,
-				})
-			}
-		}
-
-		if err := tx.Create(paymentRecord).Error; err != nil {
-			return err
-		}
-
-		walletUsedAmount := totalAmount
-
-		if paymentMethod == paymentMethodTopup {
-			topupTransaction := &model.WalletTransaction{
-				ID:         uuid.New().String(),
-				UserID:     result.UserID,
-				Type:       walletTransactionTypeTopup,
-				Amount:     topupAmount,
-				Currency:   model.StringPtr(currency),
-				Note:       model.StringPtr(fmt.Sprintf("Wallet top-up for %s (%d months)", planRecord.Name, req.GetTermMonths())),
-				PaymentID:  &paymentRecord.ID,
-				PlanID:     &planRecord.ID,
-				TermMonths: int32Ptr(req.GetTermMonths()),
-			}
-			if err := tx.Create(topupTransaction).Error; err != nil {
-				return err
-			}
-		}
-
-		debitTransaction := &model.WalletTransaction{
-			ID:         uuid.New().String(),
-			UserID:     result.UserID,
-			Type:       walletTransactionTypeSubscriptionDebit,
-			Amount:     -totalAmount,
-			Currency:   model.StringPtr(currency),
-			Note:       model.StringPtr(fmt.Sprintf("Subscription payment for %s (%d months)", planRecord.Name, req.GetTermMonths())),
-			PaymentID:  &paymentRecord.ID,
-			PlanID:     &planRecord.ID,
-			TermMonths: int32Ptr(req.GetTermMonths()),
-		}
-		if err := tx.Create(debitTransaction).Error; err != nil {
-			return err
-		}
-
-		subscription = &model.PlanSubscription{
-			ID:            uuid.New().String(),
-			UserID:        result.UserID,
-			PaymentID:     paymentRecord.ID,
-			PlanID:        planRecord.ID,
-			TermMonths:    req.GetTermMonths(),
-			PaymentMethod: paymentMethod,
-			WalletAmount:  walletUsedAmount,
-			TopupAmount:   topupAmount,
-			StartedAt:     now,
-			ExpiresAt:     newExpiry,
-		}
-		if err := tx.Create(subscription).Error; err != nil {
-			return err
-		}
-
-		if err := tx.Model(&model.User{}).
-			Where("id = ?", result.UserID).
-			Update("plan_id", planRecord.ID).Error; err != nil {
-			return err
-		}
-
-		notification := buildSubscriptionNotification(result.UserID, paymentRecord.ID, invoiceID, &planRecord, subscription)
-		if err := tx.Create(notification).Error; err != nil {
-			return err
-		}
-
-		walletBalance, err = model.GetWalletBalance(ctx, tx, result.UserID)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		Plan:          planRecord,
+		TermMonths:    req.GetTermMonths(),
+		PaymentMethod: paymentMethod,
+		TopupAmount:   req.TopupAmount,
 	})
 	if err != nil {
 		if _, ok := status.FromError(err); ok {
@@ -219,20 +57,35 @@ func (s *appServices) CreatePayment(ctx context.Context, req *appv1.CreatePaymen
 	}
 
 	return &appv1.CreatePaymentResponse{
-		Payment:       toProtoPayment(paymentRecord),
-		Subscription:  toProtoPlanSubscription(subscription),
-		WalletBalance: walletBalance,
-		InvoiceId:     invoiceID,
+		Payment:       toProtoPayment(resultValue.Payment),
+		Subscription:  toProtoPlanSubscription(resultValue.Subscription),
+		WalletBalance: resultValue.WalletBalance,
+		InvoiceId:     resultValue.InvoiceID,
 		Message:       "Payment completed successfully",
 	}, nil
 }
-func (s *appServices) ListPaymentHistory(ctx context.Context, _ *appv1.ListPaymentHistoryRequest) (*appv1.ListPaymentHistoryResponse, error) {
+func (s *appServices) ListPaymentHistory(ctx context.Context, req *appv1.ListPaymentHistoryRequest) (*appv1.ListPaymentHistoryResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var rows []paymentRow
+	page, limit, offset := adminPageLimitOffset(req.GetPage(), req.GetLimit())
+
+	type paymentHistoryRow struct {
+		ID            string     `gorm:"column:id"`
+		Amount        float64    `gorm:"column:amount"`
+		Currency      *string    `gorm:"column:currency"`
+		Status        *string    `gorm:"column:status"`
+		PlanID        *string    `gorm:"column:plan_id"`
+		PlanName      *string    `gorm:"column:plan_name"`
+		TermMonths    *int32     `gorm:"column:term_months"`
+		PaymentMethod *string    `gorm:"column:payment_method"`
+		ExpiresAt     *time.Time `gorm:"column:expires_at"`
+		CreatedAt     *time.Time `gorm:"column:created_at"`
+	}
+
+	var rows []paymentHistoryRow
 	if err := s.db.WithContext(ctx).
 		Table("payment AS p").
 		Select("p.id, p.amount, p.currency, p.status, p.plan_id, pl.name AS plan_name, ps.term_months, ps.payment_method, ps.expires_at, p.created_at").
@@ -245,21 +98,21 @@ func (s *appServices) ListPaymentHistory(ctx context.Context, _ *appv1.ListPayme
 		return nil, status.Error(codes.Internal, "Failed to fetch payment history")
 	}
 
-	items := make([]paymentapi.PaymentHistoryItem, 0, len(rows))
+	items := make([]*appv1.PaymentHistoryItem, 0, len(rows))
 	for _, row := range rows {
-		items = append(items, paymentapi.PaymentHistoryItem{
-			ID:            row.ID,
+		items = append(items, &appv1.PaymentHistoryItem{
+			Id:            row.ID,
 			Amount:        row.Amount,
 			Currency:      normalizeCurrency(row.Currency),
 			Status:        normalizePaymentStatus(row.Status),
-			PlanID:        row.PlanID,
+			PlanId:        row.PlanID,
 			PlanName:      row.PlanName,
-			InvoiceID:     buildInvoiceID(row.ID),
+			InvoiceId:     buildInvoiceID(row.ID),
 			Kind:          paymentKindSubscription,
 			TermMonths:    row.TermMonths,
 			PaymentMethod: normalizeOptionalPaymentMethod(row.PaymentMethod),
-			ExpiresAt:     row.ExpiresAt,
-			CreatedAt:     row.CreatedAt,
+			ExpiresAt:     timeToProto(row.ExpiresAt),
+			CreatedAt:     timeToProto(row.CreatedAt),
 		})
 	}
 
@@ -273,15 +126,14 @@ func (s *appServices) ListPaymentHistory(ctx context.Context, _ *appv1.ListPayme
 	}
 
 	for _, topup := range topups {
-		createdAt := topup.CreatedAt
-		items = append(items, paymentapi.PaymentHistoryItem{
-			ID:        topup.ID,
+		items = append(items, &appv1.PaymentHistoryItem{
+			Id:        topup.ID,
 			Amount:    topup.Amount,
 			Currency:  normalizeCurrency(topup.Currency),
 			Status:    "success",
-			InvoiceID: buildInvoiceID(topup.ID),
+			InvoiceId: buildInvoiceID(topup.ID),
 			Kind:      paymentKindWalletTopup,
-			CreatedAt: createdAt,
+			CreatedAt: timeToProto(topup.CreatedAt),
 		})
 	}
 
@@ -289,22 +141,30 @@ func (s *appServices) ListPaymentHistory(ctx context.Context, _ *appv1.ListPayme
 		left := time.Time{}
 		right := time.Time{}
 		if items[i].CreatedAt != nil {
-			left = *items[i].CreatedAt
+			left = items[i].CreatedAt.AsTime()
 		}
 		if items[j].CreatedAt != nil {
-			right = *items[j].CreatedAt
+			right = items[j].CreatedAt.AsTime()
+		}
+		if right.Equal(left) {
+			return items[i].GetId() > items[j].GetId()
 		}
 		return right.After(left)
 	})
 
-	payload := make([]*appv1.PaymentHistoryItem, 0, len(items))
-	for _, item := range items {
-		copyItem := item
-		payload = append(payload, toProtoPaymentHistoryItem(&copyItem))
+	total := int64(len(items))
+	hasPrev := page > 1 && total > 0
+	if offset >= len(items) {
+		return &appv1.ListPaymentHistoryResponse{Payments: []*appv1.PaymentHistoryItem{}, Total: total, Page: page, Limit: limit, HasPrev: hasPrev, HasNext: false}, nil
 	}
-
-	return &appv1.ListPaymentHistoryResponse{Payments: payload}, nil
+	end := offset + int(limit)
+	if end > len(items) {
+		end = len(items)
+	}
+	hasNext := end < len(items)
+	return &appv1.ListPaymentHistoryResponse{Payments: items[offset:end], Total: total, Page: page, Limit: limit, HasPrev: hasPrev, HasNext: hasNext}, nil
 }
+
 func (s *appServices) TopupWallet(ctx context.Context, req *appv1.TopupWalletRequest) (*appv1.TopupWalletResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
@@ -331,7 +191,7 @@ func (s *appServices) TopupWallet(ctx context.Context, req *appv1.TopupWalletReq
 		Type:    "billing.topup",
 		Title:   "Wallet credited",
 		Message: fmt.Sprintf("Your wallet has been credited with %.2f USD.", amount),
-		Metadata: model.StringPtr(mustMarshalJSON(map[string]interface{}{
+		Metadata: model.StringPtr(mustMarshalJSON(map[string]any{
 			"wallet_transaction_id": transaction.ID,
 			"invoice_id":            buildInvoiceID(transaction.ID),
 		})),
@@ -391,7 +251,7 @@ func (s *appServices) DownloadInvoice(ctx context.Context, req *appv1.DownloadIn
 			Content:     invoiceText,
 		}, nil
 	}
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		s.logger.Error("Failed to load payment invoice", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to download invoice")
 	}

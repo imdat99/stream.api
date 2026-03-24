@@ -152,8 +152,8 @@ func (r *Adapter) SubscribeCancel(ctx context.Context, agentID string) (<-chan s
 	return ch, nil
 }
 
-func (r *Adapter) PublishJobUpdate(ctx context.Context, jobID string, status string) error {
-	payload, err := json.Marshal(map[string]string{"job_id": jobID, "status": status})
+func (r *Adapter) PublishJobUpdate(ctx context.Context, jobID string, status string, videoID string) error {
+	payload, err := json.Marshal(map[string]string{"job_id": jobID, "status": status, "video_id": videoID})
 	if err != nil {
 		return err
 	}

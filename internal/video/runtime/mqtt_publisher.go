@@ -20,12 +20,16 @@ const (
 type mqttPublisher struct {
 	client     mqtt.Client
 	jobService *services.JobService
-	agentRT    interface{ ListAgentsWithStats() []*services.AgentWithStats }
-	logger     logger.Logger
-	prefix     string
+	agentRT    interface {
+		ListAgentsWithStats() []*services.AgentWithStats
+	}
+	logger logger.Logger
+	prefix string
 }
 
-func newMQTTPublisher(jobService *services.JobService, agentRT interface{ ListAgentsWithStats() []*services.AgentWithStats }, appLogger logger.Logger) (*mqttPublisher, error) {
+func newMQTTPublisher(jobService *services.JobService, agentRT interface {
+	ListAgentsWithStats() []*services.AgentWithStats
+}, appLogger logger.Logger) (*mqttPublisher, error) {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(defaultMQTTBrokerURL)
 	opts.SetClientID(fmt.Sprintf("stream-api-%d", time.Now().UnixNano()))
@@ -133,7 +137,7 @@ func (p *mqttPublisher) consumeResources(ctx context.Context) {
 						continue
 					}
 					agentPayload, _ := json.Marshal(map[string]any{
-						"type": "agent_update",
+						"type":    "agent_update",
 						"payload": mapAgentPayload(agent),
 					})
 					p.publish(fmt.Sprintf("%s/events", p.prefix), agentPayload)
@@ -157,18 +161,18 @@ func mapAgentPayload(agent *services.AgentWithStats) map[string]any {
 		return map[string]any{}
 	}
 	return map[string]any{
-		"id":             agent.ID,
-		"name":           agent.Name,
-		"platform":       agent.Platform,
-		"backend":        agent.Backend,
-		"version":        agent.Version,
-		"capacity":       agent.Capacity,
-		"status":         string(agent.Status),
-		"cpu":            agent.CPU,
-		"ram":            agent.RAM,
-		"last_heartbeat": agent.LastHeartbeat,
-		"created_at":     agent.CreatedAt,
-		"updated_at":     agent.UpdatedAt,
+		"id":               agent.ID,
+		"name":             agent.Name,
+		"platform":         agent.Platform,
+		"backend":          agent.Backend,
+		"version":          agent.Version,
+		"capacity":         agent.Capacity,
+		"status":           string(agent.Status),
+		"cpu":              agent.CPU,
+		"ram":              agent.RAM,
+		"last_heartbeat":   agent.LastHeartbeat,
+		"created_at":       agent.CreatedAt,
+		"updated_at":       agent.UpdatedAt,
 		"active_job_count": agent.ActiveJobCount,
 	}
 }
@@ -203,4 +207,34 @@ func publishResourceEvent(client mqtt.Client, appLogger logger.Logger, entry dom
 	}
 	token := client.Publish(fmt.Sprintf("%s/events", defaultMQTTPrefix), 0, false, payload)
 	token.WaitTimeout(5 * time.Second)
+}
+
+type MQTTBootstrap struct{ *mqttPublisher }
+
+func NewMQTTBootstrap(jobService *services.JobService, agentRT interface {
+	ListAgentsWithStats() []*services.AgentWithStats
+}, appLogger logger.Logger) (*MQTTBootstrap, error) {
+	publisher, err := newMQTTPublisher(jobService, agentRT, appLogger)
+	if err != nil {
+		return nil, err
+	}
+	return &MQTTBootstrap{mqttPublisher: publisher}, nil
+}
+
+func (b *MQTTBootstrap) Start(ctx context.Context) {
+	if b == nil || b.mqttPublisher == nil {
+		return
+	}
+	b.mqttPublisher.start(ctx)
+}
+
+func (b *MQTTBootstrap) Client() mqtt.Client {
+	if b == nil || b.mqttPublisher == nil {
+		return nil
+	}
+	return b.client
+}
+
+func PublishAgentMQTTEvent(client mqtt.Client, appLogger logger.Logger, eventType string, agent *services.AgentWithStats) {
+	publishAgentEvent(client, appLogger, eventType, agent)
 }

@@ -9,7 +9,7 @@ plugins:
     opt:
       - paths=source_relative
   - remote: buf.build/community/stephenh-ts-proto
-    out: ../stream-ui/src/server/gen/proto
+    out: ../stream.ui/src/server/gen/proto
     opt:
       - env=node
       - esModuleInterop=true

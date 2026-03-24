@@ -7,10 +7,10 @@ import (
 	"golang.org/x/oauth2/google"
 	"gorm.io/gorm"
 	"stream.api/internal/config"
+	"stream.api/internal/database/model"
 	appv1 "stream.api/internal/gen/proto/app/v1"
 	"stream.api/internal/middleware"
-	videogrpc "stream.api/internal/video/runtime/grpc"
-	"stream.api/internal/video/runtime/services"
+	"stream.api/internal/video"
 	"stream.api/pkg/cache"
 	"stream.api/pkg/logger"
 	"stream.api/pkg/storage"
@@ -18,14 +18,22 @@ import (
 )
 
 const adTemplateUpgradeRequiredMessage = "Upgrade required to manage Ads & VAST"
+const defaultGoogleUserInfoURL = "https://www.googleapis.com/oauth2/v2/userinfo"
+
+const (
+	playerConfigFreePlanLimitMessage          = "Free plan supports only 1 player config"
+	playerConfigFreePlanReconciliationMessage = "Delete extra player configs to continue managing player configs on the free plan"
+)
 
 const (
 	walletTransactionTypeTopup             = "topup"
 	walletTransactionTypeSubscriptionDebit = "subscription_debit"
+	walletTransactionTypeReferralReward    = "referral_reward"
 	paymentMethodWallet                    = "wallet"
 	paymentMethodTopup                     = "topup"
 	paymentKindSubscription                = "subscription"
 	paymentKindWalletTopup                 = "wallet_topup"
+	defaultReferralRewardBps               = int32(500)
 )
 
 var allowedTermMonths = map[int32]struct{}{
@@ -43,6 +51,7 @@ type Services struct {
 	NotificationsServiceServer
 	DomainsServiceServer
 	AdTemplatesServiceServer
+	PlayerConfigsServiceServer
 	PlansServiceServer
 	PaymentsServiceServer
 	VideosServiceServer
@@ -57,6 +66,7 @@ type appServices struct {
 	appv1.UnimplementedNotificationsServiceServer
 	appv1.UnimplementedDomainsServiceServer
 	appv1.UnimplementedAdTemplatesServiceServer
+	appv1.UnimplementedPlayerConfigsServiceServer
 	appv1.UnimplementedPlansServiceServer
 	appv1.UnimplementedPaymentsServiceServer
 	appv1.UnimplementedVideosServiceServer
@@ -68,23 +78,12 @@ type appServices struct {
 	tokenProvider   token.Provider
 	cache           cache.Cache
 	storageProvider storage.Provider
-	jobService      *services.JobService
-	agentRuntime    *videogrpc.Server
-	googleOauth     *oauth2.Config
-	googleStateTTL  time.Duration
-}
-
-type paymentRow struct {
-	ID            string     `gorm:"column:id"`
-	Amount        float64    `gorm:"column:amount"`
-	Currency      *string    `gorm:"column:currency"`
-	Status        *string    `gorm:"column:status"`
-	PlanID        *string    `gorm:"column:plan_id"`
-	PlanName      *string    `gorm:"column:plan_name"`
-	TermMonths    *int32     `gorm:"column:term_months"`
-	PaymentMethod *string    `gorm:"column:payment_method"`
-	ExpiresAt     *time.Time `gorm:"column:expires_at"`
-	CreatedAt     *time.Time `gorm:"column:created_at"`
+	videoService    *video.Service
+	agentRuntime      video.AgentRuntime
+	googleOauth       *oauth2.Config
+	googleStateTTL    time.Duration
+	googleUserInfoURL string
+	frontendBaseURL   string
 }
 
 type paymentInvoiceDetails struct {
@@ -96,13 +95,33 @@ type paymentInvoiceDetails struct {
 	TopupAmount   float64
 }
 
-type apiErrorBody struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"`
+type paymentExecutionInput struct {
+	UserID        string
+	Plan          *model.Plan
+	TermMonths    int32
+	PaymentMethod string
+	TopupAmount   *float64
 }
 
-func NewServices(c cache.Cache, t token.Provider, db *gorm.DB, l logger.Logger, cfg *config.Config, jobService *services.JobService, agentRuntime *videogrpc.Server) *Services {
+type paymentExecutionResult struct {
+	Payment       *model.Payment
+	Subscription  *model.PlanSubscription
+	WalletBalance float64
+	InvoiceID     string
+}
+
+type referralRewardResult struct {
+	Granted bool
+	Amount  float64
+}
+
+type apiErrorBody struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    any    `json:"data,omitempty"`
+}
+
+func NewServices(c cache.Cache, t token.Provider, db *gorm.DB, l logger.Logger, cfg *config.Config, videoService *video.Service, agentRuntime video.AgentRuntime) *Services {
 	var storageProvider storage.Provider
 	if cfg != nil {
 		provider, err := storage.NewS3Provider(cfg)
@@ -131,17 +150,24 @@ func NewServices(c cache.Cache, t token.Provider, db *gorm.DB, l logger.Logger, 
 		}
 	}
 
+	frontendBaseURL := ""
+	if cfg != nil {
+		frontendBaseURL = cfg.Frontend.BaseURL
+	}
+
 	service := &appServices{
-		db:              db,
-		logger:          l,
-		authenticator:   middleware.NewAuthenticator(db, l, cfg.Internal.Marker),
-		tokenProvider:   t,
-		cache:           c,
-		storageProvider: storageProvider,
-		jobService:      jobService,
-		agentRuntime:    agentRuntime,
-		googleOauth:     googleOauth,
-		googleStateTTL:  googleStateTTL,
+		db:                db,
+		logger:            l,
+		authenticator:     middleware.NewAuthenticator(db, l, cfg.Internal.Marker),
+		tokenProvider:     t,
+		cache:             c,
+		storageProvider:   storageProvider,
+		videoService:      videoService,
+		agentRuntime:      agentRuntime,
+		googleOauth:       googleOauth,
+		googleStateTTL:    googleStateTTL,
+		googleUserInfoURL: defaultGoogleUserInfoURL,
+		frontendBaseURL:   frontendBaseURL,
 	}
 	return &Services{
 		AuthServiceServer:          service,
@@ -151,6 +177,7 @@ func NewServices(c cache.Cache, t token.Provider, db *gorm.DB, l logger.Logger, 
 		NotificationsServiceServer: service,
 		DomainsServiceServer:       service,
 		AdTemplatesServiceServer:   service,
+		PlayerConfigsServiceServer: service,
 		PlansServiceServer:         service,
 		PaymentsServiceServer:      service,
 		VideosServiceServer:        service,
@@ -184,6 +211,10 @@ type DomainsServiceServer interface {
 
 type AdTemplatesServiceServer interface {
 	appv1.AdTemplatesServiceServer
+}
+
+type PlayerConfigsServiceServer interface {
+	appv1.PlayerConfigsServiceServer
 }
 
 type PlansServiceServer interface {

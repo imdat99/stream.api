@@ -27,8 +27,9 @@ message User {
   double wallet_balance = 14;
   string language = 15;
   string locale = 16;
-  google.protobuf.Timestamp created_at = 17;
-  google.protobuf.Timestamp updated_at = 18;
+  string telegram_id = 17;
+  google.protobuf.Timestamp created_at = 18;
+  google.protobuf.Timestamp updated_at = 19;
 }
 
 message Preferences {
@@ -76,6 +77,46 @@ message AdTemplate {
   bool is_default = 8;
   google.protobuf.Timestamp created_at = 9;
   google.protobuf.Timestamp updated_at = 10;
+}
+
+message PlayerConfig {
+  string id = 1;
+  string name = 2;
+  optional string description = 3;
+  bool autoplay = 4;
+  bool loop = 5;
+  bool muted = 6;
+  bool show_controls = 7;
+  bool pip = 8;
+  bool airplay = 9;
+  bool chromecast = 10;
+  bool is_active = 11;
+  bool is_default = 12;
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp updated_at = 14;
+  bool encrytion_m3u8 = 15;
+  optional string logo_url = 16;
+}
+
+message AdminPlayerConfig {
+  string id = 1;
+  string user_id = 2;
+  string name = 3;
+  optional string description = 4;
+  bool autoplay = 5;
+  bool loop = 6;
+  bool muted = 7;
+  bool show_controls = 8;
+  bool pip = 9;
+  bool airplay = 10;
+  bool chromecast = 11;
+  bool is_active = 12;
+  bool is_default = 13;
+  optional string owner_email = 14;
+  google.protobuf.Timestamp created_at = 15;
+  google.protobuf.Timestamp updated_at = 16;
+  bool encrytion_m3u8 = 17;
+  optional string logo_url = 18;
 }
 
 message Plan {
@@ -164,6 +205,7 @@ message Video {
   optional string storage_type = 12;
   google.protobuf.Timestamp created_at = 13;
   google.protobuf.Timestamp updated_at = 14;
+  optional string job_id = 15;
 }
 
 message AdminDashboard {
@@ -193,9 +235,28 @@ message AdminUser {
   google.protobuf.Timestamp updated_at = 12;
 }
 
+message ReferralUserSummary {
+  string id = 1;
+  string email = 2;
+  optional string username = 3;
+}
+
+message AdminUserReferralInfo {
+  optional ReferralUserSummary referrer = 1;
+  bool referral_eligible = 2;
+  double effective_reward_percent = 3;
+  optional double reward_override_percent = 4;
+  optional string share_link = 5;
+  bool reward_granted = 6;
+  google.protobuf.Timestamp reward_granted_at = 7;
+  optional string reward_payment_id = 8;
+  optional double reward_amount = 9;
+}
+
 message AdminUserDetail {
   AdminUser user = 1;
   optional PlanSubscription subscription = 2;
+  optional AdminUserReferralInfo referral = 3;
 }
 
 message AdminVideo {
@@ -213,6 +274,8 @@ message AdminVideo {
   optional string ad_template_name = 12;
   google.protobuf.Timestamp created_at = 13;
   google.protobuf.Timestamp updated_at = 14;
+  optional string processing_status = 15;
+  optional string job_id = 16;
 }
 
 message AdminPayment {
@@ -288,6 +351,7 @@ message AdminJob {
   int32 max_retries = 17;
   google.protobuf.Timestamp created_at = 18;
   google.protobuf.Timestamp updated_at = 19;
+  optional string video_id = 20;
 }
 
 message AdminAgent {

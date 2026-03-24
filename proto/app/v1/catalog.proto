@@ -19,6 +19,13 @@ service AdTemplatesService {
   rpc DeleteAdTemplate(DeleteAdTemplateRequest) returns (MessageResponse);
 }
 
+service PlayerConfigsService {
+  rpc ListPlayerConfigs(ListPlayerConfigsRequest) returns (ListPlayerConfigsResponse);
+  rpc CreatePlayerConfig(CreatePlayerConfigRequest) returns (CreatePlayerConfigResponse);
+  rpc UpdatePlayerConfig(UpdatePlayerConfigRequest) returns (UpdatePlayerConfigResponse);
+  rpc DeletePlayerConfig(DeletePlayerConfigRequest) returns (MessageResponse);
+}
+
 service PlansService {
   rpc ListPlans(ListPlansRequest) returns (ListPlansResponse);
 }
@@ -77,6 +84,57 @@ message UpdateAdTemplateResponse {
 }
 
 message DeleteAdTemplateRequest {
+  string id = 1;
+}
+
+message ListPlayerConfigsRequest {}
+
+message ListPlayerConfigsResponse {
+  repeated PlayerConfig configs = 1;
+}
+
+message CreatePlayerConfigRequest {
+  string name = 1;
+  optional string description = 2;
+  bool autoplay = 3;
+  bool loop = 4;
+  bool muted = 5;
+  bool show_controls = 6;
+  bool pip = 7;
+  bool airplay = 8;
+  bool chromecast = 9;
+  optional bool is_active = 10;
+  optional bool is_default = 11;
+  optional bool encrytion_m3u8 = 12;
+  optional string logo_url = 13;
+}
+
+message CreatePlayerConfigResponse {
+  PlayerConfig config = 1;
+}
+
+message UpdatePlayerConfigRequest {
+  string id = 1;
+  string name = 2;
+  optional string description = 3;
+  bool autoplay = 4;
+  bool loop = 5;
+  bool muted = 6;
+  bool show_controls = 7;
+  bool pip = 8;
+  bool airplay = 9;
+  bool chromecast = 10;
+  optional bool is_active = 11;
+  optional bool is_default = 12;
+  optional bool encrytion_m3u8 = 13;
+  optional string logo_url = 14;
+}
+
+message UpdatePlayerConfigResponse {
+  PlayerConfig config = 1;
+}
+
+message DeletePlayerConfigRequest {
   string id = 1;
 }
 

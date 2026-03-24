@@ -2,16 +2,22 @@ package main
 
 import (
 	"log"
-	"os"
 
+	"gorm.io/datatypes"
 	"gorm.io/driver/postgres"
 	"gorm.io/gen"
 	"gorm.io/gen/field"
 	"gorm.io/gorm"
+	"stream.api/internal/config"
 )
 
 func main() {
-	dsn := os.Getenv("APP_DATABASE_DSN")
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dsn := cfg.Database.DSN
 	if dsn == "" {
 		log.Fatal("APP_DATABASE_DSN is required")
 	}
@@ -21,42 +27,44 @@ func main() {
 		log.Fatal("Không thể kết nối database:", err)
 	}
 
-	// 2. CẤU HÌNH GENERATOR
 	g := gen.NewGenerator(gen.Config{
 		OutPath:      "internal/database/query",
 		ModelPkgPath: "internal/database/model",
-		Mode:         gen.WithDefaultQuery | gen.WithQueryInterface, // Tạo cả query mặc định và interface để dễ mock test
+		Mode:         gen.WithDefaultQuery | gen.WithQueryInterface,
 
-		// Tùy chọn sinh code cho Model
-		FieldNullable:     true, // Sinh pointer (*) cho các field có thể NULL trong DB
-		FieldCoverable:    true, // Sinh pointer cho tất cả field (hữu ích khi dùng hàm Update zero value)
-		FieldSignable:     true, // Hỗ trợ unsigned integer
-		FieldWithIndexTag: true, // Sinh tag gorm:index
-		FieldWithTypeTag:  true, // Sinh tag gorm:type
+		FieldNullable:     true,
+		FieldCoverable:    true,
+		FieldSignable:     true,
+		FieldWithIndexTag: true,
+		FieldWithTypeTag:  true,
 	})
 
 	g.UseDB(db)
 
-	// 3. XỬ LÝ KIỂU DỮ LIỆU (Data Mapping)
-	// Ví dụ: Map decimal sang float64 thay vì string hoặc mảng byte
-	dataMap := map[string]func(gorm.ColumnType) (dataType string){
-		"decimal": func(columnType gorm.ColumnType) (dataType string) {
-			return "float64" // Hoặc "decimal.Decimal" nếu dùng shopspring/decimal
-		},
-		"numeric": func(columnType gorm.ColumnType) (dataType string) {
+	dataMap := map[string]func(gorm.ColumnType) string{
+		"decimal": func(columnType gorm.ColumnType) string {
 			return "float64"
 		},
-		"text[]": func(columnType gorm.ColumnType) (dataType string) {
-			return "[]string"
+		"numeric": func(columnType gorm.ColumnType) string {
+			return "float64"
 		},
-		"_text": func(columnType gorm.ColumnType) (dataType string) {
-			return "[]string"
+		"text[]": func(columnType gorm.ColumnType) string {
+			return "pq.StringArray"
+		},
+		"_text": func(columnType gorm.ColumnType) string {
+			return "pq.StringArray"
+		},
+		"json": func(columnType gorm.ColumnType) string {
+			return "datatypes.JSON"
+		},
+		"jsonb": func(columnType gorm.ColumnType) string {
+			return "datatypes.JSON"
 		},
 	}
-	g.WithDataTypeMap(dataMap)
-	g.WithImportPkgPath("github.com/lib/pq")
 
-	// 4. CÁC TÙY CHỌN (OPTIONS)
+	g.WithDataTypeMap(dataMap)
+	g.WithImportPkgPath("github.com/lib/pq", "gorm.io/datatypes")
+
 	g.WithOpts(
 		gen.FieldType("id", "string"),
 		gen.FieldType("features", "pq.StringArray"),
@@ -64,26 +72,13 @@ func main() {
 		gen.FieldGORMTag("version", func(tag field.GormTag) field.GormTag {
 			return tag.Set("version", "")
 		}),
-
 		gen.FieldJSONTag("password", "-"),
 		gen.FieldJSONTag("version", "-"),
 	)
 
-	// 5. CHỌN TABLE ĐỂ GENERATE
-	// GenerateAllTable() sẽ lấy tất cả, bao gồm cả bảng migration nếu có.
-	// Nếu muốn loại trừ bảng nào đó, hãy dùng logic filter hoặc liệt kê cụ thể.
-
-	// Cách 1: Lấy tất cả (như code cũ)
 	allTables := g.GenerateAllTable()
-
-	// Cách 2: (Khuyên dùng) Lọc bỏ các bảng rác hoặc hệ thống
-	// var tableModels []interface{}
-	// for _, tbl := range allTables {
-	// 	  // Logic lọc bảng ở đây nếu cần
-	//    tableModels = append(tableModels, tbl)
-	// }
-
 	g.ApplyBasic(allTables...)
-
 	g.Execute()
+
+	_ = datatypes.JSON{} // tránh import bị báo unused trong vài trường hợp
 }

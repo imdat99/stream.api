@@ -3,7 +3,7 @@ syntax = "proto3";
 package stream.app.v1;
 
 option go_package = "stream.api/internal/gen/proto/app/v1;appv1";
-
+import "google/protobuf/wrappers.proto"; 
 import "app/v1/common.proto";
 
 service AccountService {
@@ -11,6 +11,7 @@ service AccountService {
   rpc UpdateMe(UpdateMeRequest) returns (UpdateMeResponse);
   rpc DeleteMe(DeleteMeRequest) returns (MessageResponse);
   rpc ClearMyData(ClearMyDataRequest) returns (MessageResponse);
+  rpc GetUserById (google.protobuf.StringValue) returns (User) {}
 }
 
 service PreferencesService {
@@ -41,6 +42,7 @@ message UpdateMeRequest {
   optional string email = 2;
   optional string language = 3;
   optional string locale = 4;
+  optional string telegram_id = 5;
 }
 
 message UpdateMeResponse {

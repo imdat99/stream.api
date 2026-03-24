@@ -28,10 +28,18 @@ message CreatePaymentResponse {
   string message = 5;
 }
 
-message ListPaymentHistoryRequest {}
+message ListPaymentHistoryRequest {
+  int32 page = 1;
+  int32 limit = 2;
+}
 
 message ListPaymentHistoryResponse {
   repeated PaymentHistoryItem payments = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+  bool has_prev = 5;
+  bool has_next = 6;
 }
 
 message TopupWalletRequest {

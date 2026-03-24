@@ -346,8 +346,9 @@ func (s *appServices) DeleteAdTemplate(ctx context.Context, req *appv1.DeleteAdT
 	}
 
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("ad_template_id = ? AND user_id = ?", id, result.UserID).
-			Delete(&model.VideoAdConfig{}).Error; err != nil {
+		if err := tx.Model(&model.Video{}).
+			Where("user_id = ? AND ad_id = ?", result.UserID, id).
+			Update("ad_id", nil).Error; err != nil {
 			return err
 		}
 
@@ -387,4 +388,237 @@ func (s *appServices) ListPlans(ctx context.Context, _ *appv1.ListPlansRequest) 
 	}
 
 	return &appv1.ListPlansResponse{Plans: items}, nil
+}
+
+func (s *appServices) ListPlayerConfigs(ctx context.Context, _ *appv1.ListPlayerConfigsRequest) (*appv1.ListPlayerConfigsResponse, error) {
+	result, err := s.authenticate(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var items []model.PlayerConfig
+	if err := s.db.WithContext(ctx).
+		Where("user_id = ?", result.UserID).
+		Order("is_default DESC").
+		Order("created_at DESC").
+		Find(&items).Error; err != nil {
+		s.logger.Error("Failed to list player configs", "error", err)
+		return nil, status.Error(codes.Internal, "Failed to load player configs")
+	}
+
+	payload := make([]*appv1.PlayerConfig, 0, len(items))
+	for _, item := range items {
+		copyItem := item
+		payload = append(payload, toProtoPlayerConfig(&copyItem))
+	}
+
+	return &appv1.ListPlayerConfigsResponse{Configs: payload}, nil
+}
+
+func (s *appServices) CreatePlayerConfig(ctx context.Context, req *appv1.CreatePlayerConfigRequest) (*appv1.CreatePlayerConfigResponse, error) {
+	result, err := s.authenticate(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	name := strings.TrimSpace(req.GetName())
+	if name == "" {
+		return nil, status.Error(codes.InvalidArgument, "Name is required")
+	}
+
+	item := &model.PlayerConfig{
+		ID:            uuid.New().String(),
+		UserID:        result.UserID,
+		Name:          name,
+		Description:   nullableTrimmedString(req.Description),
+		Autoplay:      req.GetAutoplay(),
+		Loop:          req.GetLoop(),
+		Muted:         req.GetMuted(),
+		ShowControls:  model.BoolPtr(req.GetShowControls()),
+		Pip:           model.BoolPtr(req.GetPip()),
+		Airplay:       model.BoolPtr(req.GetAirplay()),
+		Chromecast:    model.BoolPtr(req.GetChromecast()),
+		IsActive:      model.BoolPtr(req.IsActive == nil || *req.IsActive),
+		IsDefault:     req.IsDefault != nil && *req.IsDefault,
+		EncrytionM3u8: model.BoolPtr(req.EncrytionM3U8 == nil || *req.EncrytionM3U8),
+		LogoURL:       nullableTrimmedString(req.LogoUrl),
+	}
+	if !playerConfigIsActive(item.IsActive) {
+		item.IsDefault = false
+	}
+
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		lockedUser, err := lockUserForUpdate(ctx, tx, result.UserID)
+		if err != nil {
+			return err
+		}
+
+		var configCount int64
+		if err := tx.WithContext(ctx).
+			Model(&model.PlayerConfig{}).
+			Where("user_id = ?", result.UserID).
+			Count(&configCount).Error; err != nil {
+			return err
+		}
+		if err := playerConfigActionAllowed(lockedUser, configCount, "create"); err != nil {
+			return err
+		}
+
+		if item.IsDefault {
+			if err := unsetDefaultPlayerConfigs(tx, result.UserID, ""); err != nil {
+				return err
+			}
+		}
+		return tx.Create(item).Error
+	}); err != nil {
+		if status.Code(err) != codes.Unknown {
+			return nil, err
+		}
+		s.logger.Error("Failed to create player config", "error", err)
+		return nil, status.Error(codes.Internal, "Failed to save player config")
+	}
+
+	return &appv1.CreatePlayerConfigResponse{Config: toProtoPlayerConfig(item)}, nil
+}
+
+func (s *appServices) UpdatePlayerConfig(ctx context.Context, req *appv1.UpdatePlayerConfigRequest) (*appv1.UpdatePlayerConfigResponse, error) {
+	result, err := s.authenticate(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	id := strings.TrimSpace(req.GetId())
+	if id == "" {
+		return nil, status.Error(codes.NotFound, "Player config not found")
+	}
+
+	name := strings.TrimSpace(req.GetName())
+	if name == "" {
+		return nil, status.Error(codes.InvalidArgument, "Name is required")
+	}
+
+	var item model.PlayerConfig
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		lockedUser, err := lockUserForUpdate(ctx, tx, result.UserID)
+		if err != nil {
+			return err
+		}
+
+		var configCount int64
+		if err := tx.WithContext(ctx).
+			Model(&model.PlayerConfig{}).
+			Where("user_id = ?", result.UserID).
+			Count(&configCount).Error; err != nil {
+			return err
+		}
+
+		if err := tx.WithContext(ctx).Where("id = ? AND user_id = ?", id, result.UserID).First(&item).Error; err != nil {
+			return err
+		}
+
+		action := "update"
+		wasActive := playerConfigIsActive(item.IsActive)
+		if req.IsActive != nil && *req.IsActive != wasActive {
+			action = "toggle-active"
+		}
+		if req.IsDefault != nil && *req.IsDefault {
+			action = "set-default"
+		}
+		if err := playerConfigActionAllowed(lockedUser, configCount, action); err != nil {
+			return err
+		}
+
+		item.Name = name
+		item.Description = nullableTrimmedString(req.Description)
+		item.Autoplay = req.GetAutoplay()
+		item.Loop = req.GetLoop()
+		item.Muted = req.GetMuted()
+		item.ShowControls = model.BoolPtr(req.GetShowControls())
+		item.Pip = model.BoolPtr(req.GetPip())
+		item.Airplay = model.BoolPtr(req.GetAirplay())
+		item.Chromecast = model.BoolPtr(req.GetChromecast())
+		if req.EncrytionM3U8 != nil {
+			item.EncrytionM3u8 = model.BoolPtr(*req.EncrytionM3U8)
+		}
+		if req.LogoUrl != nil {
+			item.LogoURL = nullableTrimmedString(req.LogoUrl)
+		}
+		if req.IsActive != nil {
+			item.IsActive = model.BoolPtr(*req.IsActive)
+		}
+		if req.IsDefault != nil {
+			item.IsDefault = *req.IsDefault
+		}
+		if !playerConfigIsActive(item.IsActive) {
+			item.IsDefault = false
+		}
+
+		if item.IsDefault {
+			if err := unsetDefaultPlayerConfigs(tx, result.UserID, item.ID); err != nil {
+				return err
+			}
+		}
+		return tx.Save(&item).Error
+	}); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.NotFound, "Player config not found")
+		}
+		if status.Code(err) != codes.Unknown {
+			return nil, err
+		}
+		s.logger.Error("Failed to update player config", "error", err)
+		return nil, status.Error(codes.Internal, "Failed to save player config")
+	}
+
+	return &appv1.UpdatePlayerConfigResponse{Config: toProtoPlayerConfig(&item)}, nil
+}
+
+func (s *appServices) DeletePlayerConfig(ctx context.Context, req *appv1.DeletePlayerConfigRequest) (*appv1.MessageResponse, error) {
+	result, err := s.authenticate(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	id := strings.TrimSpace(req.GetId())
+	if id == "" {
+		return nil, status.Error(codes.NotFound, "Player config not found")
+	}
+
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		lockedUser, err := lockUserForUpdate(ctx, tx, result.UserID)
+		if err != nil {
+			return err
+		}
+
+		var configCount int64
+		if err := tx.WithContext(ctx).
+			Model(&model.PlayerConfig{}).
+			Where("user_id = ?", result.UserID).
+			Count(&configCount).Error; err != nil {
+			return err
+		}
+		if err := playerConfigActionAllowed(lockedUser, configCount, "delete"); err != nil {
+			return err
+		}
+
+		res := tx.Where("id = ? AND user_id = ?", id, result.UserID).Delete(&model.PlayerConfig{})
+		if res.Error != nil {
+			return res.Error
+		}
+		if res.RowsAffected == 0 {
+			return gorm.ErrRecordNotFound
+		}
+		return nil
+	}); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.NotFound, "Player config not found")
+		}
+		if status.Code(err) != codes.Unknown {
+			return nil, err
+		}
+		s.logger.Error("Failed to delete player config", "error", err)
+		return nil, status.Error(codes.Internal, "Failed to delete player config")
+	}
+
+	return messageResponse("Player config deleted"), nil
 }

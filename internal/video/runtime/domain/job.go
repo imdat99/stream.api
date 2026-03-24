@@ -17,6 +17,7 @@ type Job struct {
 	Status        JobStatus `json:"status" gorm:"type:varchar(32);index"`
 	Priority      int       `json:"priority" gorm:"default:0;index"`
 	UserID        string    `json:"user_id" gorm:"index"`
+	VideoID       string    `json:"video_id,omitempty"`
 	Name          string    `json:"name"`
 	TimeLimit     int64     `json:"time_limit"`
 	InputURL      string    `json:"input_url"`

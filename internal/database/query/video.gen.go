@@ -47,6 +47,8 @@ func newVideo(db *gorm.DB, opts ...gen.DOOption) video {
 	_video.CreatedAt = field.NewTime(tableName, "created_at")
 	_video.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_video.Version = field.NewInt64(tableName, "version")
+	_video.AdID = field.NewString(tableName, "ad_id")
+	_video.Metadata = field.NewField(tableName, "metadata")
 
 	_video.fillFieldMap()
 
@@ -76,6 +78,8 @@ type video struct {
 	CreatedAt        field.Time
 	UpdatedAt        field.Time
 	Version          field.Int64
+	AdID             field.String
+	Metadata         field.Field
 
 	fieldMap map[string]field.Expr
 }
@@ -111,6 +115,8 @@ func (v *video) updateTableName(table string) *video {
 	v.CreatedAt = field.NewTime(table, "created_at")
 	v.UpdatedAt = field.NewTime(table, "updated_at")
 	v.Version = field.NewInt64(table, "version")
+	v.AdID = field.NewString(table, "ad_id")
+	v.Metadata = field.NewField(table, "metadata")
 
 	v.fillFieldMap()
 
@@ -135,7 +141,7 @@ func (v *video) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (v *video) fillFieldMap() {
-	v.fieldMap = make(map[string]field.Expr, 19)
+	v.fieldMap = make(map[string]field.Expr, 21)
 	v.fieldMap["id"] = v.ID
 	v.fieldMap["name"] = v.Name
 	v.fieldMap["title"] = v.Title
@@ -155,6 +161,8 @@ func (v *video) fillFieldMap() {
 	v.fieldMap["created_at"] = v.CreatedAt
 	v.fieldMap["updated_at"] = v.UpdatedAt
 	v.fieldMap["version"] = v.Version
+	v.fieldMap["ad_id"] = v.AdID
+	v.fieldMap["metadata"] = v.Metadata
 }
 
 func (v video) clone(db *gorm.DB) video {

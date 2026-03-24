@@ -84,8 +84,9 @@ type User struct {
 	WalletBalance     float64                `protobuf:"fixed64,14,opt,name=wallet_balance,json=walletBalance,proto3" json:"wallet_balance,omitempty"`
 	Language          string                 `protobuf:"bytes,15,opt,name=language,proto3" json:"language,omitempty"`
 	Locale            string                 `protobuf:"bytes,16,opt,name=locale,proto3" json:"locale,omitempty"`
-	CreatedAt         *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt         *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	TelegramId        string                 `protobuf:"bytes,17,opt,name=telegram_id,json=telegramId,proto3" json:"telegram_id,omitempty"`
+	CreatedAt         *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt         *timestamppb.Timestamp `protobuf:"bytes,19,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -228,6 +229,13 @@ func (x *User) GetLanguage() string {
 func (x *User) GetLocale() string {
 	if x != nil {
 		return x.Locale
+	}
+	return ""
+}
+
+func (x *User) GetTelegramId() string {
+	if x != nil {
+		return x.TelegramId
 	}
 	return ""
 }
@@ -670,6 +678,350 @@ func (x *AdTemplate) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+type PlayerConfig struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Description   *string                `protobuf:"bytes,3,opt,name=description,proto3,oneof" json:"description,omitempty"`
+	Autoplay      bool                   `protobuf:"varint,4,opt,name=autoplay,proto3" json:"autoplay,omitempty"`
+	Loop          bool                   `protobuf:"varint,5,opt,name=loop,proto3" json:"loop,omitempty"`
+	Muted         bool                   `protobuf:"varint,6,opt,name=muted,proto3" json:"muted,omitempty"`
+	ShowControls  bool                   `protobuf:"varint,7,opt,name=show_controls,json=showControls,proto3" json:"show_controls,omitempty"`
+	Pip           bool                   `protobuf:"varint,8,opt,name=pip,proto3" json:"pip,omitempty"`
+	Airplay       bool                   `protobuf:"varint,9,opt,name=airplay,proto3" json:"airplay,omitempty"`
+	Chromecast    bool                   `protobuf:"varint,10,opt,name=chromecast,proto3" json:"chromecast,omitempty"`
+	IsActive      bool                   `protobuf:"varint,11,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty"`
+	IsDefault     bool                   `protobuf:"varint,12,opt,name=is_default,json=isDefault,proto3" json:"is_default,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	EncrytionM3U8 bool                   `protobuf:"varint,15,opt,name=encrytion_m3u8,json=encrytionM3u8,proto3" json:"encrytion_m3u8,omitempty"`
+	LogoUrl       *string                `protobuf:"bytes,16,opt,name=logo_url,json=logoUrl,proto3,oneof" json:"logo_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlayerConfig) Reset() {
+	*x = PlayerConfig{}
+	mi := &file_app_v1_common_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlayerConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlayerConfig) ProtoMessage() {}
+
+func (x *PlayerConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_common_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlayerConfig.ProtoReflect.Descriptor instead.
+func (*PlayerConfig) Descriptor() ([]byte, []int) {
+	return file_app_v1_common_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *PlayerConfig) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *PlayerConfig) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *PlayerConfig) GetDescription() string {
+	if x != nil && x.Description != nil {
+		return *x.Description
+	}
+	return ""
+}
+
+func (x *PlayerConfig) GetAutoplay() bool {
+	if x != nil {
+		return x.Autoplay
+	}
+	return false
+}
+
+func (x *PlayerConfig) GetLoop() bool {
+	if x != nil {
+		return x.Loop
+	}
+	return false
+}
+
+func (x *PlayerConfig) GetMuted() bool {
+	if x != nil {
+		return x.Muted
+	}
+	return false
+}
+
+func (x *PlayerConfig) GetShowControls() bool {
+	if x != nil {
+		return x.ShowControls
+	}
+	return false
+}
+
+func (x *PlayerConfig) GetPip() bool {
+	if x != nil {
+		return x.Pip
+	}
+	return false
+}
+
+func (x *PlayerConfig) GetAirplay() bool {
+	if x != nil {
+		return x.Airplay
+	}
+	return false
+}
+
+func (x *PlayerConfig) GetChromecast() bool {
+	if x != nil {
+		return x.Chromecast
+	}
+	return false
+}
+
+func (x *PlayerConfig) GetIsActive() bool {
+	if x != nil {
+		return x.IsActive
+	}
+	return false
+}
+
+func (x *PlayerConfig) GetIsDefault() bool {
+	if x != nil {
+		return x.IsDefault
+	}
+	return false
+}
+
+func (x *PlayerConfig) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *PlayerConfig) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+func (x *PlayerConfig) GetEncrytionM3U8() bool {
+	if x != nil {
+		return x.EncrytionM3U8
+	}
+	return false
+}
+
+func (x *PlayerConfig) GetLogoUrl() string {
+	if x != nil && x.LogoUrl != nil {
+		return *x.LogoUrl
+	}
+	return ""
+}
+
+type AdminPlayerConfig struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Description   *string                `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
+	Autoplay      bool                   `protobuf:"varint,5,opt,name=autoplay,proto3" json:"autoplay,omitempty"`
+	Loop          bool                   `protobuf:"varint,6,opt,name=loop,proto3" json:"loop,omitempty"`
+	Muted         bool                   `protobuf:"varint,7,opt,name=muted,proto3" json:"muted,omitempty"`
+	ShowControls  bool                   `protobuf:"varint,8,opt,name=show_controls,json=showControls,proto3" json:"show_controls,omitempty"`
+	Pip           bool                   `protobuf:"varint,9,opt,name=pip,proto3" json:"pip,omitempty"`
+	Airplay       bool                   `protobuf:"varint,10,opt,name=airplay,proto3" json:"airplay,omitempty"`
+	Chromecast    bool                   `protobuf:"varint,11,opt,name=chromecast,proto3" json:"chromecast,omitempty"`
+	IsActive      bool                   `protobuf:"varint,12,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty"`
+	IsDefault     bool                   `protobuf:"varint,13,opt,name=is_default,json=isDefault,proto3" json:"is_default,omitempty"`
+	OwnerEmail    *string                `protobuf:"bytes,14,opt,name=owner_email,json=ownerEmail,proto3,oneof" json:"owner_email,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	EncrytionM3U8 bool                   `protobuf:"varint,17,opt,name=encrytion_m3u8,json=encrytionM3u8,proto3" json:"encrytion_m3u8,omitempty"`
+	LogoUrl       *string                `protobuf:"bytes,18,opt,name=logo_url,json=logoUrl,proto3,oneof" json:"logo_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminPlayerConfig) Reset() {
+	*x = AdminPlayerConfig{}
+	mi := &file_app_v1_common_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminPlayerConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminPlayerConfig) ProtoMessage() {}
+
+func (x *AdminPlayerConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_common_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminPlayerConfig.ProtoReflect.Descriptor instead.
+func (*AdminPlayerConfig) Descriptor() ([]byte, []int) {
+	return file_app_v1_common_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *AdminPlayerConfig) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *AdminPlayerConfig) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *AdminPlayerConfig) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *AdminPlayerConfig) GetDescription() string {
+	if x != nil && x.Description != nil {
+		return *x.Description
+	}
+	return ""
+}
+
+func (x *AdminPlayerConfig) GetAutoplay() bool {
+	if x != nil {
+		return x.Autoplay
+	}
+	return false
+}
+
+func (x *AdminPlayerConfig) GetLoop() bool {
+	if x != nil {
+		return x.Loop
+	}
+	return false
+}
+
+func (x *AdminPlayerConfig) GetMuted() bool {
+	if x != nil {
+		return x.Muted
+	}
+	return false
+}
+
+func (x *AdminPlayerConfig) GetShowControls() bool {
+	if x != nil {
+		return x.ShowControls
+	}
+	return false
+}
+
+func (x *AdminPlayerConfig) GetPip() bool {
+	if x != nil {
+		return x.Pip
+	}
+	return false
+}
+
+func (x *AdminPlayerConfig) GetAirplay() bool {
+	if x != nil {
+		return x.Airplay
+	}
+	return false
+}
+
+func (x *AdminPlayerConfig) GetChromecast() bool {
+	if x != nil {
+		return x.Chromecast
+	}
+	return false
+}
+
+func (x *AdminPlayerConfig) GetIsActive() bool {
+	if x != nil {
+		return x.IsActive
+	}
+	return false
+}
+
+func (x *AdminPlayerConfig) GetIsDefault() bool {
+	if x != nil {
+		return x.IsDefault
+	}
+	return false
+}
+
+func (x *AdminPlayerConfig) GetOwnerEmail() string {
+	if x != nil && x.OwnerEmail != nil {
+		return *x.OwnerEmail
+	}
+	return ""
+}
+
+func (x *AdminPlayerConfig) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *AdminPlayerConfig) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+func (x *AdminPlayerConfig) GetEncrytionM3U8() bool {
+	if x != nil {
+		return x.EncrytionM3U8
+	}
+	return false
+}
+
+func (x *AdminPlayerConfig) GetLogoUrl() string {
+	if x != nil && x.LogoUrl != nil {
+		return *x.LogoUrl
+	}
+	return ""
+}
+
 type Plan struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -689,7 +1041,7 @@ type Plan struct {
 
 func (x *Plan) Reset() {
 	*x = Plan{}
-	mi := &file_app_v1_common_proto_msgTypes[6]
+	mi := &file_app_v1_common_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -701,7 +1053,7 @@ func (x *Plan) String() string {
 func (*Plan) ProtoMessage() {}
 
 func (x *Plan) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_common_proto_msgTypes[6]
+	mi := &file_app_v1_common_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -714,7 +1066,7 @@ func (x *Plan) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Plan.ProtoReflect.Descriptor instead.
 func (*Plan) Descriptor() ([]byte, []int) {
-	return file_app_v1_common_proto_rawDescGZIP(), []int{6}
+	return file_app_v1_common_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Plan) GetId() string {
@@ -812,7 +1164,7 @@ type Payment struct {
 
 func (x *Payment) Reset() {
 	*x = Payment{}
-	mi := &file_app_v1_common_proto_msgTypes[7]
+	mi := &file_app_v1_common_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -824,7 +1176,7 @@ func (x *Payment) String() string {
 func (*Payment) ProtoMessage() {}
 
 func (x *Payment) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_common_proto_msgTypes[7]
+	mi := &file_app_v1_common_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -837,7 +1189,7 @@ func (x *Payment) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Payment.ProtoReflect.Descriptor instead.
 func (*Payment) Descriptor() ([]byte, []int) {
-	return file_app_v1_common_proto_rawDescGZIP(), []int{7}
+	return file_app_v1_common_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *Payment) GetId() string {
@@ -930,7 +1282,7 @@ type PlanSubscription struct {
 
 func (x *PlanSubscription) Reset() {
 	*x = PlanSubscription{}
-	mi := &file_app_v1_common_proto_msgTypes[8]
+	mi := &file_app_v1_common_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -942,7 +1294,7 @@ func (x *PlanSubscription) String() string {
 func (*PlanSubscription) ProtoMessage() {}
 
 func (x *PlanSubscription) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_common_proto_msgTypes[8]
+	mi := &file_app_v1_common_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -955,7 +1307,7 @@ func (x *PlanSubscription) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanSubscription.ProtoReflect.Descriptor instead.
 func (*PlanSubscription) Descriptor() ([]byte, []int) {
-	return file_app_v1_common_proto_rawDescGZIP(), []int{8}
+	return file_app_v1_common_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *PlanSubscription) GetId() string {
@@ -1061,7 +1413,7 @@ type WalletTransaction struct {
 
 func (x *WalletTransaction) Reset() {
 	*x = WalletTransaction{}
-	mi := &file_app_v1_common_proto_msgTypes[9]
+	mi := &file_app_v1_common_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1073,7 +1425,7 @@ func (x *WalletTransaction) String() string {
 func (*WalletTransaction) ProtoMessage() {}
 
 func (x *WalletTransaction) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_common_proto_msgTypes[9]
+	mi := &file_app_v1_common_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1086,7 +1438,7 @@ func (x *WalletTransaction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WalletTransaction.ProtoReflect.Descriptor instead.
 func (*WalletTransaction) Descriptor() ([]byte, []int) {
-	return file_app_v1_common_proto_rawDescGZIP(), []int{9}
+	return file_app_v1_common_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *WalletTransaction) GetId() string {
@@ -1186,7 +1538,7 @@ type PaymentHistoryItem struct {
 
 func (x *PaymentHistoryItem) Reset() {
 	*x = PaymentHistoryItem{}
-	mi := &file_app_v1_common_proto_msgTypes[10]
+	mi := &file_app_v1_common_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1198,7 +1550,7 @@ func (x *PaymentHistoryItem) String() string {
 func (*PaymentHistoryItem) ProtoMessage() {}
 
 func (x *PaymentHistoryItem) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_common_proto_msgTypes[10]
+	mi := &file_app_v1_common_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1211,7 +1563,7 @@ func (x *PaymentHistoryItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PaymentHistoryItem.ProtoReflect.Descriptor instead.
 func (*PaymentHistoryItem) Descriptor() ([]byte, []int) {
-	return file_app_v1_common_proto_rawDescGZIP(), []int{10}
+	return file_app_v1_common_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *PaymentHistoryItem) GetId() string {
@@ -1314,13 +1666,14 @@ type Video struct {
 	StorageType      *string                `protobuf:"bytes,12,opt,name=storage_type,json=storageType,proto3,oneof" json:"storage_type,omitempty"`
 	CreatedAt        *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt        *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	JobId            *string                `protobuf:"bytes,15,opt,name=job_id,json=jobId,proto3,oneof" json:"job_id,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
 
 func (x *Video) Reset() {
 	*x = Video{}
-	mi := &file_app_v1_common_proto_msgTypes[11]
+	mi := &file_app_v1_common_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1332,7 +1685,7 @@ func (x *Video) String() string {
 func (*Video) ProtoMessage() {}
 
 func (x *Video) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_common_proto_msgTypes[11]
+	mi := &file_app_v1_common_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1345,7 +1698,7 @@ func (x *Video) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Video.ProtoReflect.Descriptor instead.
 func (*Video) Descriptor() ([]byte, []int) {
-	return file_app_v1_common_proto_rawDescGZIP(), []int{11}
+	return file_app_v1_common_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *Video) GetId() string {
@@ -1446,6 +1799,13 @@ func (x *Video) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *Video) GetJobId() string {
+	if x != nil && x.JobId != nil {
+		return *x.JobId
+	}
+	return ""
+}
+
 type AdminDashboard struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
 	TotalUsers          int64                  `protobuf:"varint,1,opt,name=total_users,json=totalUsers,proto3" json:"total_users,omitempty"`
@@ -1463,7 +1823,7 @@ type AdminDashboard struct {
 
 func (x *AdminDashboard) Reset() {
 	*x = AdminDashboard{}
-	mi := &file_app_v1_common_proto_msgTypes[12]
+	mi := &file_app_v1_common_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1475,7 +1835,7 @@ func (x *AdminDashboard) String() string {
 func (*AdminDashboard) ProtoMessage() {}
 
 func (x *AdminDashboard) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_common_proto_msgTypes[12]
+	mi := &file_app_v1_common_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1488,7 +1848,7 @@ func (x *AdminDashboard) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminDashboard.ProtoReflect.Descriptor instead.
 func (*AdminDashboard) Descriptor() ([]byte, []int) {
-	return file_app_v1_common_proto_rawDescGZIP(), []int{12}
+	return file_app_v1_common_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *AdminDashboard) GetTotalUsers() int64 {
@@ -1574,7 +1934,7 @@ type AdminUser struct {
 
 func (x *AdminUser) Reset() {
 	*x = AdminUser{}
-	mi := &file_app_v1_common_proto_msgTypes[13]
+	mi := &file_app_v1_common_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1586,7 +1946,7 @@ func (x *AdminUser) String() string {
 func (*AdminUser) ProtoMessage() {}
 
 func (x *AdminUser) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_common_proto_msgTypes[13]
+	mi := &file_app_v1_common_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1599,7 +1959,7 @@ func (x *AdminUser) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminUser.ProtoReflect.Descriptor instead.
 func (*AdminUser) Descriptor() ([]byte, []int) {
-	return file_app_v1_common_proto_rawDescGZIP(), []int{13}
+	return file_app_v1_common_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *AdminUser) GetId() string {
@@ -1686,17 +2046,186 @@ func (x *AdminUser) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+type ReferralUserSummary struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
+	Username      *string                `protobuf:"bytes,3,opt,name=username,proto3,oneof" json:"username,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReferralUserSummary) Reset() {
+	*x = ReferralUserSummary{}
+	mi := &file_app_v1_common_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReferralUserSummary) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReferralUserSummary) ProtoMessage() {}
+
+func (x *ReferralUserSummary) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_common_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReferralUserSummary.ProtoReflect.Descriptor instead.
+func (*ReferralUserSummary) Descriptor() ([]byte, []int) {
+	return file_app_v1_common_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *ReferralUserSummary) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *ReferralUserSummary) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *ReferralUserSummary) GetUsername() string {
+	if x != nil && x.Username != nil {
+		return *x.Username
+	}
+	return ""
+}
+
+type AdminUserReferralInfo struct {
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	Referrer               *ReferralUserSummary   `protobuf:"bytes,1,opt,name=referrer,proto3,oneof" json:"referrer,omitempty"`
+	ReferralEligible       bool                   `protobuf:"varint,2,opt,name=referral_eligible,json=referralEligible,proto3" json:"referral_eligible,omitempty"`
+	EffectiveRewardPercent float64                `protobuf:"fixed64,3,opt,name=effective_reward_percent,json=effectiveRewardPercent,proto3" json:"effective_reward_percent,omitempty"`
+	RewardOverridePercent  *float64               `protobuf:"fixed64,4,opt,name=reward_override_percent,json=rewardOverridePercent,proto3,oneof" json:"reward_override_percent,omitempty"`
+	ShareLink              *string                `protobuf:"bytes,5,opt,name=share_link,json=shareLink,proto3,oneof" json:"share_link,omitempty"`
+	RewardGranted          bool                   `protobuf:"varint,6,opt,name=reward_granted,json=rewardGranted,proto3" json:"reward_granted,omitempty"`
+	RewardGrantedAt        *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=reward_granted_at,json=rewardGrantedAt,proto3" json:"reward_granted_at,omitempty"`
+	RewardPaymentId        *string                `protobuf:"bytes,8,opt,name=reward_payment_id,json=rewardPaymentId,proto3,oneof" json:"reward_payment_id,omitempty"`
+	RewardAmount           *float64               `protobuf:"fixed64,9,opt,name=reward_amount,json=rewardAmount,proto3,oneof" json:"reward_amount,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *AdminUserReferralInfo) Reset() {
+	*x = AdminUserReferralInfo{}
+	mi := &file_app_v1_common_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminUserReferralInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminUserReferralInfo) ProtoMessage() {}
+
+func (x *AdminUserReferralInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_common_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminUserReferralInfo.ProtoReflect.Descriptor instead.
+func (*AdminUserReferralInfo) Descriptor() ([]byte, []int) {
+	return file_app_v1_common_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *AdminUserReferralInfo) GetReferrer() *ReferralUserSummary {
+	if x != nil {
+		return x.Referrer
+	}
+	return nil
+}
+
+func (x *AdminUserReferralInfo) GetReferralEligible() bool {
+	if x != nil {
+		return x.ReferralEligible
+	}
+	return false
+}
+
+func (x *AdminUserReferralInfo) GetEffectiveRewardPercent() float64 {
+	if x != nil {
+		return x.EffectiveRewardPercent
+	}
+	return 0
+}
+
+func (x *AdminUserReferralInfo) GetRewardOverridePercent() float64 {
+	if x != nil && x.RewardOverridePercent != nil {
+		return *x.RewardOverridePercent
+	}
+	return 0
+}
+
+func (x *AdminUserReferralInfo) GetShareLink() string {
+	if x != nil && x.ShareLink != nil {
+		return *x.ShareLink
+	}
+	return ""
+}
+
+func (x *AdminUserReferralInfo) GetRewardGranted() bool {
+	if x != nil {
+		return x.RewardGranted
+	}
+	return false
+}
+
+func (x *AdminUserReferralInfo) GetRewardGrantedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.RewardGrantedAt
+	}
+	return nil
+}
+
+func (x *AdminUserReferralInfo) GetRewardPaymentId() string {
+	if x != nil && x.RewardPaymentId != nil {
+		return *x.RewardPaymentId
+	}
+	return ""
+}
+
+func (x *AdminUserReferralInfo) GetRewardAmount() float64 {
+	if x != nil && x.RewardAmount != nil {
+		return *x.RewardAmount
+	}
+	return 0
+}
+
 type AdminUserDetail struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	User          *AdminUser             `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
 	Subscription  *PlanSubscription      `protobuf:"bytes,2,opt,name=subscription,proto3,oneof" json:"subscription,omitempty"`
+	Referral      *AdminUserReferralInfo `protobuf:"bytes,3,opt,name=referral,proto3,oneof" json:"referral,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AdminUserDetail) Reset() {
 	*x = AdminUserDetail{}
-	mi := &file_app_v1_common_proto_msgTypes[14]
+	mi := &file_app_v1_common_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1708,7 +2237,7 @@ func (x *AdminUserDetail) String() string {
 func (*AdminUserDetail) ProtoMessage() {}
 
 func (x *AdminUserDetail) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_common_proto_msgTypes[14]
+	mi := &file_app_v1_common_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1721,7 +2250,7 @@ func (x *AdminUserDetail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminUserDetail.ProtoReflect.Descriptor instead.
 func (*AdminUserDetail) Descriptor() ([]byte, []int) {
-	return file_app_v1_common_proto_rawDescGZIP(), []int{14}
+	return file_app_v1_common_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *AdminUserDetail) GetUser() *AdminUser {
@@ -1738,29 +2267,38 @@ func (x *AdminUserDetail) GetSubscription() *PlanSubscription {
 	return nil
 }
 
+func (x *AdminUserDetail) GetReferral() *AdminUserReferralInfo {
+	if x != nil {
+		return x.Referral
+	}
+	return nil
+}
+
 type AdminVideo struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	UserId         string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Title          string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	Description    *string                `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
-	Url            string                 `protobuf:"bytes,5,opt,name=url,proto3" json:"url,omitempty"`
-	Status         string                 `protobuf:"bytes,6,opt,name=status,proto3" json:"status,omitempty"`
-	Size           int64                  `protobuf:"varint,7,opt,name=size,proto3" json:"size,omitempty"`
-	Duration       int32                  `protobuf:"varint,8,opt,name=duration,proto3" json:"duration,omitempty"`
-	Format         string                 `protobuf:"bytes,9,opt,name=format,proto3" json:"format,omitempty"`
-	OwnerEmail     *string                `protobuf:"bytes,10,opt,name=owner_email,json=ownerEmail,proto3,oneof" json:"owner_email,omitempty"`
-	AdTemplateId   *string                `protobuf:"bytes,11,opt,name=ad_template_id,json=adTemplateId,proto3,oneof" json:"ad_template_id,omitempty"`
-	AdTemplateName *string                `protobuf:"bytes,12,opt,name=ad_template_name,json=adTemplateName,proto3,oneof" json:"ad_template_name,omitempty"`
-	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt      *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	UserId           string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Title            string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	Description      *string                `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
+	Url              string                 `protobuf:"bytes,5,opt,name=url,proto3" json:"url,omitempty"`
+	Status           string                 `protobuf:"bytes,6,opt,name=status,proto3" json:"status,omitempty"`
+	Size             int64                  `protobuf:"varint,7,opt,name=size,proto3" json:"size,omitempty"`
+	Duration         int32                  `protobuf:"varint,8,opt,name=duration,proto3" json:"duration,omitempty"`
+	Format           string                 `protobuf:"bytes,9,opt,name=format,proto3" json:"format,omitempty"`
+	OwnerEmail       *string                `protobuf:"bytes,10,opt,name=owner_email,json=ownerEmail,proto3,oneof" json:"owner_email,omitempty"`
+	AdTemplateId     *string                `protobuf:"bytes,11,opt,name=ad_template_id,json=adTemplateId,proto3,oneof" json:"ad_template_id,omitempty"`
+	AdTemplateName   *string                `protobuf:"bytes,12,opt,name=ad_template_name,json=adTemplateName,proto3,oneof" json:"ad_template_name,omitempty"`
+	CreatedAt        *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt        *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	ProcessingStatus *string                `protobuf:"bytes,15,opt,name=processing_status,json=processingStatus,proto3,oneof" json:"processing_status,omitempty"`
+	JobId            *string                `protobuf:"bytes,16,opt,name=job_id,json=jobId,proto3,oneof" json:"job_id,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *AdminVideo) Reset() {
 	*x = AdminVideo{}
-	mi := &file_app_v1_common_proto_msgTypes[15]
+	mi := &file_app_v1_common_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1772,7 +2310,7 @@ func (x *AdminVideo) String() string {
 func (*AdminVideo) ProtoMessage() {}
 
 func (x *AdminVideo) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_common_proto_msgTypes[15]
+	mi := &file_app_v1_common_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1785,7 +2323,7 @@ func (x *AdminVideo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminVideo.ProtoReflect.Descriptor instead.
 func (*AdminVideo) Descriptor() ([]byte, []int) {
-	return file_app_v1_common_proto_rawDescGZIP(), []int{15}
+	return file_app_v1_common_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *AdminVideo) GetId() string {
@@ -1886,6 +2424,20 @@ func (x *AdminVideo) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *AdminVideo) GetProcessingStatus() string {
+	if x != nil && x.ProcessingStatus != nil {
+		return *x.ProcessingStatus
+	}
+	return ""
+}
+
+func (x *AdminVideo) GetJobId() string {
+	if x != nil && x.JobId != nil {
+		return *x.JobId
+	}
+	return ""
+}
+
 type AdminPayment struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1912,7 +2464,7 @@ type AdminPayment struct {
 
 func (x *AdminPayment) Reset() {
 	*x = AdminPayment{}
-	mi := &file_app_v1_common_proto_msgTypes[16]
+	mi := &file_app_v1_common_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1924,7 +2476,7 @@ func (x *AdminPayment) String() string {
 func (*AdminPayment) ProtoMessage() {}
 
 func (x *AdminPayment) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_common_proto_msgTypes[16]
+	mi := &file_app_v1_common_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1937,7 +2489,7 @@ func (x *AdminPayment) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminPayment.ProtoReflect.Descriptor instead.
 func (*AdminPayment) Descriptor() ([]byte, []int) {
-	return file_app_v1_common_proto_rawDescGZIP(), []int{16}
+	return file_app_v1_common_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *AdminPayment) GetId() string {
@@ -2088,7 +2640,7 @@ type AdminPlan struct {
 
 func (x *AdminPlan) Reset() {
 	*x = AdminPlan{}
-	mi := &file_app_v1_common_proto_msgTypes[17]
+	mi := &file_app_v1_common_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2100,7 +2652,7 @@ func (x *AdminPlan) String() string {
 func (*AdminPlan) ProtoMessage() {}
 
 func (x *AdminPlan) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_common_proto_msgTypes[17]
+	mi := &file_app_v1_common_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2113,7 +2665,7 @@ func (x *AdminPlan) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminPlan.ProtoReflect.Descriptor instead.
 func (*AdminPlan) Descriptor() ([]byte, []int) {
-	return file_app_v1_common_proto_rawDescGZIP(), []int{17}
+	return file_app_v1_common_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *AdminPlan) GetId() string {
@@ -2234,7 +2786,7 @@ type AdminAdTemplate struct {
 
 func (x *AdminAdTemplate) Reset() {
 	*x = AdminAdTemplate{}
-	mi := &file_app_v1_common_proto_msgTypes[18]
+	mi := &file_app_v1_common_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2246,7 +2798,7 @@ func (x *AdminAdTemplate) String() string {
 func (*AdminAdTemplate) ProtoMessage() {}
 
 func (x *AdminAdTemplate) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_common_proto_msgTypes[18]
+	mi := &file_app_v1_common_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2259,7 +2811,7 @@ func (x *AdminAdTemplate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminAdTemplate.ProtoReflect.Descriptor instead.
 func (*AdminAdTemplate) Descriptor() ([]byte, []int) {
-	return file_app_v1_common_proto_rawDescGZIP(), []int{18}
+	return file_app_v1_common_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *AdminAdTemplate) GetId() string {
@@ -2367,13 +2919,14 @@ type AdminJob struct {
 	MaxRetries    int32                  `protobuf:"varint,17,opt,name=max_retries,json=maxRetries,proto3" json:"max_retries,omitempty"`
 	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,19,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	VideoId       *string                `protobuf:"bytes,20,opt,name=video_id,json=videoId,proto3,oneof" json:"video_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AdminJob) Reset() {
 	*x = AdminJob{}
-	mi := &file_app_v1_common_proto_msgTypes[19]
+	mi := &file_app_v1_common_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2385,7 +2938,7 @@ func (x *AdminJob) String() string {
 func (*AdminJob) ProtoMessage() {}
 
 func (x *AdminJob) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_common_proto_msgTypes[19]
+	mi := &file_app_v1_common_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2398,7 +2951,7 @@ func (x *AdminJob) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminJob.ProtoReflect.Descriptor instead.
 func (*AdminJob) Descriptor() ([]byte, []int) {
-	return file_app_v1_common_proto_rawDescGZIP(), []int{19}
+	return file_app_v1_common_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *AdminJob) GetId() string {
@@ -2534,6 +3087,13 @@ func (x *AdminJob) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *AdminJob) GetVideoId() string {
+	if x != nil && x.VideoId != nil {
+		return *x.VideoId
+	}
+	return ""
+}
+
 type AdminAgent struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -2554,7 +3114,7 @@ type AdminAgent struct {
 
 func (x *AdminAgent) Reset() {
 	*x = AdminAgent{}
-	mi := &file_app_v1_common_proto_msgTypes[20]
+	mi := &file_app_v1_common_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2566,7 +3126,7 @@ func (x *AdminAgent) String() string {
 func (*AdminAgent) ProtoMessage() {}
 
 func (x *AdminAgent) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_common_proto_msgTypes[20]
+	mi := &file_app_v1_common_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2579,7 +3139,7 @@ func (x *AdminAgent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminAgent.ProtoReflect.Descriptor instead.
 func (*AdminAgent) Descriptor() ([]byte, []int) {
-	return file_app_v1_common_proto_rawDescGZIP(), []int{20}
+	return file_app_v1_common_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *AdminAgent) GetId() string {
@@ -2672,7 +3232,7 @@ const file_app_v1_common_proto_rawDesc = "" +
 	"\n" +
 	"\x13app/v1/common.proto\x12\rstream.app.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"+\n" +
 	"\x0fMessageResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"\xb9\x06\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"\xda\x06\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1f\n" +
@@ -2690,11 +3250,13 @@ const file_app_v1_common_proto_rawDesc = "" +
 	"\x12plan_expiring_soon\x18\r \x01(\bR\x10planExpiringSoon\x12%\n" +
 	"\x0ewallet_balance\x18\x0e \x01(\x01R\rwalletBalance\x12\x1a\n" +
 	"\blanguage\x18\x0f \x01(\tR\blanguage\x12\x16\n" +
-	"\x06locale\x18\x10 \x01(\tR\x06locale\x129\n" +
+	"\x06locale\x18\x10 \x01(\tR\x06locale\x12\x1f\n" +
+	"\vtelegram_id\x18\x11 \x01(\tR\n" +
+	"telegramId\x129\n" +
 	"\n" +
-	"created_at\x18\x11 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"created_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\v\n" +
+	"updated_at\x18\x13 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\v\n" +
 	"\t_usernameB\t\n" +
 	"\a_avatarB\a\n" +
 	"\x05_roleB\f\n" +
@@ -2759,7 +3321,61 @@ const file_app_v1_common_proto_rawDesc = "" +
 	"updated_at\x18\n" +
 	" \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\x0e\n" +
 	"\f_descriptionB\v\n" +
-	"\t_duration\"\xda\x02\n" +
+	"\t_duration\"\xa6\x04\n" +
+	"\fPlayerConfig\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12%\n" +
+	"\vdescription\x18\x03 \x01(\tH\x00R\vdescription\x88\x01\x01\x12\x1a\n" +
+	"\bautoplay\x18\x04 \x01(\bR\bautoplay\x12\x12\n" +
+	"\x04loop\x18\x05 \x01(\bR\x04loop\x12\x14\n" +
+	"\x05muted\x18\x06 \x01(\bR\x05muted\x12#\n" +
+	"\rshow_controls\x18\a \x01(\bR\fshowControls\x12\x10\n" +
+	"\x03pip\x18\b \x01(\bR\x03pip\x12\x18\n" +
+	"\aairplay\x18\t \x01(\bR\aairplay\x12\x1e\n" +
+	"\n" +
+	"chromecast\x18\n" +
+	" \x01(\bR\n" +
+	"chromecast\x12\x1b\n" +
+	"\tis_active\x18\v \x01(\bR\bisActive\x12\x1d\n" +
+	"\n" +
+	"is_default\x18\f \x01(\bR\tisDefault\x129\n" +
+	"\n" +
+	"created_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12%\n" +
+	"\x0eencrytion_m3u8\x18\x0f \x01(\bR\rencrytionM3u8\x12\x1e\n" +
+	"\blogo_url\x18\x10 \x01(\tH\x01R\alogoUrl\x88\x01\x01B\x0e\n" +
+	"\f_descriptionB\v\n" +
+	"\t_logo_url\"\xfa\x04\n" +
+	"\x11AdminPlayerConfig\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12%\n" +
+	"\vdescription\x18\x04 \x01(\tH\x00R\vdescription\x88\x01\x01\x12\x1a\n" +
+	"\bautoplay\x18\x05 \x01(\bR\bautoplay\x12\x12\n" +
+	"\x04loop\x18\x06 \x01(\bR\x04loop\x12\x14\n" +
+	"\x05muted\x18\a \x01(\bR\x05muted\x12#\n" +
+	"\rshow_controls\x18\b \x01(\bR\fshowControls\x12\x10\n" +
+	"\x03pip\x18\t \x01(\bR\x03pip\x12\x18\n" +
+	"\aairplay\x18\n" +
+	" \x01(\bR\aairplay\x12\x1e\n" +
+	"\n" +
+	"chromecast\x18\v \x01(\bR\n" +
+	"chromecast\x12\x1b\n" +
+	"\tis_active\x18\f \x01(\bR\bisActive\x12\x1d\n" +
+	"\n" +
+	"is_default\x18\r \x01(\bR\tisDefault\x12$\n" +
+	"\vowner_email\x18\x0e \x01(\tH\x01R\n" +
+	"ownerEmail\x88\x01\x01\x129\n" +
+	"\n" +
+	"created_at\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12%\n" +
+	"\x0eencrytion_m3u8\x18\x11 \x01(\bR\rencrytionM3u8\x12\x1e\n" +
+	"\blogo_url\x18\x12 \x01(\tH\x02R\alogoUrl\x88\x01\x01B\x0e\n" +
+	"\f_descriptionB\x0e\n" +
+	"\f_owner_emailB\v\n" +
+	"\t_logo_url\"\xda\x02\n" +
 	"\x04Plan\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12%\n" +
@@ -2856,7 +3472,7 @@ const file_app_v1_common_proto_rawDesc = "" +
 	"\n" +
 	"_plan_nameB\x0e\n" +
 	"\f_term_monthsB\x11\n" +
-	"\x0f_payment_method\"\x97\x04\n" +
+	"\x0f_payment_method\"\xbe\x04\n" +
 	"\x05Video\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x14\n" +
@@ -2874,12 +3490,14 @@ const file_app_v1_common_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\x0e\n" +
+	"updated_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x1a\n" +
+	"\x06job_id\x18\x0f \x01(\tH\x04R\x05jobId\x88\x01\x01B\x0e\n" +
 	"\f_descriptionB\f\n" +
 	"\n" +
 	"_thumbnailB\x14\n" +
 	"\x12_processing_statusB\x0f\n" +
-	"\r_storage_type\"\x81\x03\n" +
+	"\r_storage_typeB\t\n" +
+	"\a_job_id\"\x81\x03\n" +
 	"\x0eAdminDashboard\x12\x1f\n" +
 	"\vtotal_users\x18\x01 \x01(\x03R\n" +
 	"totalUsers\x12!\n" +
@@ -2914,11 +3532,34 @@ const file_app_v1_common_proto_rawDesc = "" +
 	"\n" +
 	"\b_plan_idB\f\n" +
 	"\n" +
-	"_plan_name\"\x9a\x01\n" +
+	"_plan_name\"i\n" +
+	"\x13ReferralUserSummary\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1f\n" +
+	"\busername\x18\x03 \x01(\tH\x00R\busername\x88\x01\x01B\v\n" +
+	"\t_username\"\xce\x04\n" +
+	"\x15AdminUserReferralInfo\x12C\n" +
+	"\breferrer\x18\x01 \x01(\v2\".stream.app.v1.ReferralUserSummaryH\x00R\breferrer\x88\x01\x01\x12+\n" +
+	"\x11referral_eligible\x18\x02 \x01(\bR\x10referralEligible\x128\n" +
+	"\x18effective_reward_percent\x18\x03 \x01(\x01R\x16effectiveRewardPercent\x12;\n" +
+	"\x17reward_override_percent\x18\x04 \x01(\x01H\x01R\x15rewardOverridePercent\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"share_link\x18\x05 \x01(\tH\x02R\tshareLink\x88\x01\x01\x12%\n" +
+	"\x0ereward_granted\x18\x06 \x01(\bR\rrewardGranted\x12F\n" +
+	"\x11reward_granted_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\x0frewardGrantedAt\x12/\n" +
+	"\x11reward_payment_id\x18\b \x01(\tH\x03R\x0frewardPaymentId\x88\x01\x01\x12(\n" +
+	"\rreward_amount\x18\t \x01(\x01H\x04R\frewardAmount\x88\x01\x01B\v\n" +
+	"\t_referrerB\x1a\n" +
+	"\x18_reward_override_percentB\r\n" +
+	"\v_share_linkB\x14\n" +
+	"\x12_reward_payment_idB\x10\n" +
+	"\x0e_reward_amount\"\xee\x01\n" +
 	"\x0fAdminUserDetail\x12,\n" +
 	"\x04user\x18\x01 \x01(\v2\x18.stream.app.v1.AdminUserR\x04user\x12H\n" +
-	"\fsubscription\x18\x02 \x01(\v2\x1f.stream.app.v1.PlanSubscriptionH\x00R\fsubscription\x88\x01\x01B\x0f\n" +
-	"\r_subscription\"\xa2\x04\n" +
+	"\fsubscription\x18\x02 \x01(\v2\x1f.stream.app.v1.PlanSubscriptionH\x00R\fsubscription\x88\x01\x01\x12E\n" +
+	"\breferral\x18\x03 \x01(\v2$.stream.app.v1.AdminUserReferralInfoH\x01R\breferral\x88\x01\x01B\x0f\n" +
+	"\r_subscriptionB\v\n" +
+	"\t_referral\"\x91\x05\n" +
 	"\n" +
 	"AdminVideo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
@@ -2938,11 +3579,15 @@ const file_app_v1_common_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\x0e\n" +
+	"updated_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x120\n" +
+	"\x11processing_status\x18\x0f \x01(\tH\x04R\x10processingStatus\x88\x01\x01\x12\x1a\n" +
+	"\x06job_id\x18\x10 \x01(\tH\x05R\x05jobId\x88\x01\x01B\x0e\n" +
 	"\f_descriptionB\x0e\n" +
 	"\f_owner_emailB\x11\n" +
 	"\x0f_ad_template_idB\x13\n" +
-	"\x11_ad_template_name\"\x9d\x06\n" +
+	"\x11_ad_template_nameB\x14\n" +
+	"\x12_processing_statusB\t\n" +
+	"\a_job_id\"\x9d\x06\n" +
 	"\fAdminPayment\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x1c\n" +
@@ -3019,7 +3664,7 @@ const file_app_v1_common_proto_rawDesc = "" +
 	"updated_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\x0e\n" +
 	"\f_descriptionB\v\n" +
 	"\t_durationB\x0e\n" +
-	"\f_owner_email\"\xeb\x04\n" +
+	"\f_owner_email\"\x98\x05\n" +
 	"\bAdminJob\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\x12\x1a\n" +
@@ -3046,8 +3691,10 @@ const file_app_v1_common_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x13 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtB\v\n" +
-	"\t_agent_id\"\x91\x03\n" +
+	"updated_at\x18\x13 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x1e\n" +
+	"\bvideo_id\x18\x14 \x01(\tH\x01R\avideoId\x88\x01\x01B\v\n" +
+	"\t_agent_idB\v\n" +
+	"\t_video_id\"\x91\x03\n" +
 	"\n" +
 	"AdminAgent\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
@@ -3078,7 +3725,7 @@ func file_app_v1_common_proto_rawDescGZIP() []byte {
 	return file_app_v1_common_proto_rawDescData
 }
 
-var file_app_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_app_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_app_v1_common_proto_goTypes = []any{
 	(*MessageResponse)(nil),       // 0: stream.app.v1.MessageResponse
 	(*User)(nil),                  // 1: stream.app.v1.User
@@ -3086,65 +3733,76 @@ var file_app_v1_common_proto_goTypes = []any{
 	(*Notification)(nil),          // 3: stream.app.v1.Notification
 	(*Domain)(nil),                // 4: stream.app.v1.Domain
 	(*AdTemplate)(nil),            // 5: stream.app.v1.AdTemplate
-	(*Plan)(nil),                  // 6: stream.app.v1.Plan
-	(*Payment)(nil),               // 7: stream.app.v1.Payment
-	(*PlanSubscription)(nil),      // 8: stream.app.v1.PlanSubscription
-	(*WalletTransaction)(nil),     // 9: stream.app.v1.WalletTransaction
-	(*PaymentHistoryItem)(nil),    // 10: stream.app.v1.PaymentHistoryItem
-	(*Video)(nil),                 // 11: stream.app.v1.Video
-	(*AdminDashboard)(nil),        // 12: stream.app.v1.AdminDashboard
-	(*AdminUser)(nil),             // 13: stream.app.v1.AdminUser
-	(*AdminUserDetail)(nil),       // 14: stream.app.v1.AdminUserDetail
-	(*AdminVideo)(nil),            // 15: stream.app.v1.AdminVideo
-	(*AdminPayment)(nil),          // 16: stream.app.v1.AdminPayment
-	(*AdminPlan)(nil),             // 17: stream.app.v1.AdminPlan
-	(*AdminAdTemplate)(nil),       // 18: stream.app.v1.AdminAdTemplate
-	(*AdminJob)(nil),              // 19: stream.app.v1.AdminJob
-	(*AdminAgent)(nil),            // 20: stream.app.v1.AdminAgent
-	(*timestamppb.Timestamp)(nil), // 21: google.protobuf.Timestamp
+	(*PlayerConfig)(nil),          // 6: stream.app.v1.PlayerConfig
+	(*AdminPlayerConfig)(nil),     // 7: stream.app.v1.AdminPlayerConfig
+	(*Plan)(nil),                  // 8: stream.app.v1.Plan
+	(*Payment)(nil),               // 9: stream.app.v1.Payment
+	(*PlanSubscription)(nil),      // 10: stream.app.v1.PlanSubscription
+	(*WalletTransaction)(nil),     // 11: stream.app.v1.WalletTransaction
+	(*PaymentHistoryItem)(nil),    // 12: stream.app.v1.PaymentHistoryItem
+	(*Video)(nil),                 // 13: stream.app.v1.Video
+	(*AdminDashboard)(nil),        // 14: stream.app.v1.AdminDashboard
+	(*AdminUser)(nil),             // 15: stream.app.v1.AdminUser
+	(*ReferralUserSummary)(nil),   // 16: stream.app.v1.ReferralUserSummary
+	(*AdminUserReferralInfo)(nil), // 17: stream.app.v1.AdminUserReferralInfo
+	(*AdminUserDetail)(nil),       // 18: stream.app.v1.AdminUserDetail
+	(*AdminVideo)(nil),            // 19: stream.app.v1.AdminVideo
+	(*AdminPayment)(nil),          // 20: stream.app.v1.AdminPayment
+	(*AdminPlan)(nil),             // 21: stream.app.v1.AdminPlan
+	(*AdminAdTemplate)(nil),       // 22: stream.app.v1.AdminAdTemplate
+	(*AdminJob)(nil),              // 23: stream.app.v1.AdminJob
+	(*AdminAgent)(nil),            // 24: stream.app.v1.AdminAgent
+	(*timestamppb.Timestamp)(nil), // 25: google.protobuf.Timestamp
 }
 var file_app_v1_common_proto_depIdxs = []int32{
-	21, // 0: stream.app.v1.User.plan_started_at:type_name -> google.protobuf.Timestamp
-	21, // 1: stream.app.v1.User.plan_expires_at:type_name -> google.protobuf.Timestamp
-	21, // 2: stream.app.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	21, // 3: stream.app.v1.User.updated_at:type_name -> google.protobuf.Timestamp
-	21, // 4: stream.app.v1.Notification.created_at:type_name -> google.protobuf.Timestamp
-	21, // 5: stream.app.v1.Domain.created_at:type_name -> google.protobuf.Timestamp
-	21, // 6: stream.app.v1.Domain.updated_at:type_name -> google.protobuf.Timestamp
-	21, // 7: stream.app.v1.AdTemplate.created_at:type_name -> google.protobuf.Timestamp
-	21, // 8: stream.app.v1.AdTemplate.updated_at:type_name -> google.protobuf.Timestamp
-	21, // 9: stream.app.v1.Payment.created_at:type_name -> google.protobuf.Timestamp
-	21, // 10: stream.app.v1.Payment.updated_at:type_name -> google.protobuf.Timestamp
-	21, // 11: stream.app.v1.PlanSubscription.started_at:type_name -> google.protobuf.Timestamp
-	21, // 12: stream.app.v1.PlanSubscription.expires_at:type_name -> google.protobuf.Timestamp
-	21, // 13: stream.app.v1.PlanSubscription.created_at:type_name -> google.protobuf.Timestamp
-	21, // 14: stream.app.v1.PlanSubscription.updated_at:type_name -> google.protobuf.Timestamp
-	21, // 15: stream.app.v1.WalletTransaction.created_at:type_name -> google.protobuf.Timestamp
-	21, // 16: stream.app.v1.WalletTransaction.updated_at:type_name -> google.protobuf.Timestamp
-	21, // 17: stream.app.v1.PaymentHistoryItem.expires_at:type_name -> google.protobuf.Timestamp
-	21, // 18: stream.app.v1.PaymentHistoryItem.created_at:type_name -> google.protobuf.Timestamp
-	21, // 19: stream.app.v1.Video.created_at:type_name -> google.protobuf.Timestamp
-	21, // 20: stream.app.v1.Video.updated_at:type_name -> google.protobuf.Timestamp
-	21, // 21: stream.app.v1.AdminUser.created_at:type_name -> google.protobuf.Timestamp
-	21, // 22: stream.app.v1.AdminUser.updated_at:type_name -> google.protobuf.Timestamp
-	13, // 23: stream.app.v1.AdminUserDetail.user:type_name -> stream.app.v1.AdminUser
-	8,  // 24: stream.app.v1.AdminUserDetail.subscription:type_name -> stream.app.v1.PlanSubscription
-	21, // 25: stream.app.v1.AdminVideo.created_at:type_name -> google.protobuf.Timestamp
-	21, // 26: stream.app.v1.AdminVideo.updated_at:type_name -> google.protobuf.Timestamp
-	21, // 27: stream.app.v1.AdminPayment.created_at:type_name -> google.protobuf.Timestamp
-	21, // 28: stream.app.v1.AdminPayment.updated_at:type_name -> google.protobuf.Timestamp
-	21, // 29: stream.app.v1.AdminAdTemplate.created_at:type_name -> google.protobuf.Timestamp
-	21, // 30: stream.app.v1.AdminAdTemplate.updated_at:type_name -> google.protobuf.Timestamp
-	21, // 31: stream.app.v1.AdminJob.created_at:type_name -> google.protobuf.Timestamp
-	21, // 32: stream.app.v1.AdminJob.updated_at:type_name -> google.protobuf.Timestamp
-	21, // 33: stream.app.v1.AdminAgent.last_heartbeat:type_name -> google.protobuf.Timestamp
-	21, // 34: stream.app.v1.AdminAgent.created_at:type_name -> google.protobuf.Timestamp
-	21, // 35: stream.app.v1.AdminAgent.updated_at:type_name -> google.protobuf.Timestamp
-	36, // [36:36] is the sub-list for method output_type
-	36, // [36:36] is the sub-list for method input_type
-	36, // [36:36] is the sub-list for extension type_name
-	36, // [36:36] is the sub-list for extension extendee
-	0,  // [0:36] is the sub-list for field type_name
+	25, // 0: stream.app.v1.User.plan_started_at:type_name -> google.protobuf.Timestamp
+	25, // 1: stream.app.v1.User.plan_expires_at:type_name -> google.protobuf.Timestamp
+	25, // 2: stream.app.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	25, // 3: stream.app.v1.User.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 4: stream.app.v1.Notification.created_at:type_name -> google.protobuf.Timestamp
+	25, // 5: stream.app.v1.Domain.created_at:type_name -> google.protobuf.Timestamp
+	25, // 6: stream.app.v1.Domain.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 7: stream.app.v1.AdTemplate.created_at:type_name -> google.protobuf.Timestamp
+	25, // 8: stream.app.v1.AdTemplate.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 9: stream.app.v1.PlayerConfig.created_at:type_name -> google.protobuf.Timestamp
+	25, // 10: stream.app.v1.PlayerConfig.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 11: stream.app.v1.AdminPlayerConfig.created_at:type_name -> google.protobuf.Timestamp
+	25, // 12: stream.app.v1.AdminPlayerConfig.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 13: stream.app.v1.Payment.created_at:type_name -> google.protobuf.Timestamp
+	25, // 14: stream.app.v1.Payment.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 15: stream.app.v1.PlanSubscription.started_at:type_name -> google.protobuf.Timestamp
+	25, // 16: stream.app.v1.PlanSubscription.expires_at:type_name -> google.protobuf.Timestamp
+	25, // 17: stream.app.v1.PlanSubscription.created_at:type_name -> google.protobuf.Timestamp
+	25, // 18: stream.app.v1.PlanSubscription.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 19: stream.app.v1.WalletTransaction.created_at:type_name -> google.protobuf.Timestamp
+	25, // 20: stream.app.v1.WalletTransaction.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 21: stream.app.v1.PaymentHistoryItem.expires_at:type_name -> google.protobuf.Timestamp
+	25, // 22: stream.app.v1.PaymentHistoryItem.created_at:type_name -> google.protobuf.Timestamp
+	25, // 23: stream.app.v1.Video.created_at:type_name -> google.protobuf.Timestamp
+	25, // 24: stream.app.v1.Video.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 25: stream.app.v1.AdminUser.created_at:type_name -> google.protobuf.Timestamp
+	25, // 26: stream.app.v1.AdminUser.updated_at:type_name -> google.protobuf.Timestamp
+	16, // 27: stream.app.v1.AdminUserReferralInfo.referrer:type_name -> stream.app.v1.ReferralUserSummary
+	25, // 28: stream.app.v1.AdminUserReferralInfo.reward_granted_at:type_name -> google.protobuf.Timestamp
+	15, // 29: stream.app.v1.AdminUserDetail.user:type_name -> stream.app.v1.AdminUser
+	10, // 30: stream.app.v1.AdminUserDetail.subscription:type_name -> stream.app.v1.PlanSubscription
+	17, // 31: stream.app.v1.AdminUserDetail.referral:type_name -> stream.app.v1.AdminUserReferralInfo
+	25, // 32: stream.app.v1.AdminVideo.created_at:type_name -> google.protobuf.Timestamp
+	25, // 33: stream.app.v1.AdminVideo.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 34: stream.app.v1.AdminPayment.created_at:type_name -> google.protobuf.Timestamp
+	25, // 35: stream.app.v1.AdminPayment.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 36: stream.app.v1.AdminAdTemplate.created_at:type_name -> google.protobuf.Timestamp
+	25, // 37: stream.app.v1.AdminAdTemplate.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 38: stream.app.v1.AdminJob.created_at:type_name -> google.protobuf.Timestamp
+	25, // 39: stream.app.v1.AdminJob.updated_at:type_name -> google.protobuf.Timestamp
+	25, // 40: stream.app.v1.AdminAgent.last_heartbeat:type_name -> google.protobuf.Timestamp
+	25, // 41: stream.app.v1.AdminAgent.created_at:type_name -> google.protobuf.Timestamp
+	25, // 42: stream.app.v1.AdminAgent.updated_at:type_name -> google.protobuf.Timestamp
+	43, // [43:43] is the sub-list for method output_type
+	43, // [43:43] is the sub-list for method input_type
+	43, // [43:43] is the sub-list for extension type_name
+	43, // [43:43] is the sub-list for extension extendee
+	0,  // [0:43] is the sub-list for field type_name
 }
 
 func init() { file_app_v1_common_proto_init() }
@@ -3157,23 +3815,27 @@ func file_app_v1_common_proto_init() {
 	file_app_v1_common_proto_msgTypes[5].OneofWrappers = []any{}
 	file_app_v1_common_proto_msgTypes[6].OneofWrappers = []any{}
 	file_app_v1_common_proto_msgTypes[7].OneofWrappers = []any{}
+	file_app_v1_common_proto_msgTypes[8].OneofWrappers = []any{}
 	file_app_v1_common_proto_msgTypes[9].OneofWrappers = []any{}
-	file_app_v1_common_proto_msgTypes[10].OneofWrappers = []any{}
 	file_app_v1_common_proto_msgTypes[11].OneofWrappers = []any{}
+	file_app_v1_common_proto_msgTypes[12].OneofWrappers = []any{}
 	file_app_v1_common_proto_msgTypes[13].OneofWrappers = []any{}
-	file_app_v1_common_proto_msgTypes[14].OneofWrappers = []any{}
 	file_app_v1_common_proto_msgTypes[15].OneofWrappers = []any{}
 	file_app_v1_common_proto_msgTypes[16].OneofWrappers = []any{}
 	file_app_v1_common_proto_msgTypes[17].OneofWrappers = []any{}
 	file_app_v1_common_proto_msgTypes[18].OneofWrappers = []any{}
 	file_app_v1_common_proto_msgTypes[19].OneofWrappers = []any{}
+	file_app_v1_common_proto_msgTypes[20].OneofWrappers = []any{}
+	file_app_v1_common_proto_msgTypes[21].OneofWrappers = []any{}
+	file_app_v1_common_proto_msgTypes[22].OneofWrappers = []any{}
+	file_app_v1_common_proto_msgTypes[23].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_v1_common_proto_rawDesc), len(file_app_v1_common_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   21,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

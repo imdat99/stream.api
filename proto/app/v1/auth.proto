@@ -30,6 +30,7 @@ message RegisterRequest {
   string username = 1;
   string email = 2;
   string password = 3;
+  optional string ref_username = 4;
 }
 
 message RegisterResponse {
@@ -60,6 +61,7 @@ message GetGoogleLoginUrlResponse {
 
 message CompleteGoogleLoginRequest {
   string code = 1;
+  optional string ref_username = 2;
 }
 
 message CompleteGoogleLoginResponse {

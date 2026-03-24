@@ -413,6 +413,222 @@ var AdTemplatesService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
+	PlayerConfigsService_ListPlayerConfigs_FullMethodName  = "/stream.app.v1.PlayerConfigsService/ListPlayerConfigs"
+	PlayerConfigsService_CreatePlayerConfig_FullMethodName = "/stream.app.v1.PlayerConfigsService/CreatePlayerConfig"
+	PlayerConfigsService_UpdatePlayerConfig_FullMethodName = "/stream.app.v1.PlayerConfigsService/UpdatePlayerConfig"
+	PlayerConfigsService_DeletePlayerConfig_FullMethodName = "/stream.app.v1.PlayerConfigsService/DeletePlayerConfig"
+)
+
+// PlayerConfigsServiceClient is the client API for PlayerConfigsService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type PlayerConfigsServiceClient interface {
+	ListPlayerConfigs(ctx context.Context, in *ListPlayerConfigsRequest, opts ...grpc.CallOption) (*ListPlayerConfigsResponse, error)
+	CreatePlayerConfig(ctx context.Context, in *CreatePlayerConfigRequest, opts ...grpc.CallOption) (*CreatePlayerConfigResponse, error)
+	UpdatePlayerConfig(ctx context.Context, in *UpdatePlayerConfigRequest, opts ...grpc.CallOption) (*UpdatePlayerConfigResponse, error)
+	DeletePlayerConfig(ctx context.Context, in *DeletePlayerConfigRequest, opts ...grpc.CallOption) (*MessageResponse, error)
+}
+
+type playerConfigsServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewPlayerConfigsServiceClient(cc grpc.ClientConnInterface) PlayerConfigsServiceClient {
+	return &playerConfigsServiceClient{cc}
+}
+
+func (c *playerConfigsServiceClient) ListPlayerConfigs(ctx context.Context, in *ListPlayerConfigsRequest, opts ...grpc.CallOption) (*ListPlayerConfigsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListPlayerConfigsResponse)
+	err := c.cc.Invoke(ctx, PlayerConfigsService_ListPlayerConfigs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *playerConfigsServiceClient) CreatePlayerConfig(ctx context.Context, in *CreatePlayerConfigRequest, opts ...grpc.CallOption) (*CreatePlayerConfigResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreatePlayerConfigResponse)
+	err := c.cc.Invoke(ctx, PlayerConfigsService_CreatePlayerConfig_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *playerConfigsServiceClient) UpdatePlayerConfig(ctx context.Context, in *UpdatePlayerConfigRequest, opts ...grpc.CallOption) (*UpdatePlayerConfigResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdatePlayerConfigResponse)
+	err := c.cc.Invoke(ctx, PlayerConfigsService_UpdatePlayerConfig_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *playerConfigsServiceClient) DeletePlayerConfig(ctx context.Context, in *DeletePlayerConfigRequest, opts ...grpc.CallOption) (*MessageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MessageResponse)
+	err := c.cc.Invoke(ctx, PlayerConfigsService_DeletePlayerConfig_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// PlayerConfigsServiceServer is the server API for PlayerConfigsService service.
+// All implementations must embed UnimplementedPlayerConfigsServiceServer
+// for forward compatibility.
+type PlayerConfigsServiceServer interface {
+	ListPlayerConfigs(context.Context, *ListPlayerConfigsRequest) (*ListPlayerConfigsResponse, error)
+	CreatePlayerConfig(context.Context, *CreatePlayerConfigRequest) (*CreatePlayerConfigResponse, error)
+	UpdatePlayerConfig(context.Context, *UpdatePlayerConfigRequest) (*UpdatePlayerConfigResponse, error)
+	DeletePlayerConfig(context.Context, *DeletePlayerConfigRequest) (*MessageResponse, error)
+	mustEmbedUnimplementedPlayerConfigsServiceServer()
+}
+
+// UnimplementedPlayerConfigsServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedPlayerConfigsServiceServer struct{}
+
+func (UnimplementedPlayerConfigsServiceServer) ListPlayerConfigs(context.Context, *ListPlayerConfigsRequest) (*ListPlayerConfigsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListPlayerConfigs not implemented")
+}
+func (UnimplementedPlayerConfigsServiceServer) CreatePlayerConfig(context.Context, *CreatePlayerConfigRequest) (*CreatePlayerConfigResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreatePlayerConfig not implemented")
+}
+func (UnimplementedPlayerConfigsServiceServer) UpdatePlayerConfig(context.Context, *UpdatePlayerConfigRequest) (*UpdatePlayerConfigResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdatePlayerConfig not implemented")
+}
+func (UnimplementedPlayerConfigsServiceServer) DeletePlayerConfig(context.Context, *DeletePlayerConfigRequest) (*MessageResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeletePlayerConfig not implemented")
+}
+func (UnimplementedPlayerConfigsServiceServer) mustEmbedUnimplementedPlayerConfigsServiceServer() {}
+func (UnimplementedPlayerConfigsServiceServer) testEmbeddedByValue()                              {}
+
+// UnsafePlayerConfigsServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to PlayerConfigsServiceServer will
+// result in compilation errors.
+type UnsafePlayerConfigsServiceServer interface {
+	mustEmbedUnimplementedPlayerConfigsServiceServer()
+}
+
+func RegisterPlayerConfigsServiceServer(s grpc.ServiceRegistrar, srv PlayerConfigsServiceServer) {
+	// If the following call panics, it indicates UnimplementedPlayerConfigsServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&PlayerConfigsService_ServiceDesc, srv)
+}
+
+func _PlayerConfigsService_ListPlayerConfigs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListPlayerConfigsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlayerConfigsServiceServer).ListPlayerConfigs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlayerConfigsService_ListPlayerConfigs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlayerConfigsServiceServer).ListPlayerConfigs(ctx, req.(*ListPlayerConfigsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PlayerConfigsService_CreatePlayerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreatePlayerConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlayerConfigsServiceServer).CreatePlayerConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlayerConfigsService_CreatePlayerConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlayerConfigsServiceServer).CreatePlayerConfig(ctx, req.(*CreatePlayerConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PlayerConfigsService_UpdatePlayerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdatePlayerConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlayerConfigsServiceServer).UpdatePlayerConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlayerConfigsService_UpdatePlayerConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlayerConfigsServiceServer).UpdatePlayerConfig(ctx, req.(*UpdatePlayerConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PlayerConfigsService_DeletePlayerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeletePlayerConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlayerConfigsServiceServer).DeletePlayerConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlayerConfigsService_DeletePlayerConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlayerConfigsServiceServer).DeletePlayerConfig(ctx, req.(*DeletePlayerConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// PlayerConfigsService_ServiceDesc is the grpc.ServiceDesc for PlayerConfigsService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var PlayerConfigsService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "stream.app.v1.PlayerConfigsService",
+	HandlerType: (*PlayerConfigsServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListPlayerConfigs",
+			Handler:    _PlayerConfigsService_ListPlayerConfigs_Handler,
+		},
+		{
+			MethodName: "CreatePlayerConfig",
+			Handler:    _PlayerConfigsService_CreatePlayerConfig_Handler,
+		},
+		{
+			MethodName: "UpdatePlayerConfig",
+			Handler:    _PlayerConfigsService_UpdatePlayerConfig_Handler,
+		},
+		{
+			MethodName: "DeletePlayerConfig",
+			Handler:    _PlayerConfigsService_DeletePlayerConfig_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "app/v1/catalog.proto",
+}
+
+const (
 	PlansService_ListPlans_FullMethodName = "/stream.app.v1.PlansService/ListPlans"
 )
 

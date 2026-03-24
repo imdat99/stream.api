@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -23,6 +24,7 @@ const (
 	AccountService_UpdateMe_FullMethodName    = "/stream.app.v1.AccountService/UpdateMe"
 	AccountService_DeleteMe_FullMethodName    = "/stream.app.v1.AccountService/DeleteMe"
 	AccountService_ClearMyData_FullMethodName = "/stream.app.v1.AccountService/ClearMyData"
+	AccountService_GetUserById_FullMethodName = "/stream.app.v1.AccountService/GetUserById"
 )
 
 // AccountServiceClient is the client API for AccountService service.
@@ -33,6 +35,7 @@ type AccountServiceClient interface {
 	UpdateMe(ctx context.Context, in *UpdateMeRequest, opts ...grpc.CallOption) (*UpdateMeResponse, error)
 	DeleteMe(ctx context.Context, in *DeleteMeRequest, opts ...grpc.CallOption) (*MessageResponse, error)
 	ClearMyData(ctx context.Context, in *ClearMyDataRequest, opts ...grpc.CallOption) (*MessageResponse, error)
+	GetUserById(ctx context.Context, in *wrapperspb.StringValue, opts ...grpc.CallOption) (*User, error)
 }
 
 type accountServiceClient struct {
@@ -83,6 +86,16 @@ func (c *accountServiceClient) ClearMyData(ctx context.Context, in *ClearMyDataR
 	return out, nil
 }
 
+func (c *accountServiceClient) GetUserById(ctx context.Context, in *wrapperspb.StringValue, opts ...grpc.CallOption) (*User, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(User)
+	err := c.cc.Invoke(ctx, AccountService_GetUserById_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AccountServiceServer is the server API for AccountService service.
 // All implementations must embed UnimplementedAccountServiceServer
 // for forward compatibility.
@@ -91,6 +104,7 @@ type AccountServiceServer interface {
 	UpdateMe(context.Context, *UpdateMeRequest) (*UpdateMeResponse, error)
 	DeleteMe(context.Context, *DeleteMeRequest) (*MessageResponse, error)
 	ClearMyData(context.Context, *ClearMyDataRequest) (*MessageResponse, error)
+	GetUserById(context.Context, *wrapperspb.StringValue) (*User, error)
 	mustEmbedUnimplementedAccountServiceServer()
 }
 
@@ -112,6 +126,9 @@ func (UnimplementedAccountServiceServer) DeleteMe(context.Context, *DeleteMeRequ
 }
 func (UnimplementedAccountServiceServer) ClearMyData(context.Context, *ClearMyDataRequest) (*MessageResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ClearMyData not implemented")
+}
+func (UnimplementedAccountServiceServer) GetUserById(context.Context, *wrapperspb.StringValue) (*User, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetUserById not implemented")
 }
 func (UnimplementedAccountServiceServer) mustEmbedUnimplementedAccountServiceServer() {}
 func (UnimplementedAccountServiceServer) testEmbeddedByValue()                        {}
@@ -206,6 +223,24 @@ func _AccountService_ClearMyData_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AccountService_GetUserById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(wrapperspb.StringValue)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountServiceServer).GetUserById(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AccountService_GetUserById_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountServiceServer).GetUserById(ctx, req.(*wrapperspb.StringValue))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AccountService_ServiceDesc is the grpc.ServiceDesc for AccountService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -228,6 +263,10 @@ var AccountService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ClearMyData",
 			Handler:    _AccountService_ClearMyData_Handler,
+		},
+		{
+			MethodName: "GetUserById",
+			Handler:    _AccountService_GetUserById_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

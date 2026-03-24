@@ -6,11 +6,10 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	"gorm.io/gorm"
-	authapi "stream.api/internal/api/auth"
-	preferencesapi "stream.api/internal/api/preferences"
-	usageapi "stream.api/internal/api/usage"
 	"stream.api/internal/database/model"
+	"stream.api/internal/database/query"
 	appv1 "stream.api/internal/gen/proto/app/v1"
 )
 
@@ -19,11 +18,27 @@ func (s *appServices) GetMe(ctx context.Context, _ *appv1.GetMeRequest) (*appv1.
 	if err != nil {
 		return nil, err
 	}
-	payload, err := authapi.BuildUserPayload(ctx, s.db, result.User)
+	payload, err := buildUserPayload(ctx, s.db, result.User)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to build user payload")
 	}
-	return &appv1.GetMeResponse{User: toProtoUserPayload(payload)}, nil
+	return &appv1.GetMeResponse{User: toProtoUser(payload)}, nil
+}
+func (s *appServices) GetUserById(ctx context.Context, req *wrapperspb.StringValue) (*appv1.User, error) {
+	_, err := s.authenticator.RequireTrustedMetadata(ctx)
+	if err != nil {
+		return nil, err
+	}
+	u := query.User
+	user, err := u.WithContext(ctx).Where(u.ID.Eq(req.Value)).First()
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "Unauthorized")
+	}
+	payload, err := buildUserPayload(ctx, s.db, user)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to build user payload")
+	}
+	return toProtoUser(payload), nil
 }
 func (s *appServices) UpdateMe(ctx context.Context, req *appv1.UpdateMeRequest) (*appv1.UpdateMeResponse, error) {
 	result, err := s.authenticate(ctx)
@@ -31,7 +46,7 @@ func (s *appServices) UpdateMe(ctx context.Context, req *appv1.UpdateMeRequest) 
 		return nil, err
 	}
 
-	updatedUser, err := authapi.UpdateUserProfile(ctx, s.db, s.logger, result.UserID, authapi.UpdateProfileInput{
+	updatedUser, err := updateUserProfile(ctx, s.db, s.logger, result.UserID, updateProfileInput{
 		Username: req.Username,
 		Email:    req.Email,
 		Language: req.Language,
@@ -39,14 +54,14 @@ func (s *appServices) UpdateMe(ctx context.Context, req *appv1.UpdateMeRequest) 
 	})
 	if err != nil {
 		switch {
-		case errors.Is(err, authapi.ErrEmailRequired), errors.Is(err, authapi.ErrEmailAlreadyRegistered):
+		case errors.Is(err, errEmailRequired), errors.Is(err, errEmailAlreadyRegistered):
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		default:
 			return nil, status.Error(codes.Internal, "Failed to update profile")
 		}
 	}
 
-	payload, err := authapi.BuildUserPayload(ctx, s.db, updatedUser)
+	payload, err := buildUserPayload(ctx, s.db, updatedUser)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to build user payload")
 	}
@@ -67,9 +82,6 @@ func (s *appServices) DeleteMe(ctx context.Context, _ *appv1.DeleteMeRequest) (*
 			return err
 		}
 		if err := tx.Where("user_id = ?", userID).Delete(&model.AdTemplate{}).Error; err != nil {
-			return err
-		}
-		if err := tx.Where("user_id = ?", userID).Delete(&model.VideoAdConfig{}).Error; err != nil {
 			return err
 		}
 		if err := tx.Where("user_id = ?", userID).Delete(&model.WalletTransaction{}).Error; err != nil {
@@ -115,9 +127,6 @@ func (s *appServices) ClearMyData(ctx context.Context, _ *appv1.ClearMyDataReque
 		if err := tx.Where("user_id = ?", userID).Delete(&model.AdTemplate{}).Error; err != nil {
 			return err
 		}
-		if err := tx.Where("user_id = ?", userID).Delete(&model.VideoAdConfig{}).Error; err != nil {
-			return err
-		}
 		if err := tx.Where("user_id = ?", userID).Delete(&model.Video{}).Error; err != nil {
 			return err
 		}
@@ -137,7 +146,7 @@ func (s *appServices) GetPreferences(ctx context.Context, _ *appv1.GetPreference
 	if err != nil {
 		return nil, err
 	}
-	pref, err := preferencesapi.LoadUserPreferences(ctx, s.db, result.UserID)
+	pref, err := loadUserPreferences(ctx, s.db, result.UserID)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to load preferences")
 	}
@@ -148,18 +157,11 @@ func (s *appServices) UpdatePreferences(ctx context.Context, req *appv1.UpdatePr
 	if err != nil {
 		return nil, err
 	}
-	pref, err := preferencesapi.UpdateUserPreferences(ctx, s.db, s.logger, result.UserID, preferencesapi.UpdateInput{
+	pref, err := updateUserPreferences(ctx, s.db, s.logger, result.UserID, updatePreferencesInput{
 		EmailNotifications:     req.EmailNotifications,
 		PushNotifications:      req.PushNotifications,
 		MarketingNotifications: req.MarketingNotifications,
 		TelegramNotifications:  req.TelegramNotifications,
-		Autoplay:               req.Autoplay,
-		Loop:                   req.Loop,
-		Muted:                  req.Muted,
-		ShowControls:           req.ShowControls,
-		Pip:                    req.Pip,
-		Airplay:                req.Airplay,
-		Chromecast:             req.Chromecast,
 		Language:               req.Language,
 		Locale:                 req.Locale,
 	})
@@ -173,7 +175,7 @@ func (s *appServices) GetUsage(ctx context.Context, _ *appv1.GetUsageRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	payload, err := usageapi.LoadUsage(ctx, s.db, s.logger, result.User)
+	payload, err := loadUsage(ctx, s.db, s.logger, result.User)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to load usage")
 	}

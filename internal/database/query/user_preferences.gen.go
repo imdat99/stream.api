@@ -35,16 +35,8 @@ func newUserPreference(db *gorm.DB, opts ...gen.DOOption) userPreference {
 	_userPreference.PushNotifications = field.NewBool(tableName, "push_notifications")
 	_userPreference.MarketingNotifications = field.NewBool(tableName, "marketing_notifications")
 	_userPreference.TelegramNotifications = field.NewBool(tableName, "telegram_notifications")
-	_userPreference.Autoplay = field.NewBool(tableName, "autoplay")
-	_userPreference.Loop = field.NewBool(tableName, "loop")
-	_userPreference.Muted = field.NewBool(tableName, "muted")
-	_userPreference.ShowControls = field.NewBool(tableName, "show_controls")
-	_userPreference.Pip = field.NewBool(tableName, "pip")
-	_userPreference.Airplay = field.NewBool(tableName, "airplay")
-	_userPreference.Chromecast = field.NewBool(tableName, "chromecast")
 	_userPreference.CreatedAt = field.NewTime(tableName, "created_at")
 	_userPreference.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_userPreference.EncrytionM3u8 = field.NewBool(tableName, "encrytion_m3u8")
 	_userPreference.Version = field.NewInt64(tableName, "version")
 
 	_userPreference.fillFieldMap()
@@ -63,16 +55,8 @@ type userPreference struct {
 	PushNotifications      field.Bool
 	MarketingNotifications field.Bool
 	TelegramNotifications  field.Bool
-	Autoplay               field.Bool
-	Loop                   field.Bool
-	Muted                  field.Bool
-	ShowControls           field.Bool
-	Pip                    field.Bool
-	Airplay                field.Bool
-	Chromecast             field.Bool
 	CreatedAt              field.Time
 	UpdatedAt              field.Time
-	EncrytionM3u8          field.Bool
 	Version                field.Int64
 
 	fieldMap map[string]field.Expr
@@ -97,16 +81,8 @@ func (u *userPreference) updateTableName(table string) *userPreference {
 	u.PushNotifications = field.NewBool(table, "push_notifications")
 	u.MarketingNotifications = field.NewBool(table, "marketing_notifications")
 	u.TelegramNotifications = field.NewBool(table, "telegram_notifications")
-	u.Autoplay = field.NewBool(table, "autoplay")
-	u.Loop = field.NewBool(table, "loop")
-	u.Muted = field.NewBool(table, "muted")
-	u.ShowControls = field.NewBool(table, "show_controls")
-	u.Pip = field.NewBool(table, "pip")
-	u.Airplay = field.NewBool(table, "airplay")
-	u.Chromecast = field.NewBool(table, "chromecast")
 	u.CreatedAt = field.NewTime(table, "created_at")
 	u.UpdatedAt = field.NewTime(table, "updated_at")
-	u.EncrytionM3u8 = field.NewBool(table, "encrytion_m3u8")
 	u.Version = field.NewInt64(table, "version")
 
 	u.fillFieldMap()
@@ -136,7 +112,7 @@ func (u *userPreference) GetFieldByName(fieldName string) (field.OrderExpr, bool
 }
 
 func (u *userPreference) fillFieldMap() {
-	u.fieldMap = make(map[string]field.Expr, 18)
+	u.fieldMap = make(map[string]field.Expr, 10)
 	u.fieldMap["user_id"] = u.UserID
 	u.fieldMap["language"] = u.Language
 	u.fieldMap["locale"] = u.Locale
@@ -144,16 +120,8 @@ func (u *userPreference) fillFieldMap() {
 	u.fieldMap["push_notifications"] = u.PushNotifications
 	u.fieldMap["marketing_notifications"] = u.MarketingNotifications
 	u.fieldMap["telegram_notifications"] = u.TelegramNotifications
-	u.fieldMap["autoplay"] = u.Autoplay
-	u.fieldMap["loop"] = u.Loop
-	u.fieldMap["muted"] = u.Muted
-	u.fieldMap["show_controls"] = u.ShowControls
-	u.fieldMap["pip"] = u.Pip
-	u.fieldMap["airplay"] = u.Airplay
-	u.fieldMap["chromecast"] = u.Chromecast
 	u.fieldMap["created_at"] = u.CreatedAt
 	u.fieldMap["updated_at"] = u.UpdatedAt
-	u.fieldMap["encrytion_m3u8"] = u.EncrytionM3u8
 	u.fieldMap["version"] = u.Version
 }
 

@@ -122,6 +122,7 @@ type RegisterRequest struct {
 	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
 	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
 	Password      string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
+	RefUsername   *string                `protobuf:"bytes,4,opt,name=ref_username,json=refUsername,proto3,oneof" json:"ref_username,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -173,6 +174,13 @@ func (x *RegisterRequest) GetEmail() string {
 func (x *RegisterRequest) GetPassword() string {
 	if x != nil {
 		return x.Password
+	}
+	return ""
+}
+
+func (x *RegisterRequest) GetRefUsername() string {
+	if x != nil && x.RefUsername != nil {
+		return *x.RefUsername
 	}
 	return ""
 }
@@ -488,6 +496,7 @@ func (x *GetGoogleLoginUrlResponse) GetUrl() string {
 type CompleteGoogleLoginRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	RefUsername   *string                `protobuf:"bytes,2,opt,name=ref_username,json=refUsername,proto3,oneof" json:"ref_username,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -525,6 +534,13 @@ func (*CompleteGoogleLoginRequest) Descriptor() ([]byte, []int) {
 func (x *CompleteGoogleLoginRequest) GetCode() string {
 	if x != nil {
 		return x.Code
+	}
+	return ""
+}
+
+func (x *CompleteGoogleLoginRequest) GetRefUsername() string {
+	if x != nil && x.RefUsername != nil {
+		return *x.RefUsername
 	}
 	return ""
 }
@@ -582,11 +598,13 @@ const file_app_v1_auth_proto_rawDesc = "" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"8\n" +
 	"\rLoginResponse\x12'\n" +
-	"\x04user\x18\x01 \x01(\v2\x13.stream.app.v1.UserR\x04user\"_\n" +
+	"\x04user\x18\x01 \x01(\v2\x13.stream.app.v1.UserR\x04user\"\x98\x01\n" +
 	"\x0fRegisterRequest\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1a\n" +
-	"\bpassword\x18\x03 \x01(\tR\bpassword\";\n" +
+	"\bpassword\x18\x03 \x01(\tR\bpassword\x12&\n" +
+	"\fref_username\x18\x04 \x01(\tH\x00R\vrefUsername\x88\x01\x01B\x0f\n" +
+	"\r_ref_username\";\n" +
 	"\x10RegisterResponse\x12'\n" +
 	"\x04user\x18\x01 \x01(\v2\x13.stream.app.v1.UserR\x04user\"\x0f\n" +
 	"\rLogoutRequest\"e\n" +
@@ -600,9 +618,11 @@ const file_app_v1_auth_proto_rawDesc = "" +
 	"\fnew_password\x18\x02 \x01(\tR\vnewPassword\"\x1a\n" +
 	"\x18GetGoogleLoginUrlRequest\"-\n" +
 	"\x19GetGoogleLoginUrlResponse\x12\x10\n" +
-	"\x03url\x18\x01 \x01(\tR\x03url\"0\n" +
+	"\x03url\x18\x01 \x01(\tR\x03url\"i\n" +
 	"\x1aCompleteGoogleLoginRequest\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\"F\n" +
+	"\x04code\x18\x01 \x01(\tR\x04code\x12&\n" +
+	"\fref_username\x18\x02 \x01(\tH\x00R\vrefUsername\x88\x01\x01B\x0f\n" +
+	"\r_ref_username\"F\n" +
 	"\x1bCompleteGoogleLoginResponse\x12'\n" +
 	"\x04user\x18\x01 \x01(\v2\x13.stream.app.v1.UserR\x04user2\xc2\x05\n" +
 	"\vAuthService\x12B\n" +
@@ -677,6 +697,8 @@ func file_app_v1_auth_proto_init() {
 		return
 	}
 	file_app_v1_common_proto_init()
+	file_app_v1_auth_proto_msgTypes[2].OneofWrappers = []any{}
+	file_app_v1_auth_proto_msgTypes[10].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

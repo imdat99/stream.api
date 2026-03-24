@@ -167,6 +167,8 @@ func (x *CreatePaymentResponse) GetMessage() string {
 
 type ListPaymentHistoryRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Page          int32                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
+	Limit         int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -201,9 +203,28 @@ func (*ListPaymentHistoryRequest) Descriptor() ([]byte, []int) {
 	return file_app_v1_payments_proto_rawDescGZIP(), []int{2}
 }
 
+func (x *ListPaymentHistoryRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListPaymentHistoryRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
 type ListPaymentHistoryResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Payments      []*PaymentHistoryItem  `protobuf:"bytes,1,rep,name=payments,proto3" json:"payments,omitempty"`
+	Total         int64                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	Page          int32                  `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
+	Limit         int32                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
+	HasPrev       bool                   `protobuf:"varint,5,opt,name=has_prev,json=hasPrev,proto3" json:"has_prev,omitempty"`
+	HasNext       bool                   `protobuf:"varint,6,opt,name=has_next,json=hasNext,proto3" json:"has_next,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -243,6 +264,41 @@ func (x *ListPaymentHistoryResponse) GetPayments() []*PaymentHistoryItem {
 		return x.Payments
 	}
 	return nil
+}
+
+func (x *ListPaymentHistoryResponse) GetTotal() int64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *ListPaymentHistoryResponse) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListPaymentHistoryResponse) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *ListPaymentHistoryResponse) GetHasPrev() bool {
+	if x != nil {
+		return x.HasPrev
+	}
+	return false
+}
+
+func (x *ListPaymentHistoryResponse) GetHasNext() bool {
+	if x != nil {
+		return x.HasNext
+	}
+	return false
 }
 
 type TopupWalletRequest struct {
@@ -471,10 +527,17 @@ const file_app_v1_payments_proto_rawDesc = "" +
 	"\x0ewallet_balance\x18\x03 \x01(\x01R\rwalletBalance\x12\x1d\n" +
 	"\n" +
 	"invoice_id\x18\x04 \x01(\tR\tinvoiceId\x12\x18\n" +
-	"\amessage\x18\x05 \x01(\tR\amessage\"\x1b\n" +
-	"\x19ListPaymentHistoryRequest\"[\n" +
+	"\amessage\x18\x05 \x01(\tR\amessage\"E\n" +
+	"\x19ListPaymentHistoryRequest\x12\x12\n" +
+	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x14\n" +
+	"\x05limit\x18\x02 \x01(\x05R\x05limit\"\xd1\x01\n" +
 	"\x1aListPaymentHistoryResponse\x12=\n" +
-	"\bpayments\x18\x01 \x03(\v2!.stream.app.v1.PaymentHistoryItemR\bpayments\",\n" +
+	"\bpayments\x18\x01 \x03(\v2!.stream.app.v1.PaymentHistoryItemR\bpayments\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total\x12\x12\n" +
+	"\x04page\x18\x03 \x01(\x05R\x04page\x12\x14\n" +
+	"\x05limit\x18\x04 \x01(\x05R\x05limit\x12\x19\n" +
+	"\bhas_prev\x18\x05 \x01(\bR\ahasPrev\x12\x19\n" +
+	"\bhas_next\x18\x06 \x01(\bR\ahasNext\",\n" +
 	"\x12TopupWalletRequest\x12\x16\n" +
 	"\x06amount\x18\x01 \x01(\x01R\x06amount\"\xac\x01\n" +
 	"\x13TopupWalletResponse\x12O\n" +

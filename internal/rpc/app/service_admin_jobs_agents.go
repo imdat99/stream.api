@@ -10,36 +10,38 @@ import (
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 	appv1 "stream.api/internal/gen/proto/app/v1"
-	"stream.api/internal/video/runtime/services"
+	"stream.api/internal/video"
 )
 
 func (s *appServices) ListAdminJobs(ctx context.Context, req *appv1.ListAdminJobsRequest) (*appv1.ListAdminJobsResponse, error) {
 	if _, err := s.requireAdmin(ctx); err != nil {
 		return nil, err
 	}
-	if s.jobService == nil {
+	if s.videoService == nil {
 		return nil, status.Error(codes.Unavailable, "Job service is unavailable")
 	}
 
+	agentID := strings.TrimSpace(req.GetAgentId())
 	offset := int(req.GetOffset())
 	limit := int(req.GetLimit())
-	if offset < 0 {
-		offset = 0
-	}
-	if limit <= 0 || limit > 100 {
-		limit = 20
-	}
+	pageSize := int(req.GetPageSize())
+	useCursorPagination := req.Cursor != nil || pageSize > 0
 
 	var (
-		result *services.PaginatedJobs
+		result *video.PaginatedJobs
 		err    error
 	)
-	if agentID := strings.TrimSpace(req.GetAgentId()); agentID != "" {
-		result, err = s.jobService.ListJobsByAgent(ctx, agentID, offset, limit)
+	if useCursorPagination {
+		result, err = s.videoService.ListJobsByCursor(ctx, agentID, req.GetCursor(), pageSize)
+	} else if agentID != "" {
+		result, err = s.videoService.ListJobsByAgent(ctx, agentID, offset, limit)
 	} else {
-		result, err = s.jobService.ListJobs(ctx, offset, limit)
+		result, err = s.videoService.ListJobs(ctx, offset, limit)
 	}
 	if err != nil {
+		if errors.Is(err, video.ErrInvalidJobCursor) {
+			return nil, status.Error(codes.InvalidArgument, "Invalid job cursor")
+		}
 		return nil, status.Error(codes.Internal, "Failed to list jobs")
 	}
 
@@ -48,19 +50,24 @@ func (s *appServices) ListAdminJobs(ctx context.Context, req *appv1.ListAdminJob
 		jobs = append(jobs, buildAdminJob(job))
 	}
 
-	return &appv1.ListAdminJobsResponse{
-		Jobs:    jobs,
-		Total:   result.Total,
-		Offset:  int32(result.Offset),
-		Limit:   int32(result.Limit),
-		HasMore: result.HasMore,
-	}, nil
+	response := &appv1.ListAdminJobsResponse{
+		Jobs:     jobs,
+		Total:    result.Total,
+		Offset:   int32(result.Offset),
+		Limit:    int32(result.Limit),
+		HasMore:  result.HasMore,
+		PageSize: int32(result.PageSize),
+	}
+	if strings.TrimSpace(result.NextCursor) != "" {
+		response.NextCursor = &result.NextCursor
+	}
+	return response, nil
 }
 func (s *appServices) GetAdminJob(ctx context.Context, req *appv1.GetAdminJobRequest) (*appv1.GetAdminJobResponse, error) {
 	if _, err := s.requireAdmin(ctx); err != nil {
 		return nil, err
 	}
-	if s.jobService == nil {
+	if s.videoService == nil {
 		return nil, status.Error(codes.Unavailable, "Job service is unavailable")
 	}
 
@@ -68,7 +75,7 @@ func (s *appServices) GetAdminJob(ctx context.Context, req *appv1.GetAdminJobReq
 	if id == "" {
 		return nil, status.Error(codes.NotFound, "Job not found")
 	}
-	job, err := s.jobService.GetJob(ctx, id)
+	job, err := s.videoService.GetJob(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Job not found")
@@ -88,7 +95,7 @@ func (s *appServices) CreateAdminJob(ctx context.Context, req *appv1.CreateAdmin
 	if _, err := s.requireAdmin(ctx); err != nil {
 		return nil, err
 	}
-	if s.jobService == nil {
+	if s.videoService == nil {
 		return nil, status.Error(codes.Unavailable, "Job service is unavailable")
 	}
 
@@ -113,7 +120,11 @@ func (s *appServices) CreateAdminJob(ctx context.Context, req *appv1.CreateAdmin
 		return nil, status.Error(codes.Internal, "Failed to create job payload")
 	}
 
-	job, err := s.jobService.CreateJob(ctx, strings.TrimSpace(req.GetUserId()), name, payload, int(req.GetPriority()), req.GetTimeLimit())
+	videoID := ""
+	if req.VideoId != nil {
+		videoID = strings.TrimSpace(req.GetVideoId())
+	}
+	job, err := s.videoService.CreateJob(ctx, strings.TrimSpace(req.GetUserId()), videoID, name, payload, int(req.GetPriority()), req.GetTimeLimit())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to create job")
 	}
@@ -123,7 +134,7 @@ func (s *appServices) CancelAdminJob(ctx context.Context, req *appv1.CancelAdmin
 	if _, err := s.requireAdmin(ctx); err != nil {
 		return nil, err
 	}
-	if s.jobService == nil {
+	if s.videoService == nil {
 		return nil, status.Error(codes.Unavailable, "Job service is unavailable")
 	}
 
@@ -131,7 +142,7 @@ func (s *appServices) CancelAdminJob(ctx context.Context, req *appv1.CancelAdmin
 	if id == "" {
 		return nil, status.Error(codes.NotFound, "Job not found")
 	}
-	if err := s.jobService.CancelJob(ctx, id); err != nil {
+	if err := s.videoService.CancelJob(ctx, id); err != nil {
 		if strings.Contains(strings.ToLower(err.Error()), "not found") {
 			return nil, status.Error(codes.NotFound, "Job not found")
 		}
@@ -143,7 +154,7 @@ func (s *appServices) RetryAdminJob(ctx context.Context, req *appv1.RetryAdminJo
 	if _, err := s.requireAdmin(ctx); err != nil {
 		return nil, err
 	}
-	if s.jobService == nil {
+	if s.videoService == nil {
 		return nil, status.Error(codes.Unavailable, "Job service is unavailable")
 	}
 
@@ -151,7 +162,7 @@ func (s *appServices) RetryAdminJob(ctx context.Context, req *appv1.RetryAdminJo
 	if id == "" {
 		return nil, status.Error(codes.NotFound, "Job not found")
 	}
-	job, err := s.jobService.RetryJob(ctx, id)
+	job, err := s.videoService.RetryJob(ctx, id)
 	if err != nil {
 		if strings.Contains(strings.ToLower(err.Error()), "not found") {
 			return nil, status.Error(codes.NotFound, "Job not found")

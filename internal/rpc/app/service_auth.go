@@ -14,7 +14,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
-	authapi "stream.api/internal/api/auth"
 	"stream.api/internal/database/model"
 	"stream.api/internal/database/query"
 	appv1 "stream.api/internal/gen/proto/app/v1"
@@ -43,7 +42,7 @@ func (s *appServices) Login(ctx context.Context, req *appv1.LoginRequest) (*appv
 		return nil, err
 	}
 
-	payload, err := authapi.BuildUserPayload(ctx, s.db, user)
+	payload, err := buildUserPayload(ctx, s.db, user)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to build user payload")
 	}
@@ -53,6 +52,7 @@ func (s *appServices) Register(ctx context.Context, req *appv1.RegisterRequest) 
 	email := strings.TrimSpace(req.GetEmail())
 	username := strings.TrimSpace(req.GetUsername())
 	password := req.GetPassword()
+	refUsername := strings.TrimSpace(req.GetRefUsername())
 	if email == "" || username == "" || password == "" {
 		return nil, status.Error(codes.InvalidArgument, "Username, email and password are required")
 	}
@@ -72,21 +72,29 @@ func (s *appServices) Register(ctx context.Context, req *appv1.RegisterRequest) 
 		return nil, status.Error(codes.Internal, "Failed to register")
 	}
 
+	referrerID, err := s.resolveSignupReferrerID(ctx, refUsername, username)
+	if err != nil {
+		s.logger.Error("Failed to resolve signup referrer", "error", err)
+		return nil, status.Error(codes.Internal, "Failed to register")
+	}
+
 	role := "USER"
 	passwordHash := string(hashedPassword)
 	newUser := &model.User{
-		ID:       uuid.New().String(),
-		Email:    email,
-		Password: &passwordHash,
-		Username: &username,
-		Role:     &role,
+		ID:               uuid.New().String(),
+		Email:            email,
+		Password:         &passwordHash,
+		Username:         &username,
+		Role:             &role,
+		ReferredByUserID: referrerID,
+		ReferralEligible: model.BoolPtr(true),
 	}
 	if err := u.WithContext(ctx).Create(newUser); err != nil {
 		s.logger.Error("Failed to create user", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to register")
 	}
 
-	payload, err := authapi.BuildUserPayload(ctx, s.db, newUser)
+	payload, err := buildUserPayload(ctx, s.db, newUser)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to build user payload")
 	}
@@ -216,7 +224,7 @@ func (s *appServices) CompleteGoogleLogin(ctx context.Context, req *appv1.Comple
 	}
 
 	client := s.googleOauth.Client(ctx, tokenResp)
-	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	resp, err := client.Get(s.googleUserInfoURL)
 	if err != nil {
 		s.logger.Error("Failed to fetch Google user info", "error", err)
 		return nil, status.Error(codes.Unauthenticated, "userinfo_failed")
@@ -240,6 +248,7 @@ func (s *appServices) CompleteGoogleLogin(ctx context.Context, req *appv1.Comple
 	}
 
 	email := strings.TrimSpace(strings.ToLower(googleUser.Email))
+	refUsername := strings.TrimSpace(req.GetRefUsername())
 	if email == "" {
 		return nil, status.Error(codes.InvalidArgument, "missing_email")
 	}
@@ -251,14 +260,21 @@ func (s *appServices) CompleteGoogleLogin(ctx context.Context, req *appv1.Comple
 			s.logger.Error("Failed to load Google user", "error", err)
 			return nil, status.Error(codes.Internal, "load_user_failed")
 		}
+		referrerID, resolveErr := s.resolveSignupReferrerID(ctx, refUsername, googleUser.Name)
+		if resolveErr != nil {
+			s.logger.Error("Failed to resolve Google signup referrer", "error", resolveErr)
+			return nil, status.Error(codes.Internal, "create_user_failed")
+		}
 		role := "USER"
 		user = &model.User{
-			ID:       uuid.New().String(),
-			Email:    email,
-			Username: stringPointerOrNil(googleUser.Name),
-			GoogleID: stringPointerOrNil(googleUser.ID),
-			Avatar:   stringPointerOrNil(googleUser.Picture),
-			Role:     &role,
+			ID:               uuid.New().String(),
+			Email:            email,
+			Username:         stringPointerOrNil(googleUser.Name),
+			GoogleID:         stringPointerOrNil(googleUser.ID),
+			Avatar:           stringPointerOrNil(googleUser.Picture),
+			Role:             &role,
+			ReferredByUserID: referrerID,
+			ReferralEligible: model.BoolPtr(true),
 		}
 		if err := u.WithContext(ctx).Create(user); err != nil {
 			s.logger.Error("Failed to create Google user", "error", err)
@@ -292,7 +308,7 @@ func (s *appServices) CompleteGoogleLogin(ctx context.Context, req *appv1.Comple
 		return nil, status.Error(codes.Internal, "session_failed")
 	}
 
-	payload, err := authapi.BuildUserPayload(ctx, s.db, user)
+	payload, err := buildUserPayload(ctx, s.db, user)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to build user payload")
 	}

@@ -3,10 +3,7 @@ package app
 import (
 	"context"
 	"errors"
-	"fmt"
-	"net/http"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -99,173 +96,21 @@ func (s *appServices) CreateAdminPayment(ctx context.Context, req *appv1.CreateA
 		return nil, status.Error(codes.InvalidArgument, "Payment method must be wallet or topup")
 	}
 
-	var user model.User
-	if err := s.db.WithContext(ctx).Where("id = ?", userID).First(&user).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, status.Error(codes.InvalidArgument, "User not found")
-		}
-		return nil, status.Error(codes.Internal, "Failed to create payment")
+	user, err := s.loadPaymentUserForAdmin(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	planRecord, err := s.loadPaymentPlanForAdmin(ctx, planID)
+	if err != nil {
+		return nil, err
 	}
 
-	var planRecord model.Plan
-	if err := s.db.WithContext(ctx).Where("id = ?", planID).First(&planRecord).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, status.Error(codes.InvalidArgument, "Plan not found")
-		}
-		return nil, status.Error(codes.Internal, "Failed to create payment")
-	}
-	if planRecord.IsActive == nil || !*planRecord.IsActive {
-		return nil, status.Error(codes.InvalidArgument, "Plan is not active")
-	}
-
-	totalAmount := planRecord.Price * float64(req.GetTermMonths())
-	statusValue := "SUCCESS"
-	provider := "INTERNAL"
-	currency := normalizeCurrency(nil)
-	transactionID := buildTransactionID("sub")
-	now := time.Now().UTC()
-
-	paymentRecord := &model.Payment{
-		ID:            uuid.New().String(),
+	resultValue, err := s.executePaymentFlow(ctx, paymentExecutionInput{
 		UserID:        user.ID,
-		PlanID:        &planRecord.ID,
-		Amount:        totalAmount,
-		Currency:      &currency,
-		Status:        &statusValue,
-		Provider:      &provider,
-		TransactionID: &transactionID,
-	}
-	invoiceID := buildInvoiceID(paymentRecord.ID)
-	var subscription *model.PlanSubscription
-	var walletBalance float64
-
-	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if _, err := lockUserForUpdate(ctx, tx, user.ID); err != nil {
-			return err
-		}
-
-		currentSubscription, err := model.GetLatestPlanSubscription(ctx, tx, user.ID)
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
-
-		baseExpiry := now
-		if currentSubscription != nil && currentSubscription.ExpiresAt.After(baseExpiry) {
-			baseExpiry = currentSubscription.ExpiresAt.UTC()
-		}
-		newExpiry := baseExpiry.AddDate(0, int(req.GetTermMonths()), 0)
-
-		currentWalletBalance, err := model.GetWalletBalance(ctx, tx, user.ID)
-		if err != nil {
-			return err
-		}
-		shortfall := maxFloat(totalAmount-currentWalletBalance, 0)
-		if paymentMethod == paymentMethodWallet && shortfall > 0 {
-			return statusErrorWithBody(ctx, codes.InvalidArgument, http.StatusBadRequest, "Insufficient wallet balance", map[string]interface{}{
-				"payment_method": paymentMethod,
-				"wallet_balance": currentWalletBalance,
-				"total_amount":   totalAmount,
-				"shortfall":      shortfall,
-			})
-		}
-
-		topupAmount := 0.0
-		if paymentMethod == paymentMethodTopup {
-			if req.TopupAmount == nil {
-				return statusErrorWithBody(ctx, codes.InvalidArgument, http.StatusBadRequest, "Top-up amount is required when payment method is topup", map[string]interface{}{
-					"payment_method": paymentMethod,
-					"wallet_balance": currentWalletBalance,
-					"total_amount":   totalAmount,
-					"shortfall":      shortfall,
-				})
-			}
-			topupAmount = maxFloat(req.GetTopupAmount(), 0)
-			if topupAmount <= 0 {
-				return statusErrorWithBody(ctx, codes.InvalidArgument, http.StatusBadRequest, "Top-up amount must be greater than 0", map[string]interface{}{
-					"payment_method": paymentMethod,
-					"wallet_balance": currentWalletBalance,
-					"total_amount":   totalAmount,
-					"shortfall":      shortfall,
-				})
-			}
-			if topupAmount < shortfall {
-				return statusErrorWithBody(ctx, codes.InvalidArgument, http.StatusBadRequest, "Top-up amount must be greater than or equal to the required shortfall", map[string]interface{}{
-					"payment_method": paymentMethod,
-					"wallet_balance": currentWalletBalance,
-					"total_amount":   totalAmount,
-					"shortfall":      shortfall,
-					"topup_amount":   topupAmount,
-				})
-			}
-		}
-
-		if err := tx.Create(paymentRecord).Error; err != nil {
-			return err
-		}
-
-		walletUsedAmount := totalAmount
-		if paymentMethod == paymentMethodTopup {
-			topupTransaction := &model.WalletTransaction{
-				ID:         uuid.New().String(),
-				UserID:     user.ID,
-				Type:       walletTransactionTypeTopup,
-				Amount:     maxFloat(req.GetTopupAmount(), 0),
-				Currency:   model.StringPtr(currency),
-				Note:       model.StringPtr(fmt.Sprintf("Wallet top-up for %s (%d months)", planRecord.Name, req.GetTermMonths())),
-				PaymentID:  &paymentRecord.ID,
-				PlanID:     &planRecord.ID,
-				TermMonths: int32Ptr(req.GetTermMonths()),
-			}
-			if err := tx.Create(topupTransaction).Error; err != nil {
-				return err
-			}
-		}
-
-		debitTransaction := &model.WalletTransaction{
-			ID:         uuid.New().String(),
-			UserID:     user.ID,
-			Type:       walletTransactionTypeSubscriptionDebit,
-			Amount:     -totalAmount,
-			Currency:   model.StringPtr(currency),
-			Note:       model.StringPtr(fmt.Sprintf("Subscription payment for %s (%d months)", planRecord.Name, req.GetTermMonths())),
-			PaymentID:  &paymentRecord.ID,
-			PlanID:     &planRecord.ID,
-			TermMonths: int32Ptr(req.GetTermMonths()),
-		}
-		if err := tx.Create(debitTransaction).Error; err != nil {
-			return err
-		}
-
-		subscription = &model.PlanSubscription{
-			ID:            uuid.New().String(),
-			UserID:        user.ID,
-			PaymentID:     paymentRecord.ID,
-			PlanID:        planRecord.ID,
-			TermMonths:    req.GetTermMonths(),
-			PaymentMethod: paymentMethod,
-			WalletAmount:  walletUsedAmount,
-			TopupAmount:   maxFloat(req.GetTopupAmount(), 0),
-			StartedAt:     now,
-			ExpiresAt:     newExpiry,
-		}
-		if err := tx.Create(subscription).Error; err != nil {
-			return err
-		}
-
-		if err := tx.Model(&model.User{}).Where("id = ?", user.ID).Update("plan_id", planRecord.ID).Error; err != nil {
-			return err
-		}
-
-		notification := buildSubscriptionNotification(user.ID, paymentRecord.ID, invoiceID, &planRecord, subscription)
-		if err := tx.Create(notification).Error; err != nil {
-			return err
-		}
-
-		walletBalance, err = model.GetWalletBalance(ctx, tx, user.ID)
-		if err != nil {
-			return err
-		}
-		return nil
+		Plan:          planRecord,
+		TermMonths:    req.GetTermMonths(),
+		PaymentMethod: paymentMethod,
+		TopupAmount:   req.TopupAmount,
 	})
 	if err != nil {
 		if _, ok := status.FromError(err); ok {
@@ -274,15 +119,15 @@ func (s *appServices) CreateAdminPayment(ctx context.Context, req *appv1.CreateA
 		return nil, status.Error(codes.Internal, "Failed to create payment")
 	}
 
-	payload, err := s.buildAdminPayment(ctx, paymentRecord)
+	payload, err := s.buildAdminPayment(ctx, resultValue.Payment)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to create payment")
 	}
 	return &appv1.CreateAdminPaymentResponse{
 		Payment:       payload,
-		Subscription:  toProtoPlanSubscription(subscription),
-		WalletBalance: walletBalance,
-		InvoiceId:     invoiceID,
+		Subscription:  toProtoPlanSubscription(resultValue.Subscription),
+		WalletBalance: resultValue.WalletBalance,
+		InvoiceId:     resultValue.InvoiceID,
 	}, nil
 }
 func (s *appServices) UpdateAdminPayment(ctx context.Context, req *appv1.UpdateAdminPaymentRequest) (*appv1.UpdateAdminPaymentResponse, error) {
@@ -554,7 +399,7 @@ func (s *appServices) CreateAdminAdTemplate(ctx context.Context, req *appv1.Crea
 		Name:        strings.TrimSpace(req.GetName()),
 		Description: nullableTrimmedStringPtr(req.Description),
 		VastTagURL:  strings.TrimSpace(req.GetVastTagUrl()),
-		AdFormat:    model.StringPtr(normalizeAdminAdFormatValue(req.GetAdFormat())),
+		AdFormat:    model.StringPtr(normalizeAdFormat(req.GetAdFormat())),
 		Duration:    duration,
 		IsActive:    model.BoolPtr(req.GetIsActive()),
 		IsDefault:   req.GetIsDefault(),
@@ -614,7 +459,7 @@ func (s *appServices) UpdateAdminAdTemplate(ctx context.Context, req *appv1.Upda
 	item.Name = strings.TrimSpace(req.GetName())
 	item.Description = nullableTrimmedStringPtr(req.Description)
 	item.VastTagURL = strings.TrimSpace(req.GetVastTagUrl())
-	item.AdFormat = model.StringPtr(normalizeAdminAdFormatValue(req.GetAdFormat()))
+	item.AdFormat = model.StringPtr(normalizeAdFormat(req.GetAdFormat()))
 	item.Duration = duration
 	item.IsActive = model.BoolPtr(req.GetIsActive())
 	item.IsDefault = req.GetIsDefault()
@@ -650,7 +495,7 @@ func (s *appServices) DeleteAdminAdTemplate(ctx context.Context, req *appv1.Dele
 	}
 
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("ad_template_id = ?", id).Delete(&model.VideoAdConfig{}).Error; err != nil {
+		if err := tx.Model(&model.Video{}).Where("ad_id = ?", id).Update("ad_id", nil).Error; err != nil {
 			return err
 		}
 		res := tx.Where("id = ?", id).Delete(&model.AdTemplate{})
@@ -669,4 +514,222 @@ func (s *appServices) DeleteAdminAdTemplate(ctx context.Context, req *appv1.Dele
 		return nil, status.Error(codes.Internal, "Failed to delete ad template")
 	}
 	return &appv1.MessageResponse{Message: "Ad template deleted"}, nil
+}
+
+func (s *appServices) ListAdminPlayerConfigs(ctx context.Context, req *appv1.ListAdminPlayerConfigsRequest) (*appv1.ListAdminPlayerConfigsResponse, error) {
+	if _, err := s.requireAdmin(ctx); err != nil {
+		return nil, err
+	}
+
+	page, limit, offset := adminPageLimitOffset(req.GetPage(), req.GetLimit())
+	limitInt := int(limit)
+	search := strings.TrimSpace(protoStringValue(req.Search))
+	userID := strings.TrimSpace(protoStringValue(req.UserId))
+
+	db := s.db.WithContext(ctx).Model(&model.PlayerConfig{})
+	if search != "" {
+		like := "%" + search + "%"
+		db = db.Where("name ILIKE ?", like)
+	}
+	if userID != "" {
+		db = db.Where("user_id = ?", userID)
+	}
+
+	var total int64
+	if err := db.Count(&total).Error; err != nil {
+		return nil, status.Error(codes.Internal, "Failed to list player configs")
+	}
+
+	var configs []model.PlayerConfig
+	if err := db.Order("created_at DESC").Offset(offset).Limit(limitInt).Find(&configs).Error; err != nil {
+		return nil, status.Error(codes.Internal, "Failed to list player configs")
+	}
+
+	items := make([]*appv1.AdminPlayerConfig, 0, len(configs))
+	for i := range configs {
+		payload, err := s.buildAdminPlayerConfig(ctx, &configs[i])
+		if err != nil {
+			return nil, status.Error(codes.Internal, "Failed to list player configs")
+		}
+		items = append(items, payload)
+	}
+
+	return &appv1.ListAdminPlayerConfigsResponse{
+		Configs: items,
+		Total:   total,
+		Page:    page,
+		Limit:   limit,
+	}, nil
+}
+
+func (s *appServices) GetAdminPlayerConfig(ctx context.Context, req *appv1.GetAdminPlayerConfigRequest) (*appv1.GetAdminPlayerConfigResponse, error) {
+	if _, err := s.requireAdmin(ctx); err != nil {
+		return nil, err
+	}
+
+	id := strings.TrimSpace(req.GetId())
+	if id == "" {
+		return nil, status.Error(codes.NotFound, "Player config not found")
+	}
+
+	var item model.PlayerConfig
+	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&item).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.NotFound, "Player config not found")
+		}
+		return nil, status.Error(codes.Internal, "Failed to load player config")
+	}
+
+	payload, err := s.buildAdminPlayerConfig(ctx, &item)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to load player config")
+	}
+	return &appv1.GetAdminPlayerConfigResponse{Config: payload}, nil
+}
+
+func (s *appServices) CreateAdminPlayerConfig(ctx context.Context, req *appv1.CreateAdminPlayerConfigRequest) (*appv1.CreateAdminPlayerConfigResponse, error) {
+	if _, err := s.requireAdmin(ctx); err != nil {
+		return nil, err
+	}
+
+	if msg := validateAdminPlayerConfigInput(req.GetUserId(), req.GetName()); msg != "" {
+		return nil, status.Error(codes.InvalidArgument, msg)
+	}
+
+	var user model.User
+	if err := s.db.WithContext(ctx).Where("id = ?", strings.TrimSpace(req.GetUserId())).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.InvalidArgument, "User not found")
+		}
+		return nil, status.Error(codes.Internal, "Failed to save player config")
+	}
+
+	item := &model.PlayerConfig{
+		ID:            uuid.New().String(),
+		UserID:        user.ID,
+		Name:          strings.TrimSpace(req.GetName()),
+		Description:   nullableTrimmedStringPtr(req.Description),
+		Autoplay:      req.GetAutoplay(),
+		Loop:          req.GetLoop(),
+		Muted:         req.GetMuted(),
+		ShowControls:  model.BoolPtr(req.GetShowControls()),
+		Pip:           model.BoolPtr(req.GetPip()),
+		Airplay:       model.BoolPtr(req.GetAirplay()),
+		Chromecast:    model.BoolPtr(req.GetChromecast()),
+		IsActive:      model.BoolPtr(req.GetIsActive()),
+		IsDefault:     req.GetIsDefault(),
+		EncrytionM3u8: model.BoolPtr(req.EncrytionM3U8 == nil || *req.EncrytionM3U8),
+		LogoURL:       nullableTrimmedStringPtr(req.LogoUrl),
+	}
+	if !boolValue(item.IsActive) {
+		item.IsDefault = false
+	}
+
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if item.IsDefault {
+			if err := s.unsetAdminDefaultPlayerConfigs(ctx, tx, item.UserID, ""); err != nil {
+				return err
+			}
+		}
+		return tx.Create(item).Error
+	}); err != nil {
+		return nil, status.Error(codes.Internal, "Failed to save player config")
+	}
+
+	payload, err := s.buildAdminPlayerConfig(ctx, item)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to save player config")
+	}
+	return &appv1.CreateAdminPlayerConfigResponse{Config: payload}, nil
+}
+
+func (s *appServices) UpdateAdminPlayerConfig(ctx context.Context, req *appv1.UpdateAdminPlayerConfigRequest) (*appv1.UpdateAdminPlayerConfigResponse, error) {
+	if _, err := s.requireAdmin(ctx); err != nil {
+		return nil, err
+	}
+
+	id := strings.TrimSpace(req.GetId())
+	if id == "" {
+		return nil, status.Error(codes.NotFound, "Player config not found")
+	}
+
+	if msg := validateAdminPlayerConfigInput(req.GetUserId(), req.GetName()); msg != "" {
+		return nil, status.Error(codes.InvalidArgument, msg)
+	}
+
+	var user model.User
+	if err := s.db.WithContext(ctx).Where("id = ?", strings.TrimSpace(req.GetUserId())).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.InvalidArgument, "User not found")
+		}
+		return nil, status.Error(codes.Internal, "Failed to save player config")
+	}
+
+	var item model.PlayerConfig
+	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&item).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.NotFound, "Player config not found")
+		}
+		return nil, status.Error(codes.Internal, "Failed to save player config")
+	}
+
+	item.UserID = user.ID
+	item.Name = strings.TrimSpace(req.GetName())
+	item.Description = nullableTrimmedStringPtr(req.Description)
+	item.Autoplay = req.GetAutoplay()
+	item.Loop = req.GetLoop()
+	item.Muted = req.GetMuted()
+	item.ShowControls = model.BoolPtr(req.GetShowControls())
+	item.Pip = model.BoolPtr(req.GetPip())
+	item.Airplay = model.BoolPtr(req.GetAirplay())
+	item.Chromecast = model.BoolPtr(req.GetChromecast())
+	item.IsActive = model.BoolPtr(req.GetIsActive())
+	item.IsDefault = req.GetIsDefault()
+	if req.EncrytionM3U8 != nil {
+		item.EncrytionM3u8 = model.BoolPtr(*req.EncrytionM3U8)
+	}
+	if req.LogoUrl != nil {
+		item.LogoURL = nullableTrimmedStringPtr(req.LogoUrl)
+	}
+	if !boolValue(item.IsActive) {
+		item.IsDefault = false
+	}
+
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if item.IsDefault {
+			if err := s.unsetAdminDefaultPlayerConfigs(ctx, tx, item.UserID, item.ID); err != nil {
+				return err
+			}
+		}
+		return tx.Save(&item).Error
+	}); err != nil {
+		return nil, status.Error(codes.Internal, "Failed to save player config")
+	}
+
+	payload, err := s.buildAdminPlayerConfig(ctx, &item)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to save player config")
+	}
+	return &appv1.UpdateAdminPlayerConfigResponse{Config: payload}, nil
+}
+
+func (s *appServices) DeleteAdminPlayerConfig(ctx context.Context, req *appv1.DeleteAdminPlayerConfigRequest) (*appv1.MessageResponse, error) {
+	if _, err := s.requireAdmin(ctx); err != nil {
+		return nil, err
+	}
+
+	id := strings.TrimSpace(req.GetId())
+	if id == "" {
+		return nil, status.Error(codes.NotFound, "Player config not found")
+	}
+
+	res := s.db.WithContext(ctx).Where("id = ?", id).Delete(&model.PlayerConfig{})
+	if res.Error != nil {
+		return nil, status.Error(codes.Internal, "Failed to delete player config")
+	}
+	if res.RowsAffected == 0 {
+		return nil, status.Error(codes.NotFound, "Player config not found")
+	}
+
+	return &appv1.MessageResponse{Message: "Player config deleted"}, nil
 }

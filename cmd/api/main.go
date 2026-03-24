@@ -8,9 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	bootstrap "stream.api/internal/app"
 	"stream.api/internal/config"
 	"stream.api/internal/database/query"
-	videoruntime "stream.api/internal/video/runtime"
 	"stream.api/pkg/cache"
 	"stream.api/pkg/database"
 	"stream.api/pkg/logger"
@@ -47,7 +47,7 @@ func main() {
 	tokenProvider := token.NewJWTProvider(cfg.JWT.Secret)
 	appLogger := logger.NewLogger(cfg.Server.Mode)
 
-	module, err := videoruntime.NewModule(context.Background(), cfg, db, rdb, tokenProvider, appLogger)
+	module, err := bootstrap.NewGRPCModule(context.Background(), cfg, db, rdb, tokenProvider, appLogger)
 	if err != nil {
 		log.Fatalf("Failed to setup gRPC runtime module: %v", err)
 	}

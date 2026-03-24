@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 	"stream.api/internal/config"
 	apprpc "stream.api/internal/rpc/app"
+	"stream.api/internal/video"
 	redisadapter "stream.api/internal/video/runtime/adapters/queue/redis"
 	runtimegrpc "stream.api/internal/video/runtime/grpc"
 	"stream.api/internal/video/runtime/services"
@@ -36,16 +37,17 @@ func NewModule(ctx context.Context, cfg *config.Config, db *gorm.DB, cacheClient
 	healthService := services.NewHealthService(db, adapter.Client(), cfg.Render.ServiceName)
 	grpcServer := runtimegrpc.NewServer(jobService, cfg.Render.AgentSecret)
 	module := &Module{ctx: ctx, cfg: cfg, jobService: jobService, healthService: healthService, grpcServer: grpcServer, grpcRaw: grpcpkg.NewServer()}
-	if publisher, err := newMQTTPublisher(jobService, grpcServer, appLogger); err != nil {
+	if publisher, err := NewMQTTBootstrap(jobService, grpcServer, appLogger); err != nil {
 		appLogger.Error("Failed to initialize MQTT publisher", "error", err)
 	} else {
-		module.mqttPublisher = publisher
+		module.mqttPublisher = publisher.mqttPublisher
 		grpcServer.SetAgentEventHandler(func(eventType string, agent *services.AgentWithStats) {
-			publishAgentEvent(publisher.client, appLogger, eventType, agent)
+			PublishAgentMQTTEvent(publisher.Client(), appLogger, eventType, agent)
 		})
 	}
+	videoService := video.NewService(db, jobService)
 	grpcServer.Register(module.grpcRaw)
-	apprpc.Register(module.grpcRaw, apprpc.NewServices(cacheClient, tokenProvider, db, appLogger, cfg, jobService, grpcServer))
+	apprpc.Register(module.grpcRaw, apprpc.NewServices(cacheClient, tokenProvider, db, appLogger, cfg, videoService, grpcServer))
 	if module.mqttPublisher != nil {
 		module.mqttPublisher.start(ctx)
 	}

@@ -19,40 +19,46 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AdminService_GetAdminDashboard_FullMethodName     = "/stream.app.v1.AdminService/GetAdminDashboard"
-	AdminService_ListAdminUsers_FullMethodName        = "/stream.app.v1.AdminService/ListAdminUsers"
-	AdminService_GetAdminUser_FullMethodName          = "/stream.app.v1.AdminService/GetAdminUser"
-	AdminService_CreateAdminUser_FullMethodName       = "/stream.app.v1.AdminService/CreateAdminUser"
-	AdminService_UpdateAdminUser_FullMethodName       = "/stream.app.v1.AdminService/UpdateAdminUser"
-	AdminService_UpdateAdminUserRole_FullMethodName   = "/stream.app.v1.AdminService/UpdateAdminUserRole"
-	AdminService_DeleteAdminUser_FullMethodName       = "/stream.app.v1.AdminService/DeleteAdminUser"
-	AdminService_ListAdminVideos_FullMethodName       = "/stream.app.v1.AdminService/ListAdminVideos"
-	AdminService_GetAdminVideo_FullMethodName         = "/stream.app.v1.AdminService/GetAdminVideo"
-	AdminService_CreateAdminVideo_FullMethodName      = "/stream.app.v1.AdminService/CreateAdminVideo"
-	AdminService_UpdateAdminVideo_FullMethodName      = "/stream.app.v1.AdminService/UpdateAdminVideo"
-	AdminService_DeleteAdminVideo_FullMethodName      = "/stream.app.v1.AdminService/DeleteAdminVideo"
-	AdminService_ListAdminPayments_FullMethodName     = "/stream.app.v1.AdminService/ListAdminPayments"
-	AdminService_GetAdminPayment_FullMethodName       = "/stream.app.v1.AdminService/GetAdminPayment"
-	AdminService_CreateAdminPayment_FullMethodName    = "/stream.app.v1.AdminService/CreateAdminPayment"
-	AdminService_UpdateAdminPayment_FullMethodName    = "/stream.app.v1.AdminService/UpdateAdminPayment"
-	AdminService_ListAdminPlans_FullMethodName        = "/stream.app.v1.AdminService/ListAdminPlans"
-	AdminService_CreateAdminPlan_FullMethodName       = "/stream.app.v1.AdminService/CreateAdminPlan"
-	AdminService_UpdateAdminPlan_FullMethodName       = "/stream.app.v1.AdminService/UpdateAdminPlan"
-	AdminService_DeleteAdminPlan_FullMethodName       = "/stream.app.v1.AdminService/DeleteAdminPlan"
-	AdminService_ListAdminAdTemplates_FullMethodName  = "/stream.app.v1.AdminService/ListAdminAdTemplates"
-	AdminService_GetAdminAdTemplate_FullMethodName    = "/stream.app.v1.AdminService/GetAdminAdTemplate"
-	AdminService_CreateAdminAdTemplate_FullMethodName = "/stream.app.v1.AdminService/CreateAdminAdTemplate"
-	AdminService_UpdateAdminAdTemplate_FullMethodName = "/stream.app.v1.AdminService/UpdateAdminAdTemplate"
-	AdminService_DeleteAdminAdTemplate_FullMethodName = "/stream.app.v1.AdminService/DeleteAdminAdTemplate"
-	AdminService_ListAdminJobs_FullMethodName         = "/stream.app.v1.AdminService/ListAdminJobs"
-	AdminService_GetAdminJob_FullMethodName           = "/stream.app.v1.AdminService/GetAdminJob"
-	AdminService_GetAdminJobLogs_FullMethodName       = "/stream.app.v1.AdminService/GetAdminJobLogs"
-	AdminService_CreateAdminJob_FullMethodName        = "/stream.app.v1.AdminService/CreateAdminJob"
-	AdminService_CancelAdminJob_FullMethodName        = "/stream.app.v1.AdminService/CancelAdminJob"
-	AdminService_RetryAdminJob_FullMethodName         = "/stream.app.v1.AdminService/RetryAdminJob"
-	AdminService_ListAdminAgents_FullMethodName       = "/stream.app.v1.AdminService/ListAdminAgents"
-	AdminService_RestartAdminAgent_FullMethodName     = "/stream.app.v1.AdminService/RestartAdminAgent"
-	AdminService_UpdateAdminAgent_FullMethodName      = "/stream.app.v1.AdminService/UpdateAdminAgent"
+	AdminService_GetAdminDashboard_FullMethodName               = "/stream.app.v1.AdminService/GetAdminDashboard"
+	AdminService_ListAdminUsers_FullMethodName                  = "/stream.app.v1.AdminService/ListAdminUsers"
+	AdminService_GetAdminUser_FullMethodName                    = "/stream.app.v1.AdminService/GetAdminUser"
+	AdminService_CreateAdminUser_FullMethodName                 = "/stream.app.v1.AdminService/CreateAdminUser"
+	AdminService_UpdateAdminUser_FullMethodName                 = "/stream.app.v1.AdminService/UpdateAdminUser"
+	AdminService_UpdateAdminUserReferralSettings_FullMethodName = "/stream.app.v1.AdminService/UpdateAdminUserReferralSettings"
+	AdminService_UpdateAdminUserRole_FullMethodName             = "/stream.app.v1.AdminService/UpdateAdminUserRole"
+	AdminService_DeleteAdminUser_FullMethodName                 = "/stream.app.v1.AdminService/DeleteAdminUser"
+	AdminService_ListAdminVideos_FullMethodName                 = "/stream.app.v1.AdminService/ListAdminVideos"
+	AdminService_GetAdminVideo_FullMethodName                   = "/stream.app.v1.AdminService/GetAdminVideo"
+	AdminService_CreateAdminVideo_FullMethodName                = "/stream.app.v1.AdminService/CreateAdminVideo"
+	AdminService_UpdateAdminVideo_FullMethodName                = "/stream.app.v1.AdminService/UpdateAdminVideo"
+	AdminService_DeleteAdminVideo_FullMethodName                = "/stream.app.v1.AdminService/DeleteAdminVideo"
+	AdminService_ListAdminPayments_FullMethodName               = "/stream.app.v1.AdminService/ListAdminPayments"
+	AdminService_GetAdminPayment_FullMethodName                 = "/stream.app.v1.AdminService/GetAdminPayment"
+	AdminService_CreateAdminPayment_FullMethodName              = "/stream.app.v1.AdminService/CreateAdminPayment"
+	AdminService_UpdateAdminPayment_FullMethodName              = "/stream.app.v1.AdminService/UpdateAdminPayment"
+	AdminService_ListAdminPlans_FullMethodName                  = "/stream.app.v1.AdminService/ListAdminPlans"
+	AdminService_CreateAdminPlan_FullMethodName                 = "/stream.app.v1.AdminService/CreateAdminPlan"
+	AdminService_UpdateAdminPlan_FullMethodName                 = "/stream.app.v1.AdminService/UpdateAdminPlan"
+	AdminService_DeleteAdminPlan_FullMethodName                 = "/stream.app.v1.AdminService/DeleteAdminPlan"
+	AdminService_ListAdminAdTemplates_FullMethodName            = "/stream.app.v1.AdminService/ListAdminAdTemplates"
+	AdminService_GetAdminAdTemplate_FullMethodName              = "/stream.app.v1.AdminService/GetAdminAdTemplate"
+	AdminService_CreateAdminAdTemplate_FullMethodName           = "/stream.app.v1.AdminService/CreateAdminAdTemplate"
+	AdminService_UpdateAdminAdTemplate_FullMethodName           = "/stream.app.v1.AdminService/UpdateAdminAdTemplate"
+	AdminService_DeleteAdminAdTemplate_FullMethodName           = "/stream.app.v1.AdminService/DeleteAdminAdTemplate"
+	AdminService_ListAdminPlayerConfigs_FullMethodName          = "/stream.app.v1.AdminService/ListAdminPlayerConfigs"
+	AdminService_GetAdminPlayerConfig_FullMethodName            = "/stream.app.v1.AdminService/GetAdminPlayerConfig"
+	AdminService_CreateAdminPlayerConfig_FullMethodName         = "/stream.app.v1.AdminService/CreateAdminPlayerConfig"
+	AdminService_UpdateAdminPlayerConfig_FullMethodName         = "/stream.app.v1.AdminService/UpdateAdminPlayerConfig"
+	AdminService_DeleteAdminPlayerConfig_FullMethodName         = "/stream.app.v1.AdminService/DeleteAdminPlayerConfig"
+	AdminService_ListAdminJobs_FullMethodName                   = "/stream.app.v1.AdminService/ListAdminJobs"
+	AdminService_GetAdminJob_FullMethodName                     = "/stream.app.v1.AdminService/GetAdminJob"
+	AdminService_GetAdminJobLogs_FullMethodName                 = "/stream.app.v1.AdminService/GetAdminJobLogs"
+	AdminService_CreateAdminJob_FullMethodName                  = "/stream.app.v1.AdminService/CreateAdminJob"
+	AdminService_CancelAdminJob_FullMethodName                  = "/stream.app.v1.AdminService/CancelAdminJob"
+	AdminService_RetryAdminJob_FullMethodName                   = "/stream.app.v1.AdminService/RetryAdminJob"
+	AdminService_ListAdminAgents_FullMethodName                 = "/stream.app.v1.AdminService/ListAdminAgents"
+	AdminService_RestartAdminAgent_FullMethodName               = "/stream.app.v1.AdminService/RestartAdminAgent"
+	AdminService_UpdateAdminAgent_FullMethodName                = "/stream.app.v1.AdminService/UpdateAdminAgent"
 )
 
 // AdminServiceClient is the client API for AdminService service.
@@ -64,6 +70,7 @@ type AdminServiceClient interface {
 	GetAdminUser(ctx context.Context, in *GetAdminUserRequest, opts ...grpc.CallOption) (*GetAdminUserResponse, error)
 	CreateAdminUser(ctx context.Context, in *CreateAdminUserRequest, opts ...grpc.CallOption) (*CreateAdminUserResponse, error)
 	UpdateAdminUser(ctx context.Context, in *UpdateAdminUserRequest, opts ...grpc.CallOption) (*UpdateAdminUserResponse, error)
+	UpdateAdminUserReferralSettings(ctx context.Context, in *UpdateAdminUserReferralSettingsRequest, opts ...grpc.CallOption) (*UpdateAdminUserReferralSettingsResponse, error)
 	UpdateAdminUserRole(ctx context.Context, in *UpdateAdminUserRoleRequest, opts ...grpc.CallOption) (*UpdateAdminUserRoleResponse, error)
 	DeleteAdminUser(ctx context.Context, in *DeleteAdminUserRequest, opts ...grpc.CallOption) (*MessageResponse, error)
 	ListAdminVideos(ctx context.Context, in *ListAdminVideosRequest, opts ...grpc.CallOption) (*ListAdminVideosResponse, error)
@@ -84,6 +91,11 @@ type AdminServiceClient interface {
 	CreateAdminAdTemplate(ctx context.Context, in *CreateAdminAdTemplateRequest, opts ...grpc.CallOption) (*CreateAdminAdTemplateResponse, error)
 	UpdateAdminAdTemplate(ctx context.Context, in *UpdateAdminAdTemplateRequest, opts ...grpc.CallOption) (*UpdateAdminAdTemplateResponse, error)
 	DeleteAdminAdTemplate(ctx context.Context, in *DeleteAdminAdTemplateRequest, opts ...grpc.CallOption) (*MessageResponse, error)
+	ListAdminPlayerConfigs(ctx context.Context, in *ListAdminPlayerConfigsRequest, opts ...grpc.CallOption) (*ListAdminPlayerConfigsResponse, error)
+	GetAdminPlayerConfig(ctx context.Context, in *GetAdminPlayerConfigRequest, opts ...grpc.CallOption) (*GetAdminPlayerConfigResponse, error)
+	CreateAdminPlayerConfig(ctx context.Context, in *CreateAdminPlayerConfigRequest, opts ...grpc.CallOption) (*CreateAdminPlayerConfigResponse, error)
+	UpdateAdminPlayerConfig(ctx context.Context, in *UpdateAdminPlayerConfigRequest, opts ...grpc.CallOption) (*UpdateAdminPlayerConfigResponse, error)
+	DeleteAdminPlayerConfig(ctx context.Context, in *DeleteAdminPlayerConfigRequest, opts ...grpc.CallOption) (*MessageResponse, error)
 	ListAdminJobs(ctx context.Context, in *ListAdminJobsRequest, opts ...grpc.CallOption) (*ListAdminJobsResponse, error)
 	GetAdminJob(ctx context.Context, in *GetAdminJobRequest, opts ...grpc.CallOption) (*GetAdminJobResponse, error)
 	GetAdminJobLogs(ctx context.Context, in *GetAdminJobLogsRequest, opts ...grpc.CallOption) (*GetAdminJobLogsResponse, error)
@@ -147,6 +159,16 @@ func (c *adminServiceClient) UpdateAdminUser(ctx context.Context, in *UpdateAdmi
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateAdminUserResponse)
 	err := c.cc.Invoke(ctx, AdminService_UpdateAdminUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) UpdateAdminUserReferralSettings(ctx context.Context, in *UpdateAdminUserReferralSettingsRequest, opts ...grpc.CallOption) (*UpdateAdminUserReferralSettingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateAdminUserReferralSettingsResponse)
+	err := c.cc.Invoke(ctx, AdminService_UpdateAdminUserReferralSettings_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -353,6 +375,56 @@ func (c *adminServiceClient) DeleteAdminAdTemplate(ctx context.Context, in *Dele
 	return out, nil
 }
 
+func (c *adminServiceClient) ListAdminPlayerConfigs(ctx context.Context, in *ListAdminPlayerConfigsRequest, opts ...grpc.CallOption) (*ListAdminPlayerConfigsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListAdminPlayerConfigsResponse)
+	err := c.cc.Invoke(ctx, AdminService_ListAdminPlayerConfigs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) GetAdminPlayerConfig(ctx context.Context, in *GetAdminPlayerConfigRequest, opts ...grpc.CallOption) (*GetAdminPlayerConfigResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetAdminPlayerConfigResponse)
+	err := c.cc.Invoke(ctx, AdminService_GetAdminPlayerConfig_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) CreateAdminPlayerConfig(ctx context.Context, in *CreateAdminPlayerConfigRequest, opts ...grpc.CallOption) (*CreateAdminPlayerConfigResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateAdminPlayerConfigResponse)
+	err := c.cc.Invoke(ctx, AdminService_CreateAdminPlayerConfig_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) UpdateAdminPlayerConfig(ctx context.Context, in *UpdateAdminPlayerConfigRequest, opts ...grpc.CallOption) (*UpdateAdminPlayerConfigResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateAdminPlayerConfigResponse)
+	err := c.cc.Invoke(ctx, AdminService_UpdateAdminPlayerConfig_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) DeleteAdminPlayerConfig(ctx context.Context, in *DeleteAdminPlayerConfigRequest, opts ...grpc.CallOption) (*MessageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MessageResponse)
+	err := c.cc.Invoke(ctx, AdminService_DeleteAdminPlayerConfig_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *adminServiceClient) ListAdminJobs(ctx context.Context, in *ListAdminJobsRequest, opts ...grpc.CallOption) (*ListAdminJobsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListAdminJobsResponse)
@@ -452,6 +524,7 @@ type AdminServiceServer interface {
 	GetAdminUser(context.Context, *GetAdminUserRequest) (*GetAdminUserResponse, error)
 	CreateAdminUser(context.Context, *CreateAdminUserRequest) (*CreateAdminUserResponse, error)
 	UpdateAdminUser(context.Context, *UpdateAdminUserRequest) (*UpdateAdminUserResponse, error)
+	UpdateAdminUserReferralSettings(context.Context, *UpdateAdminUserReferralSettingsRequest) (*UpdateAdminUserReferralSettingsResponse, error)
 	UpdateAdminUserRole(context.Context, *UpdateAdminUserRoleRequest) (*UpdateAdminUserRoleResponse, error)
 	DeleteAdminUser(context.Context, *DeleteAdminUserRequest) (*MessageResponse, error)
 	ListAdminVideos(context.Context, *ListAdminVideosRequest) (*ListAdminVideosResponse, error)
@@ -472,6 +545,11 @@ type AdminServiceServer interface {
 	CreateAdminAdTemplate(context.Context, *CreateAdminAdTemplateRequest) (*CreateAdminAdTemplateResponse, error)
 	UpdateAdminAdTemplate(context.Context, *UpdateAdminAdTemplateRequest) (*UpdateAdminAdTemplateResponse, error)
 	DeleteAdminAdTemplate(context.Context, *DeleteAdminAdTemplateRequest) (*MessageResponse, error)
+	ListAdminPlayerConfigs(context.Context, *ListAdminPlayerConfigsRequest) (*ListAdminPlayerConfigsResponse, error)
+	GetAdminPlayerConfig(context.Context, *GetAdminPlayerConfigRequest) (*GetAdminPlayerConfigResponse, error)
+	CreateAdminPlayerConfig(context.Context, *CreateAdminPlayerConfigRequest) (*CreateAdminPlayerConfigResponse, error)
+	UpdateAdminPlayerConfig(context.Context, *UpdateAdminPlayerConfigRequest) (*UpdateAdminPlayerConfigResponse, error)
+	DeleteAdminPlayerConfig(context.Context, *DeleteAdminPlayerConfigRequest) (*MessageResponse, error)
 	ListAdminJobs(context.Context, *ListAdminJobsRequest) (*ListAdminJobsResponse, error)
 	GetAdminJob(context.Context, *GetAdminJobRequest) (*GetAdminJobResponse, error)
 	GetAdminJobLogs(context.Context, *GetAdminJobLogsRequest) (*GetAdminJobLogsResponse, error)
@@ -505,6 +583,9 @@ func (UnimplementedAdminServiceServer) CreateAdminUser(context.Context, *CreateA
 }
 func (UnimplementedAdminServiceServer) UpdateAdminUser(context.Context, *UpdateAdminUserRequest) (*UpdateAdminUserResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateAdminUser not implemented")
+}
+func (UnimplementedAdminServiceServer) UpdateAdminUserReferralSettings(context.Context, *UpdateAdminUserReferralSettingsRequest) (*UpdateAdminUserReferralSettingsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateAdminUserReferralSettings not implemented")
 }
 func (UnimplementedAdminServiceServer) UpdateAdminUserRole(context.Context, *UpdateAdminUserRoleRequest) (*UpdateAdminUserRoleResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateAdminUserRole not implemented")
@@ -565,6 +646,21 @@ func (UnimplementedAdminServiceServer) UpdateAdminAdTemplate(context.Context, *U
 }
 func (UnimplementedAdminServiceServer) DeleteAdminAdTemplate(context.Context, *DeleteAdminAdTemplateRequest) (*MessageResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteAdminAdTemplate not implemented")
+}
+func (UnimplementedAdminServiceServer) ListAdminPlayerConfigs(context.Context, *ListAdminPlayerConfigsRequest) (*ListAdminPlayerConfigsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListAdminPlayerConfigs not implemented")
+}
+func (UnimplementedAdminServiceServer) GetAdminPlayerConfig(context.Context, *GetAdminPlayerConfigRequest) (*GetAdminPlayerConfigResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetAdminPlayerConfig not implemented")
+}
+func (UnimplementedAdminServiceServer) CreateAdminPlayerConfig(context.Context, *CreateAdminPlayerConfigRequest) (*CreateAdminPlayerConfigResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateAdminPlayerConfig not implemented")
+}
+func (UnimplementedAdminServiceServer) UpdateAdminPlayerConfig(context.Context, *UpdateAdminPlayerConfigRequest) (*UpdateAdminPlayerConfigResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateAdminPlayerConfig not implemented")
+}
+func (UnimplementedAdminServiceServer) DeleteAdminPlayerConfig(context.Context, *DeleteAdminPlayerConfigRequest) (*MessageResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteAdminPlayerConfig not implemented")
 }
 func (UnimplementedAdminServiceServer) ListAdminJobs(context.Context, *ListAdminJobsRequest) (*ListAdminJobsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListAdminJobs not implemented")
@@ -700,6 +796,24 @@ func _AdminService_UpdateAdminUser_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AdminServiceServer).UpdateAdminUser(ctx, req.(*UpdateAdminUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_UpdateAdminUserReferralSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAdminUserReferralSettingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).UpdateAdminUserReferralSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_UpdateAdminUserReferralSettings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).UpdateAdminUserReferralSettings(ctx, req.(*UpdateAdminUserReferralSettingsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1064,6 +1178,96 @@ func _AdminService_DeleteAdminAdTemplate_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdminService_ListAdminPlayerConfigs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAdminPlayerConfigsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).ListAdminPlayerConfigs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_ListAdminPlayerConfigs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).ListAdminPlayerConfigs(ctx, req.(*ListAdminPlayerConfigsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_GetAdminPlayerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAdminPlayerConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).GetAdminPlayerConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_GetAdminPlayerConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).GetAdminPlayerConfig(ctx, req.(*GetAdminPlayerConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_CreateAdminPlayerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAdminPlayerConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).CreateAdminPlayerConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_CreateAdminPlayerConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).CreateAdminPlayerConfig(ctx, req.(*CreateAdminPlayerConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_UpdateAdminPlayerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAdminPlayerConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).UpdateAdminPlayerConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_UpdateAdminPlayerConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).UpdateAdminPlayerConfig(ctx, req.(*UpdateAdminPlayerConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_DeleteAdminPlayerConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteAdminPlayerConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).DeleteAdminPlayerConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_DeleteAdminPlayerConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).DeleteAdminPlayerConfig(ctx, req.(*DeleteAdminPlayerConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AdminService_ListAdminJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListAdminJobsRequest)
 	if err := dec(in); err != nil {
@@ -1254,6 +1458,10 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AdminService_UpdateAdminUser_Handler,
 		},
 		{
+			MethodName: "UpdateAdminUserReferralSettings",
+			Handler:    _AdminService_UpdateAdminUserReferralSettings_Handler,
+		},
+		{
 			MethodName: "UpdateAdminUserRole",
 			Handler:    _AdminService_UpdateAdminUserRole_Handler,
 		},
@@ -1332,6 +1540,26 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteAdminAdTemplate",
 			Handler:    _AdminService_DeleteAdminAdTemplate_Handler,
+		},
+		{
+			MethodName: "ListAdminPlayerConfigs",
+			Handler:    _AdminService_ListAdminPlayerConfigs_Handler,
+		},
+		{
+			MethodName: "GetAdminPlayerConfig",
+			Handler:    _AdminService_GetAdminPlayerConfig_Handler,
+		},
+		{
+			MethodName: "CreateAdminPlayerConfig",
+			Handler:    _AdminService_CreateAdminPlayerConfig_Handler,
+		},
+		{
+			MethodName: "UpdateAdminPlayerConfig",
+			Handler:    _AdminService_UpdateAdminPlayerConfig_Handler,
+		},
+		{
+			MethodName: "DeleteAdminPlayerConfig",
+			Handler:    _AdminService_DeleteAdminPlayerConfig_Handler,
 		},
 		{
 			MethodName: "ListAdminJobs",

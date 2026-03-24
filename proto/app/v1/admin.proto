@@ -12,6 +12,7 @@ service AdminService {
   rpc GetAdminUser(GetAdminUserRequest) returns (GetAdminUserResponse);
   rpc CreateAdminUser(CreateAdminUserRequest) returns (CreateAdminUserResponse);
   rpc UpdateAdminUser(UpdateAdminUserRequest) returns (UpdateAdminUserResponse);
+  rpc UpdateAdminUserReferralSettings(UpdateAdminUserReferralSettingsRequest) returns (UpdateAdminUserReferralSettingsResponse);
   rpc UpdateAdminUserRole(UpdateAdminUserRoleRequest) returns (UpdateAdminUserRoleResponse);
   rpc DeleteAdminUser(DeleteAdminUserRequest) returns (MessageResponse);
   rpc ListAdminVideos(ListAdminVideosRequest) returns (ListAdminVideosResponse);
@@ -32,6 +33,11 @@ service AdminService {
   rpc CreateAdminAdTemplate(CreateAdminAdTemplateRequest) returns (CreateAdminAdTemplateResponse);
   rpc UpdateAdminAdTemplate(UpdateAdminAdTemplateRequest) returns (UpdateAdminAdTemplateResponse);
   rpc DeleteAdminAdTemplate(DeleteAdminAdTemplateRequest) returns (MessageResponse);
+  rpc ListAdminPlayerConfigs(ListAdminPlayerConfigsRequest) returns (ListAdminPlayerConfigsResponse);
+  rpc GetAdminPlayerConfig(GetAdminPlayerConfigRequest) returns (GetAdminPlayerConfigResponse);
+  rpc CreateAdminPlayerConfig(CreateAdminPlayerConfigRequest) returns (CreateAdminPlayerConfigResponse);
+  rpc UpdateAdminPlayerConfig(UpdateAdminPlayerConfigRequest) returns (UpdateAdminPlayerConfigResponse);
+  rpc DeleteAdminPlayerConfig(DeleteAdminPlayerConfigRequest) returns (MessageResponse);
   rpc ListAdminJobs(ListAdminJobsRequest) returns (ListAdminJobsResponse);
   rpc GetAdminJob(GetAdminJobRequest) returns (GetAdminJobResponse);
   rpc GetAdminJobLogs(GetAdminJobLogsRequest) returns (GetAdminJobLogsResponse);
@@ -94,6 +100,19 @@ message UpdateAdminUserRequest {
 
 message UpdateAdminUserResponse {
   AdminUser user = 1;
+}
+
+message UpdateAdminUserReferralSettingsRequest {
+  string id = 1;
+  optional string ref_username = 2;
+  optional bool clear_referrer = 3;
+  optional bool referral_eligible = 4;
+  optional int32 referral_reward_bps = 5;
+  optional bool clear_referral_reward_bps = 6;
+}
+
+message UpdateAdminUserReferralSettingsResponse {
+  AdminUserDetail user = 1;
 }
 
 message UpdateAdminUserRoleRequest {
@@ -319,8 +338,81 @@ message DeleteAdminAdTemplateRequest {
   string id = 1;
 }
 
+message ListAdminPlayerConfigsRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  optional string user_id = 3;
+  optional string search = 4;
+}
+
+message ListAdminPlayerConfigsResponse {
+  repeated AdminPlayerConfig configs = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+}
+
+message GetAdminPlayerConfigRequest {
+  string id = 1;
+}
+
+message GetAdminPlayerConfigResponse {
+  AdminPlayerConfig config = 1;
+}
+
+message CreateAdminPlayerConfigRequest {
+  string user_id = 1;
+  string name = 2;
+  optional string description = 3;
+  bool autoplay = 4;
+  bool loop = 5;
+  bool muted = 6;
+  bool show_controls = 7;
+  bool pip = 8;
+  bool airplay = 9;
+  bool chromecast = 10;
+  optional bool is_active = 11;
+  optional bool is_default = 12;
+  optional bool encrytion_m3u8 = 13;
+  optional string logo_url = 14;
+}
+
+message CreateAdminPlayerConfigResponse {
+  AdminPlayerConfig config = 1;
+}
+
+message UpdateAdminPlayerConfigRequest {
+  string id = 1;
+  string user_id = 2;
+  string name = 3;
+  optional string description = 4;
+  bool autoplay = 5;
+  bool loop = 6;
+  bool muted = 7;
+  bool show_controls = 8;
+  bool pip = 9;
+  bool airplay = 10;
+  bool chromecast = 11;
+  optional bool is_active = 12;
+  optional bool is_default = 13;
+  optional bool encrytion_m3u8 = 14;
+  optional string logo_url = 15;
+}
+
+message UpdateAdminPlayerConfigResponse {
+  AdminPlayerConfig config = 1;
+}
+
+message DeleteAdminPlayerConfigRequest {
+  string id = 1;
+}
+
 message ListAdminJobsRequest {
+  optional string cursor = 4;
+  int32 page_size = 5;
+  // Deprecated: use cursor for keyset pagination.
   int32 offset = 1;
+  // Deprecated: use page_size for keyset pagination.
   int32 limit = 2;
   optional string agent_id = 3;
 }
@@ -331,6 +423,8 @@ message ListAdminJobsResponse {
   int32 offset = 3;
   int32 limit = 4;
   bool has_more = 5;
+  optional string next_cursor = 6;
+  int32 page_size = 7;
 }
 
 message GetAdminJobRequest {
@@ -357,6 +451,7 @@ message CreateAdminJobRequest {
   optional string user_id = 5;
   optional string name = 6;
   int64 time_limit = 7;
+  optional string video_id = 8;
 }
 
 message CreateAdminJobResponse {

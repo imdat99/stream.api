@@ -24,10 +24,10 @@ var (
 	Payment           *payment
 	Plan              *plan
 	PlanSubscription  *planSubscription
+	PlayerConfig      *playerConfig
 	User              *user
 	UserPreference    *userPreference
 	Video             *video
-	VideoAdConfig     *videoAdConfig
 	WalletTransaction *walletTransaction
 )
 
@@ -40,10 +40,10 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	Payment = &Q.Payment
 	Plan = &Q.Plan
 	PlanSubscription = &Q.PlanSubscription
+	PlayerConfig = &Q.PlayerConfig
 	User = &Q.User
 	UserPreference = &Q.UserPreference
 	Video = &Q.Video
-	VideoAdConfig = &Q.VideoAdConfig
 	WalletTransaction = &Q.WalletTransaction
 }
 
@@ -57,10 +57,10 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Payment:           newPayment(db, opts...),
 		Plan:              newPlan(db, opts...),
 		PlanSubscription:  newPlanSubscription(db, opts...),
+		PlayerConfig:      newPlayerConfig(db, opts...),
 		User:              newUser(db, opts...),
 		UserPreference:    newUserPreference(db, opts...),
 		Video:             newVideo(db, opts...),
-		VideoAdConfig:     newVideoAdConfig(db, opts...),
 		WalletTransaction: newWalletTransaction(db, opts...),
 	}
 }
@@ -75,10 +75,10 @@ type Query struct {
 	Payment           payment
 	Plan              plan
 	PlanSubscription  planSubscription
+	PlayerConfig      playerConfig
 	User              user
 	UserPreference    userPreference
 	Video             video
-	VideoAdConfig     videoAdConfig
 	WalletTransaction walletTransaction
 }
 
@@ -94,10 +94,10 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Payment:           q.Payment.clone(db),
 		Plan:              q.Plan.clone(db),
 		PlanSubscription:  q.PlanSubscription.clone(db),
+		PlayerConfig:      q.PlayerConfig.clone(db),
 		User:              q.User.clone(db),
 		UserPreference:    q.UserPreference.clone(db),
 		Video:             q.Video.clone(db),
-		VideoAdConfig:     q.VideoAdConfig.clone(db),
 		WalletTransaction: q.WalletTransaction.clone(db),
 	}
 }
@@ -120,10 +120,10 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Payment:           q.Payment.replaceDB(db),
 		Plan:              q.Plan.replaceDB(db),
 		PlanSubscription:  q.PlanSubscription.replaceDB(db),
+		PlayerConfig:      q.PlayerConfig.replaceDB(db),
 		User:              q.User.replaceDB(db),
 		UserPreference:    q.UserPreference.replaceDB(db),
 		Video:             q.Video.replaceDB(db),
-		VideoAdConfig:     q.VideoAdConfig.replaceDB(db),
 		WalletTransaction: q.WalletTransaction.replaceDB(db),
 	}
 }
@@ -136,10 +136,10 @@ type queryCtx struct {
 	Payment           IPaymentDo
 	Plan              IPlanDo
 	PlanSubscription  IPlanSubscriptionDo
+	PlayerConfig      IPlayerConfigDo
 	User              IUserDo
 	UserPreference    IUserPreferenceDo
 	Video             IVideoDo
-	VideoAdConfig     IVideoAdConfigDo
 	WalletTransaction IWalletTransactionDo
 }
 
@@ -152,10 +152,10 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Payment:           q.Payment.WithContext(ctx),
 		Plan:              q.Plan.WithContext(ctx),
 		PlanSubscription:  q.PlanSubscription.WithContext(ctx),
+		PlayerConfig:      q.PlayerConfig.WithContext(ctx),
 		User:              q.User.WithContext(ctx),
 		UserPreference:    q.UserPreference.WithContext(ctx),
 		Video:             q.Video.WithContext(ctx),
-		VideoAdConfig:     q.VideoAdConfig.WithContext(ctx),
 		WalletTransaction: q.WalletTransaction.WithContext(ctx),
 	}
 }
