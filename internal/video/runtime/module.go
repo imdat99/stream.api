@@ -8,7 +8,7 @@ import (
 	grpcpkg "google.golang.org/grpc"
 	"gorm.io/gorm"
 	"stream.api/internal/config"
-	apprpc "stream.api/internal/rpc/app"
+	apprpc "stream.api/internal/service"
 	"stream.api/internal/video"
 	redisadapter "stream.api/internal/video/runtime/adapters/queue/redis"
 	runtimegrpc "stream.api/internal/video/runtime/grpc"

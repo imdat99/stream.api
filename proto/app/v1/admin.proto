@@ -6,7 +6,7 @@ option go_package = "stream.api/internal/gen/proto/app/v1;appv1";
 
 import "app/v1/common.proto";
 
-service AdminService {
+service Admin {
   rpc GetAdminDashboard(GetAdminDashboardRequest) returns (GetAdminDashboardResponse);
   rpc ListAdminUsers(ListAdminUsersRequest) returns (ListAdminUsersResponse);
   rpc GetAdminUser(GetAdminUserRequest) returns (GetAdminUserResponse);

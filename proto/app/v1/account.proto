@@ -6,24 +6,21 @@ option go_package = "stream.api/internal/gen/proto/app/v1;appv1";
 import "google/protobuf/wrappers.proto"; 
 import "app/v1/common.proto";
 
-service AccountService {
+service Account {
   rpc GetMe(GetMeRequest) returns (GetMeResponse);
   rpc UpdateMe(UpdateMeRequest) returns (UpdateMeResponse);
   rpc DeleteMe(DeleteMeRequest) returns (MessageResponse);
   rpc ClearMyData(ClearMyDataRequest) returns (MessageResponse);
   rpc GetUserById (google.protobuf.StringValue) returns (User) {}
-}
-
-service PreferencesService {
   rpc GetPreferences(GetPreferencesRequest) returns (GetPreferencesResponse);
   rpc UpdatePreferences(UpdatePreferencesRequest) returns (UpdatePreferencesResponse);
 }
 
-service UsageService {
+service Usage {
   rpc GetUsage(GetUsageRequest) returns (GetUsageResponse);
 }
 
-service NotificationsService {
+service Notifications {
   rpc ListNotifications(ListNotificationsRequest) returns (ListNotificationsResponse);
   rpc MarkNotificationRead(MarkNotificationReadRequest) returns (MessageResponse);
   rpc MarkAllNotificationsRead(MarkAllNotificationsReadRequest) returns (MessageResponse);

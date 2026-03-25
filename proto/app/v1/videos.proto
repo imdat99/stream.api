@@ -6,7 +6,7 @@ option go_package = "stream.api/internal/gen/proto/app/v1;appv1";
 
 import "app/v1/common.proto";
 
-service VideosService {
+service Videos {
   rpc GetUploadUrl(GetUploadUrlRequest) returns (GetUploadUrlResponse);
   rpc CreateVideo(CreateVideoRequest) returns (CreateVideoResponse);
   rpc ListVideos(ListVideosRequest) returns (ListVideosResponse);

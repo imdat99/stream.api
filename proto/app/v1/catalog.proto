@@ -6,27 +6,27 @@ option go_package = "stream.api/internal/gen/proto/app/v1;appv1";
 
 import "app/v1/common.proto";
 
-service DomainsService {
+service Domains {
   rpc ListDomains(ListDomainsRequest) returns (ListDomainsResponse);
   rpc CreateDomain(CreateDomainRequest) returns (CreateDomainResponse);
   rpc DeleteDomain(DeleteDomainRequest) returns (MessageResponse);
 }
 
-service AdTemplatesService {
+service AdTemplates {
   rpc ListAdTemplates(ListAdTemplatesRequest) returns (ListAdTemplatesResponse);
   rpc CreateAdTemplate(CreateAdTemplateRequest) returns (CreateAdTemplateResponse);
   rpc UpdateAdTemplate(UpdateAdTemplateRequest) returns (UpdateAdTemplateResponse);
   rpc DeleteAdTemplate(DeleteAdTemplateRequest) returns (MessageResponse);
 }
 
-service PlayerConfigsService {
+service PlayerConfigs {
   rpc ListPlayerConfigs(ListPlayerConfigsRequest) returns (ListPlayerConfigsResponse);
   rpc CreatePlayerConfig(CreatePlayerConfigRequest) returns (CreatePlayerConfigResponse);
   rpc UpdatePlayerConfig(UpdatePlayerConfigRequest) returns (UpdatePlayerConfigResponse);
   rpc DeletePlayerConfig(DeletePlayerConfigRequest) returns (MessageResponse);
 }
 
-service PlansService {
+service Plans {
   rpc ListPlans(ListPlansRequest) returns (ListPlansResponse);
 }
 

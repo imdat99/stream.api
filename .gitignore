@@ -6,7 +6,7 @@
 *.dylib
 *.test
 *.out
-api
+/bin
 # Output of the go coverage tool
 *.coverprofile
 
