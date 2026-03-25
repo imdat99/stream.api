@@ -1,3 +1,4 @@
+// update lại test sau nhé.
 package service
 
 import (
@@ -8,7 +9,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	goredis "github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
@@ -21,7 +21,6 @@ import (
 	"stream.api/internal/database/query"
 	"stream.api/internal/middleware"
 	"stream.api/pkg/logger"
-	"stream.api/pkg/token"
 )
 
 const testTrustedMarker = "trusted-test-marker"
@@ -69,26 +68,7 @@ func (f *fakeCache) Close() error {
 	return nil
 }
 
-func (fakeTokenProvider) GenerateTokenPair(userID, _, _ string) (*token.TokenPair, error) {
-	return &token.TokenPair{
-		AccessToken:  "access-" + userID,
-		RefreshToken: "refresh-" + userID,
-		AccessUUID:   "access-uuid-" + userID,
-		RefreshUUID:  "refresh-uuid-" + userID,
-		AtExpires:    time.Now().Add(time.Hour).Unix(),
-		RtExpires:    time.Now().Add(24 * time.Hour).Unix(),
-	}, nil
-}
-
-func (fakeTokenProvider) ParseToken(tokenString string) (*token.Claims, error) {
-	return &token.Claims{UserID: tokenString}, nil
-}
-
-func (fakeTokenProvider) ParseMapToken(tokenString string) (map[string]interface{}, error) {
-	return map[string]interface{}{"token": tokenString}, nil
-}
-
-var _ goredis.Client = (*fakeCache)(nil)
+// var _ goredis.Client = (*fakeCache)(nil)
 
 func newTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
@@ -244,11 +224,10 @@ func newTestAppServices(t *testing.T, db *gorm.DB) *appServices {
 	}
 
 	return &appServices{
-		db:                db,
-		logger:            testLogger{},
-		authenticator:     middleware.NewAuthenticator(db, testLogger{}, testTrustedMarker),
-		cache:             &fakeCache{values: map[string]string{}},
-		tokenProvider:     fakeTokenProvider{},
+		db:            db,
+		logger:        testLogger{},
+		authenticator: middleware.NewAuthenticator(db, testLogger{}, testTrustedMarker),
+		// cache:             &fakeCache{values: map[string]string{}},
 		googleUserInfoURL: defaultGoogleUserInfoURL,
 	}
 }

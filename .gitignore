@@ -30,6 +30,5 @@ go.work.sum
 # OS-specific junk
 .DS_Store
 Thumbs.db
-server
 # Module cache (if you're using GOPATH, which is rare now)
 Godeps/

@@ -6,11 +6,11 @@ import (
 
 	grpcpkg "google.golang.org/grpc"
 	"gorm.io/gorm"
+	redisadapter "stream.api/internal/adapters/redis"
 	"stream.api/internal/config"
 	"stream.api/internal/service"
 	"stream.api/internal/video"
 	runtime "stream.api/internal/video/runtime"
-	redisadapter "stream.api/internal/video/runtime/adapters/queue/redis"
 	runtimegrpc "stream.api/internal/video/runtime/grpc"
 	"stream.api/internal/video/runtime/services"
 	"stream.api/pkg/logger"

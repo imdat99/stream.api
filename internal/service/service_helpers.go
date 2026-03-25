@@ -959,39 +959,7 @@ func buildPaymentSubscription(input paymentExecutionInput, paymentRecord *model.
 		ExpiresAt:     newExpiry,
 	}
 }
-func (s *appServices) issueSessionCookies(ctx context.Context, user *model.User) error {
-	if user == nil {
-		return status.Error(codes.Unauthenticated, "Unauthorized")
-	}
-	tokenPair, err := s.tokenProvider.GenerateTokenPair(user.ID, user.Email, safeRole(user.Role))
-	if err != nil {
-		s.logger.Error("Token generation failed", "error", err)
-		return status.Error(codes.Internal, "Error generating tokens")
-	}
 
-	if err := s.cache.Set(ctx, "refresh_uuid:"+tokenPair.RefreshUUID, user.ID, time.Until(time.Unix(tokenPair.RtExpires, 0))); err != nil {
-		s.logger.Error("Session storage failed", "error", err)
-		return status.Error(codes.Internal, "Error storing session")
-	}
-
-	if err := grpc.SetHeader(ctx, metadata.Pairs(
-		"set-cookie", buildTokenCookie("access_token", tokenPair.AccessToken, int(tokenPair.AtExpires-time.Now().Unix())),
-		"set-cookie", buildTokenCookie("refresh_token", tokenPair.RefreshToken, int(tokenPair.RtExpires-time.Now().Unix())),
-	)); err != nil {
-		s.logger.Error("Failed to set gRPC auth headers", "error", err)
-	}
-
-	return nil
-}
-func buildTokenCookie(name string, value string, maxAge int) string {
-	return (&http.Cookie{
-		Name:     name,
-		Value:    value,
-		Path:     "/",
-		MaxAge:   maxAge,
-		HttpOnly: true,
-	}).String()
-}
 func messageResponse(message string) *appv1.MessageResponse {
 	return &appv1.MessageResponse{Message: message}
 }

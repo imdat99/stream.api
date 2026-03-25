@@ -38,10 +38,6 @@ func (s *appServices) Login(ctx context.Context, req *appv1.LoginRequest) (*appv
 		return nil, status.Error(codes.Unauthenticated, "Invalid credentials")
 	}
 
-	if err := s.issueSessionCookies(ctx, user); err != nil {
-		return nil, err
-	}
-
 	payload, err := buildUserPayload(ctx, s.db, user)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to build user payload")
@@ -302,10 +298,6 @@ func (s *appServices) CompleteGoogleLogin(ctx context.Context, req *appv1.Comple
 				return nil, status.Error(codes.Internal, "reload_user_failed")
 			}
 		}
-	}
-
-	if err := s.issueSessionCookies(ctx, user); err != nil {
-		return nil, status.Error(codes.Internal, "session_failed")
 	}
 
 	payload, err := buildUserPayload(ctx, s.db, user)

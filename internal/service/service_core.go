@@ -6,15 +6,14 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"gorm.io/gorm"
+	"stream.api/internal/adapters/redis"
 	appv1 "stream.api/internal/api/proto/app/v1"
 	"stream.api/internal/config"
 	"stream.api/internal/database/model"
 	"stream.api/internal/middleware"
 	"stream.api/internal/video"
-	"stream.api/internal/video/runtime/adapters/queue/redis"
 	"stream.api/pkg/logger"
 	"stream.api/pkg/storage"
-	"stream.api/pkg/token"
 )
 
 const adTemplateUpgradeRequiredMessage = "Upgrade required to manage Ads & VAST"
@@ -73,7 +72,6 @@ type appServices struct {
 	db                *gorm.DB
 	logger            logger.Logger
 	authenticator     *middleware.Authenticator
-	tokenProvider     token.Provider
 	cache             *redis.RedisAdapter
 	storageProvider   storage.Provider
 	videoService      *video.Service

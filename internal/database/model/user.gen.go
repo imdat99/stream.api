@@ -21,16 +21,16 @@ type User struct {
 	GoogleID                *string    `gorm:"column:google_id;type:text;uniqueIndex:user_google_id_key,priority:1" json:"google_id"`
 	StorageUsed             int64      `gorm:"column:storage_used;type:bigint;not null" json:"storage_used"`
 	PlanID                  *string    `gorm:"column:plan_id;type:uuid" json:"plan_id"`
+	CreatedAt               *time.Time `gorm:"column:created_at;type:timestamp(3) without time zone;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt               time.Time  `gorm:"column:updated_at;type:timestamp(3) without time zone;not null" json:"updated_at"`
+	Version                 *int64     `gorm:"column:version;type:bigint;not null;default:1;version" json:"-"`
+	TelegramID              *string    `gorm:"column:telegram_id;type:character varying" json:"telegram_id"`
 	ReferredByUserID        *string    `gorm:"column:referred_by_user_id;type:uuid;index:idx_user_referred_by_user_id,priority:1" json:"referred_by_user_id"`
 	ReferralEligible        *bool      `gorm:"column:referral_eligible;type:boolean;not null;default:true" json:"referral_eligible"`
 	ReferralRewardBps       *int32     `gorm:"column:referral_reward_bps;type:integer" json:"referral_reward_bps"`
 	ReferralRewardGrantedAt *time.Time `gorm:"column:referral_reward_granted_at;type:timestamp with time zone" json:"referral_reward_granted_at"`
 	ReferralRewardPaymentID *string    `gorm:"column:referral_reward_payment_id;type:uuid" json:"referral_reward_payment_id"`
 	ReferralRewardAmount    *float64   `gorm:"column:referral_reward_amount;type:numeric(65,30)" json:"referral_reward_amount"`
-	CreatedAt               *time.Time `gorm:"column:created_at;type:timestamp(3) without time zone;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt               time.Time  `gorm:"column:updated_at;type:timestamp(3) without time zone;not null" json:"updated_at"`
-	Version                 *int64     `gorm:"column:version;type:bigint;not null;default:1;version" json:"-"`
-	TelegramID              *string    `gorm:"column:telegram_id;type:character varying" json:"telegram_id"`
 }
 
 // TableName User's table name
