@@ -17,8 +17,8 @@ import (
 )
 
 type JobQueue interface {
-	Enqueue(ctx context.Context, job *domain.Job) error
-	Dequeue(ctx context.Context) (*domain.Job, error)
+	Enqueue(ctx context.Context, job *model.Job) error
+	Dequeue(ctx context.Context) (*model.Job, error)
 }
 
 type LogPubSub interface {
@@ -50,13 +50,13 @@ const (
 )
 
 type PaginatedJobs struct {
-	Jobs       []*domain.Job `json:"jobs"`
-	Total      int64         `json:"total"`
-	Offset     int           `json:"offset"`
-	Limit      int           `json:"limit"`
-	HasMore    bool          `json:"has_more"`
-	NextCursor string        `json:"next_cursor,omitempty"`
-	PageSize   int           `json:"page_size"`
+	Jobs       []*model.Job `json:"jobs"`
+	Total      int64        `json:"total"`
+	Offset     int          `json:"offset"`
+	Limit      int          `json:"limit"`
+	HasMore    bool         `json:"has_more"`
+	NextCursor string       `json:"next_cursor,omitempty"`
+	PageSize   int          `json:"page_size"`
 }
 
 type jobListCursor struct {
@@ -169,7 +169,7 @@ func listJobsByOffset(ctx context.Context, agentID string, offset, limit int) (*
 	if agentID != "" {
 		agentNumeric, err := strconv.ParseInt(agentID, 10, 64)
 		if err != nil {
-			return &PaginatedJobs{Jobs: []*domain.Job{}, Total: 0, Offset: offset, Limit: limit, PageSize: limit, HasMore: false}, nil
+			return &PaginatedJobs{Jobs: []*model.Job{}, Total: 0, Offset: offset, Limit: limit, PageSize: limit, HasMore: false}, nil
 		}
 		q = q.Where(query.Job.AgentID.Eq(agentNumeric))
 	}
@@ -177,69 +177,14 @@ func listJobsByOffset(ctx context.Context, agentID string, offset, limit int) (*
 	if err != nil {
 		return nil, err
 	}
-	items := make([]*domain.Job, 0, len(jobs))
+	items := make([]*model.Job, 0, len(jobs))
 	for _, job := range jobs {
-		items = append(items, toDomainJob(job))
+		items = append(items, job)
 	}
 	return &PaginatedJobs{Jobs: items, Total: total, Offset: offset, Limit: limit, PageSize: limit, HasMore: offset+len(items) < int(total)}, nil
 }
 
-func toDomainJob(job *model.Job) *domain.Job {
-	if job == nil {
-		return nil
-	}
-	cfg := parseJobConfig(job.Config)
-	result := &domain.Job{ID: job.ID, Name: cfg.Name, UserID: cfg.UserID, VideoID: cfg.VideoID, TimeLimit: cfg.TimeLimit}
-	if job.Status != nil {
-		result.Status = domain.JobStatus(*job.Status)
-	}
-	if job.Priority != nil {
-		result.Priority = int(*job.Priority)
-	}
-	if job.InputURL != nil {
-		result.InputURL = *job.InputURL
-	}
-	if job.OutputURL != nil {
-		result.OutputURL = *job.OutputURL
-	}
-	if job.TotalDuration != nil {
-		result.TotalDuration = *job.TotalDuration
-	}
-	if job.CurrentTime != nil {
-		result.CurrentTime = *job.CurrentTime
-	}
-	if job.Progress != nil {
-		result.Progress = *job.Progress
-	}
-	if job.AgentID != nil {
-		agentID := strconv.FormatInt(*job.AgentID, 10)
-		result.AgentID = &agentID
-	}
-	if job.Logs != nil {
-		result.Logs = *job.Logs
-	}
-	if job.Config != nil {
-		result.Config = *job.Config
-	}
-	if job.Cancelled != nil {
-		result.Cancelled = *job.Cancelled
-	}
-	if job.RetryCount != nil {
-		result.RetryCount = int(*job.RetryCount)
-	}
-	if job.MaxRetries != nil {
-		result.MaxRetries = int(*job.MaxRetries)
-	}
-	if job.CreatedAt != nil {
-		result.CreatedAt = *job.CreatedAt
-	}
-	if job.UpdatedAt != nil {
-		result.UpdatedAt = *job.UpdatedAt
-	}
-	return result
-}
-
-func (s *JobService) CreateJob(ctx context.Context, userID string, videoID string, name string, config []byte, priority int, timeLimit int64) (*domain.Job, error) {
+func (s *JobService) CreateJob(ctx context.Context, userID string, videoID string, name string, config []byte, priority int, timeLimit int64) (*model.Job, error) {
 	status := string(domain.JobStatusPending)
 	now := time.Now()
 	job := &model.Job{
@@ -259,12 +204,12 @@ func (s *JobService) CreateJob(ctx context.Context, userID string, videoID strin
 	if err := syncVideoStatus(ctx, videoID, domain.JobStatusPending); err != nil {
 		return nil, err
 	}
-	domainJob := toDomainJob(job)
-	if err := s.queue.Enqueue(ctx, domainJob); err != nil {
+	// domainJob := toDomainJob(job)
+	if err := s.queue.Enqueue(ctx, job); err != nil {
 		return nil, err
 	}
 	_ = s.pubsub.PublishJobUpdate(ctx, job.ID, status, videoID)
-	return domainJob, nil
+	return job, nil
 }
 
 func (s *JobService) ListJobs(ctx context.Context, offset, limit int) (*PaginatedJobs, error) {
@@ -291,7 +236,7 @@ func (s *JobService) ListJobsByCursor(ctx context.Context, agentID string, curso
 	if agentID != "" {
 		agentNumeric, err := strconv.ParseInt(agentID, 10, 64)
 		if err != nil {
-			return &PaginatedJobs{Jobs: []*domain.Job{}, Total: 0, Limit: pageSize, PageSize: pageSize, HasMore: false}, nil
+			return &PaginatedJobs{Jobs: []*model.Job{}, Total: 0, Limit: pageSize, PageSize: pageSize, HasMore: false}, nil
 		}
 		q = q.Where(query.Job.AgentID.Eq(agentNumeric))
 	}
@@ -315,9 +260,9 @@ func (s *JobService) ListJobsByCursor(ctx context.Context, agentID string, curso
 		jobs = jobs[:pageSize]
 	}
 
-	items := make([]*domain.Job, 0, len(jobs))
+	items := make([]*model.Job, 0, len(jobs))
 	for _, job := range jobs {
-		items = append(items, toDomainJob(job))
+		items = append(items, job)
 	}
 
 	nextCursor := ""
@@ -338,15 +283,15 @@ func (s *JobService) ListJobsByCursor(ctx context.Context, agentID string, curso
 	}, nil
 }
 
-func (s *JobService) GetJob(ctx context.Context, id string) (*domain.Job, error) {
+func (s *JobService) GetJob(ctx context.Context, id string) (*model.Job, error) {
 	job, err := query.Job.WithContext(ctx).Where(query.Job.ID.Eq(id)).First()
 	if err != nil {
 		return nil, err
 	}
-	return toDomainJob(job), nil
+	return job, nil
 }
 
-func (s *JobService) GetNextJob(ctx context.Context) (*domain.Job, error) {
+func (s *JobService) GetNextJob(ctx context.Context) (*model.Job, error) {
 	return s.queue.Dequeue(ctx)
 }
 func (s *JobService) SubscribeSystemResources(ctx context.Context) (<-chan domain.SystemResource, error) {
@@ -436,7 +381,7 @@ func (s *JobService) CancelJob(ctx context.Context, jobID string) error {
 	return s.pubsub.Publish(ctx, jobID, "[SYSTEM] Job cancelled by admin", -1)
 }
 
-func (s *JobService) RetryJob(ctx context.Context, jobID string) (*domain.Job, error) {
+func (s *JobService) RetryJob(ctx context.Context, jobID string) (*model.Job, error) {
 	job, err := query.Job.WithContext(ctx).Where(query.Job.ID.Eq(jobID)).First()
 	if err != nil {
 		return nil, fmt.Errorf("job not found: %w", err)
@@ -476,12 +421,12 @@ func (s *JobService) RetryJob(ctx context.Context, jobID string) (*domain.Job, e
 	if err := syncVideoStatus(ctx, cfg.VideoID, domain.JobStatusPending); err != nil {
 		return nil, err
 	}
-	domainJob := toDomainJob(job)
-	if err := s.queue.Enqueue(ctx, domainJob); err != nil {
+	// domainJob := toDomainJob(job)
+	if err := s.queue.Enqueue(ctx, job); err != nil {
 		return nil, err
 	}
 	_ = s.pubsub.PublishJobUpdate(ctx, jobID, pending, cfg.VideoID)
-	return domainJob, nil
+	return job, nil
 }
 
 func (s *JobService) UpdateJobProgress(ctx context.Context, jobID string, progress float64) error {

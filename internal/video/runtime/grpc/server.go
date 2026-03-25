@@ -141,7 +141,7 @@ func (s *Server) StreamJobs(_ *proto.StreamOptions, stream grpcpkg.ServerStreami
 				continue
 			}
 			var config map[string]any
-			if err := json.Unmarshal([]byte(job.Config), &config); err != nil {
+			if err := json.Unmarshal([]byte(*job.Config), &config); err != nil {
 				_ = s.jobService.UpdateJobStatus(ctx, job.ID, domain.JobStatusFailure)
 				s.untrackJobAssignment(agentID, job.ID)
 				continue
@@ -163,7 +163,9 @@ func (s *Server) StreamJobs(_ *proto.StreamOptions, stream grpcpkg.ServerStreami
 				}
 			}
 			payload, _ := json.Marshal(map[string]any{"image": image, "commands": commands, "environment": map[string]string{}})
-			if err := stream.Send(&proto.Workflow{Id: job.ID, Timeout: job.TimeLimit, Payload: payload}); err != nil {
+			// Sau này xem xét có cần cho job.TimeLimit vào db không?
+			// Hiện tại để đơn giản thì cứ để mặc định timeout 1h, nếu job nào cần timeout ngắn hơn thì tự lo trong commands của nó
+			if err := stream.Send(&proto.Workflow{Id: job.ID, Timeout: 60 * 60 * 1000, Payload: payload}); err != nil {
 				_ = s.jobService.UpdateJobStatus(ctx, job.ID, domain.JobStatusPending)
 				s.untrackJobAssignment(agentID, job.ID)
 				return err

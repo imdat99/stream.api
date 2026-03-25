@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"stream.api/internal/database/model"
+	"stream.api/internal/video/runtime/services"
 )
 
 var (
@@ -20,7 +21,7 @@ var (
 
 type Service struct {
 	db         *gorm.DB
-	jobService JobService
+	jobService *services.JobService
 }
 
 type CreateVideoInput struct {
@@ -36,14 +37,14 @@ type CreateVideoInput struct {
 
 type CreateVideoResult struct {
 	Video *model.Video
-	Job   *Job
+	Job   model.Job
 }
 
-func NewService(db *gorm.DB, jobService JobService) *Service {
+func NewService(db *gorm.DB, jobService *services.JobService) *Service {
 	return &Service{db: db, jobService: jobService}
 }
 
-func (s *Service) JobService() JobService {
+func (s *Service) JobService() *services.JobService {
 	if s == nil {
 		return nil
 	}
@@ -118,7 +119,7 @@ func (s *Service) CreateVideo(ctx context.Context, input CreateVideoInput) (*Cre
 		return nil, err
 	}
 
-	return &CreateVideoResult{Video: video, Job: job}, nil
+	return &CreateVideoResult{Video: video, Job: *job}, nil
 }
 
 func (s *Service) ListJobs(ctx context.Context, offset, limit int) (*PaginatedJobs, error) {
@@ -142,14 +143,14 @@ func (s *Service) ListJobsByCursor(ctx context.Context, agentID string, cursor s
 	return s.jobService.ListJobsByCursor(ctx, agentID, cursor, pageSize)
 }
 
-func (s *Service) GetJob(ctx context.Context, id string) (*Job, error) {
+func (s *Service) GetJob(ctx context.Context, id string) (*model.Job, error) {
 	if s == nil || s.jobService == nil {
 		return nil, ErrJobServiceUnavailable
 	}
 	return s.jobService.GetJob(ctx, id)
 }
 
-func (s *Service) CreateJob(ctx context.Context, userID string, videoID string, name string, config []byte, priority int, timeLimit int64) (*Job, error) {
+func (s *Service) CreateJob(ctx context.Context, userID string, videoID string, name string, config []byte, priority int, timeLimit int64) (*model.Job, error) {
 	if s == nil || s.jobService == nil {
 		return nil, ErrJobServiceUnavailable
 	}
@@ -163,7 +164,7 @@ func (s *Service) CancelJob(ctx context.Context, id string) error {
 	return s.jobService.CancelJob(ctx, id)
 }
 
-func (s *Service) RetryJob(ctx context.Context, id string) (*Job, error) {
+func (s *Service) RetryJob(ctx context.Context, id string) (*model.Job, error) {
 	if s == nil || s.jobService == nil {
 		return nil, ErrJobServiceUnavailable
 	}

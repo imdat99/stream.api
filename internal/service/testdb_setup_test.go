@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	goredis "github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
@@ -19,7 +20,6 @@ import (
 	"stream.api/internal/database/model"
 	"stream.api/internal/database/query"
 	"stream.api/internal/middleware"
-	"stream.api/pkg/cache"
 	"stream.api/pkg/logger"
 	"stream.api/pkg/token"
 )
@@ -88,8 +88,7 @@ func (fakeTokenProvider) ParseMapToken(tokenString string) (map[string]interface
 	return map[string]interface{}{"token": tokenString}, nil
 }
 
-var _ cache.Cache = (*fakeCache)(nil)
-var _ token.Provider = fakeTokenProvider{}
+var _ goredis.Client = (*fakeCache)(nil)
 
 func newTestDB(t *testing.T) *gorm.DB {
 	t.Helper()

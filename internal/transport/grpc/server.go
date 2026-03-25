@@ -13,9 +13,7 @@ import (
 	redisadapter "stream.api/internal/video/runtime/adapters/queue/redis"
 	runtimegrpc "stream.api/internal/video/runtime/grpc"
 	"stream.api/internal/video/runtime/services"
-	"stream.api/pkg/cache"
 	"stream.api/pkg/logger"
-	"stream.api/pkg/token"
 )
 
 type GRPCModule struct {
@@ -27,13 +25,9 @@ type GRPCModule struct {
 	cfg           *config.Config
 }
 
-func NewGRPCModule(ctx context.Context, cfg *config.Config, db *gorm.DB, cacheClient cache.Cache, tokenProvider token.Provider, appLogger logger.Logger) (*GRPCModule, error) {
-	adapter, err := redisadapter.NewAdapter(cfg.Redis.Addr, cfg.Redis.Password, cfg.Redis.DB)
-	if err != nil {
-		return nil, err
-	}
-	jobService := services.NewJobService(adapter, adapter)
-	healthService := services.NewHealthService(db, adapter.Client(), cfg.Render.ServiceName)
+func NewGRPCModule(ctx context.Context, cfg *config.Config, db *gorm.DB, rds *redisadapter.RedisAdapter, appLogger logger.Logger) (*GRPCModule, error) {
+	jobService := services.NewJobService(rds, rds)
+	healthService := services.NewHealthService(db, rds.Client(), cfg.Render.ServiceName)
 	agentRuntime := runtimegrpc.NewServer(jobService, cfg.Render.AgentSecret)
 	videoService := video.NewService(db, jobService)
 	grpcServer := grpcpkg.NewServer()
@@ -56,7 +50,7 @@ func NewGRPCModule(ctx context.Context, cfg *config.Config, db *gorm.DB, cacheCl
 	}
 
 	agentRuntime.Register(grpcServer)
-	service.Register(grpcServer, service.NewServices(cacheClient, tokenProvider, db, appLogger, cfg, videoService, agentRuntime))
+	service.Register(grpcServer, service.NewServices(rds, db, appLogger, cfg, videoService, agentRuntime))
 	if module.mqttPublisher != nil {
 		module.mqttPublisher.Start(ctx)
 	}

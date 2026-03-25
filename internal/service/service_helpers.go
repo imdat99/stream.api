@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -23,7 +24,6 @@ import (
 	appv1 "stream.api/internal/api/proto/app/v1"
 	"stream.api/internal/database/model"
 	"stream.api/internal/middleware"
-	"stream.api/internal/video/runtime/domain"
 	"stream.api/internal/video/runtime/services"
 )
 
@@ -52,31 +52,32 @@ func adminPageLimitOffset(pageValue int32, limitValue int32) (int32, int32, int)
 	offset := int((page - 1) * limit)
 	return page, limit, offset
 }
-func buildAdminJob(job *domain.Job) *appv1.AdminJob {
+func buildAdminJob(job *model.Job) *appv1.AdminJob {
 	if job == nil {
 		return nil
 	}
+	agentID := strconv.FormatInt(*job.AgentID, 10)
 	return &appv1.AdminJob{
 		Id:            job.ID,
-		Status:        string(job.Status),
-		Priority:      int32(job.Priority),
-		UserId:        job.UserID,
-		Name:          job.Name,
-		TimeLimit:     job.TimeLimit,
-		InputUrl:      job.InputURL,
-		OutputUrl:     job.OutputURL,
-		TotalDuration: job.TotalDuration,
-		CurrentTime:   job.CurrentTime,
-		Progress:      job.Progress,
-		AgentId:       job.AgentID,
-		Logs:          job.Logs,
-		Config:        job.Config,
-		Cancelled:     job.Cancelled,
-		RetryCount:    int32(job.RetryCount),
-		MaxRetries:    int32(job.MaxRetries),
-		CreatedAt:     timestamppb.New(job.CreatedAt),
-		UpdatedAt:     timestamppb.New(job.UpdatedAt),
-		VideoId:       stringPointerOrNil(job.VideoID),
+		Status:        string(*job.Status),
+		Priority:      int32(*job.Priority),
+		UserId:        *job.UserID,
+		Name:          job.ID,
+		TimeLimit:     *job.TimeLimit,
+		InputUrl:      *job.InputURL,
+		OutputUrl:     *job.OutputURL,
+		TotalDuration: *job.TotalDuration,
+		CurrentTime:   *job.CurrentTime,
+		Progress:      *job.Progress,
+		AgentId:       &agentID,
+		Logs:          *job.Logs,
+		Config:        *job.Config,
+		Cancelled:     *job.Cancelled,
+		RetryCount:    int32(*job.RetryCount),
+		MaxRetries:    int32(*job.MaxRetries),
+		CreatedAt:     timestamppb.New(*job.CreatedAt),
+		UpdatedAt:     timestamppb.New(*job.UpdatedAt),
+		VideoId:       stringPointerOrNil(*job.VideoID),
 	}
 }
 func buildAdminAgent(agent *services.AgentWithStats) *appv1.AdminAgent {

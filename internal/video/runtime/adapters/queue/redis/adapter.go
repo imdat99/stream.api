@@ -7,6 +7,7 @@ import (
 	"time"
 
 	goredis "github.com/redis/go-redis/v9"
+	"stream.api/internal/database/model"
 	"stream.api/internal/video/runtime/domain"
 )
 
@@ -17,29 +18,29 @@ const (
 	JobUpdateChannel = "render:jobs:updates"
 )
 
-type Adapter struct{ client *goredis.Client }
+type RedisAdapter struct{ client *goredis.Client }
 
-func NewAdapter(addr, password string, db int) (*Adapter, error) {
+func NewAdapter(addr, password string, db int) (*RedisAdapter, error) {
 	client := goredis.NewClient(&goredis.Options{Addr: addr, Password: password, DB: db})
 	if err := client.Ping(context.Background()).Err(); err != nil {
 		return nil, err
 	}
-	return &Adapter{client: client}, nil
+	return &RedisAdapter{client: client}, nil
 }
 
-func (r *Adapter) Client() *goredis.Client { return r.client }
+func (r *RedisAdapter) Client() *goredis.Client { return r.client }
 
-func (r *Adapter) Enqueue(ctx context.Context, job *domain.Job) error {
+func (r *RedisAdapter) Enqueue(ctx context.Context, job *model.Job) error {
 	data, err := json.Marshal(job)
 	if err != nil {
 		return err
 	}
 	timestamp := time.Now().UnixNano()
-	score := float64(-(int64(job.Priority) * 1000000000) - timestamp)
+	score := float64(-(int64(*job.Priority) * 1000000000) - timestamp)
 	return r.client.ZAdd(ctx, JobQueueKey, goredis.Z{Score: score, Member: data}).Err()
 }
 
-func (r *Adapter) Dequeue(ctx context.Context) (*domain.Job, error) {
+func (r *RedisAdapter) Dequeue(ctx context.Context) (*model.Job, error) {
 	for {
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
@@ -68,7 +69,7 @@ func (r *Adapter) Dequeue(ctx context.Context) (*domain.Job, error) {
 		default:
 			return nil, fmt.Errorf("unexpected redis queue payload type %T", member)
 		}
-		var job domain.Job
+		var job model.Job
 		if err := json.Unmarshal(raw, &job); err != nil {
 			return nil, err
 		}
@@ -76,7 +77,7 @@ func (r *Adapter) Dequeue(ctx context.Context) (*domain.Job, error) {
 	}
 }
 
-func (r *Adapter) Publish(ctx context.Context, jobID string, logLine string, progress float64) error {
+func (r *RedisAdapter) Publish(ctx context.Context, jobID string, logLine string, progress float64) error {
 	payload, err := json.Marshal(domain.LogEntry{JobID: jobID, Line: logLine, Progress: progress})
 	if err != nil {
 		return err
@@ -84,7 +85,7 @@ func (r *Adapter) Publish(ctx context.Context, jobID string, logLine string, pro
 	return r.client.Publish(ctx, LogChannel, payload).Err()
 }
 
-func (r *Adapter) Subscribe(ctx context.Context, jobID string) (<-chan domain.LogEntry, error) {
+func (r *RedisAdapter) Subscribe(ctx context.Context, jobID string) (<-chan domain.LogEntry, error) {
 	pubsub := r.client.Subscribe(ctx, LogChannel)
 	ch := make(chan domain.LogEntry)
 	go func() {
@@ -103,7 +104,7 @@ func (r *Adapter) Subscribe(ctx context.Context, jobID string) (<-chan domain.Lo
 	return ch, nil
 }
 
-func (r *Adapter) PublishResource(ctx context.Context, agentID string, data []byte) error {
+func (r *RedisAdapter) PublishResource(ctx context.Context, agentID string, data []byte) error {
 	var decoded struct {
 		CPU float64 `json:"cpu"`
 		RAM float64 `json:"ram"`
@@ -118,7 +119,7 @@ func (r *Adapter) PublishResource(ctx context.Context, agentID string, data []by
 	return r.client.Publish(ctx, ResourceChannel, payload).Err()
 }
 
-func (r *Adapter) SubscribeResources(ctx context.Context) (<-chan domain.SystemResource, error) {
+func (r *RedisAdapter) SubscribeResources(ctx context.Context) (<-chan domain.SystemResource, error) {
 	pubsub := r.client.Subscribe(ctx, ResourceChannel)
 	ch := make(chan domain.SystemResource)
 	go func() {
@@ -135,11 +136,11 @@ func (r *Adapter) SubscribeResources(ctx context.Context) (<-chan domain.SystemR
 	return ch, nil
 }
 
-func (r *Adapter) PublishCancel(ctx context.Context, agentID string, jobID string) error {
+func (r *RedisAdapter) PublishCancel(ctx context.Context, agentID string, jobID string) error {
 	return r.client.Publish(ctx, fmt.Sprintf("render:agents:%s:cancel", agentID), jobID).Err()
 }
 
-func (r *Adapter) SubscribeCancel(ctx context.Context, agentID string) (<-chan string, error) {
+func (r *RedisAdapter) SubscribeCancel(ctx context.Context, agentID string) (<-chan string, error) {
 	pubsub := r.client.Subscribe(ctx, fmt.Sprintf("render:agents:%s:cancel", agentID))
 	ch := make(chan string)
 	go func() {
@@ -152,7 +153,7 @@ func (r *Adapter) SubscribeCancel(ctx context.Context, agentID string) (<-chan s
 	return ch, nil
 }
 
-func (r *Adapter) PublishJobUpdate(ctx context.Context, jobID string, status string, videoID string) error {
+func (r *RedisAdapter) PublishJobUpdate(ctx context.Context, jobID string, status string, videoID string) error {
 	payload, err := json.Marshal(map[string]string{"job_id": jobID, "status": status, "video_id": videoID})
 	if err != nil {
 		return err
@@ -160,7 +161,7 @@ func (r *Adapter) PublishJobUpdate(ctx context.Context, jobID string, status str
 	return r.client.Publish(ctx, JobUpdateChannel, payload).Err()
 }
 
-func (r *Adapter) SubscribeJobUpdates(ctx context.Context) (<-chan string, error) {
+func (r *RedisAdapter) SubscribeJobUpdates(ctx context.Context) (<-chan string, error) {
 	pubsub := r.client.Subscribe(ctx, JobUpdateChannel)
 	ch := make(chan string)
 	go func() {
@@ -171,4 +172,19 @@ func (r *Adapter) SubscribeJobUpdates(ctx context.Context) (<-chan string, error
 		}
 	}()
 	return ch, nil
+}
+func (c *RedisAdapter) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
+	return c.client.Set(ctx, key, value, expiration).Err()
+}
+
+func (c *RedisAdapter) Get(ctx context.Context, key string) (string, error) {
+	return c.client.Get(ctx, key).Result()
+}
+
+func (c *RedisAdapter) Del(ctx context.Context, key string) error {
+	return c.client.Del(ctx, key).Err()
+}
+
+func (c *RedisAdapter) Close() error {
+	return c.client.Close()
 }

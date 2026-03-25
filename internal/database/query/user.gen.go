@@ -37,12 +37,6 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user.GoogleID = field.NewString(tableName, "google_id")
 	_user.StorageUsed = field.NewInt64(tableName, "storage_used")
 	_user.PlanID = field.NewString(tableName, "plan_id")
-	_user.ReferredByUserID = field.NewString(tableName, "referred_by_user_id")
-	_user.ReferralEligible = field.NewBool(tableName, "referral_eligible")
-	_user.ReferralRewardBps = field.NewInt32(tableName, "referral_reward_bps")
-	_user.ReferralRewardGrantedAt = field.NewTime(tableName, "referral_reward_granted_at")
-	_user.ReferralRewardPaymentID = field.NewString(tableName, "referral_reward_payment_id")
-	_user.ReferralRewardAmount = field.NewFloat64(tableName, "referral_reward_amount")
 	_user.CreatedAt = field.NewTime(tableName, "created_at")
 	_user.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_user.Version = field.NewInt64(tableName, "version")
@@ -64,18 +58,12 @@ type user struct {
 	Avatar      field.String
 	Role        field.String
 	GoogleID    field.String
-	StorageUsed             field.Int64
-	PlanID                  field.String
-	ReferredByUserID        field.String
-	ReferralEligible        field.Bool
-	ReferralRewardBps       field.Int32
-	ReferralRewardGrantedAt field.Time
-	ReferralRewardPaymentID field.String
-	ReferralRewardAmount    field.Float64
-	CreatedAt               field.Time
-	UpdatedAt               field.Time
-	Version                 field.Int64
-	TelegramID              field.String
+	StorageUsed field.Int64
+	PlanID      field.String
+	CreatedAt   field.Time
+	UpdatedAt   field.Time
+	Version     field.Int64
+	TelegramID  field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -101,12 +89,6 @@ func (u *user) updateTableName(table string) *user {
 	u.GoogleID = field.NewString(table, "google_id")
 	u.StorageUsed = field.NewInt64(table, "storage_used")
 	u.PlanID = field.NewString(table, "plan_id")
-	u.ReferredByUserID = field.NewString(table, "referred_by_user_id")
-	u.ReferralEligible = field.NewBool(table, "referral_eligible")
-	u.ReferralRewardBps = field.NewInt32(table, "referral_reward_bps")
-	u.ReferralRewardGrantedAt = field.NewTime(table, "referral_reward_granted_at")
-	u.ReferralRewardPaymentID = field.NewString(table, "referral_reward_payment_id")
-	u.ReferralRewardAmount = field.NewFloat64(table, "referral_reward_amount")
 	u.CreatedAt = field.NewTime(table, "created_at")
 	u.UpdatedAt = field.NewTime(table, "updated_at")
 	u.Version = field.NewInt64(table, "version")
@@ -135,7 +117,7 @@ func (u *user) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (u *user) fillFieldMap() {
-	u.fieldMap = make(map[string]field.Expr, 19)
+	u.fieldMap = make(map[string]field.Expr, 13)
 	u.fieldMap["id"] = u.ID
 	u.fieldMap["email"] = u.Email
 	u.fieldMap["password"] = u.Password
@@ -145,12 +127,6 @@ func (u *user) fillFieldMap() {
 	u.fieldMap["google_id"] = u.GoogleID
 	u.fieldMap["storage_used"] = u.StorageUsed
 	u.fieldMap["plan_id"] = u.PlanID
-	u.fieldMap["referred_by_user_id"] = u.ReferredByUserID
-	u.fieldMap["referral_eligible"] = u.ReferralEligible
-	u.fieldMap["referral_reward_bps"] = u.ReferralRewardBps
-	u.fieldMap["referral_reward_granted_at"] = u.ReferralRewardGrantedAt
-	u.fieldMap["referral_reward_payment_id"] = u.ReferralRewardPaymentID
-	u.fieldMap["referral_reward_amount"] = u.ReferralRewardAmount
 	u.fieldMap["created_at"] = u.CreatedAt
 	u.fieldMap["updated_at"] = u.UpdatedAt
 	u.fieldMap["version"] = u.Version

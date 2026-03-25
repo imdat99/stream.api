@@ -11,7 +11,7 @@ import (
 	"stream.api/internal/database/model"
 	"stream.api/internal/middleware"
 	"stream.api/internal/video"
-	"stream.api/pkg/cache"
+	"stream.api/internal/video/runtime/adapters/queue/redis"
 	"stream.api/pkg/logger"
 	"stream.api/pkg/storage"
 	"stream.api/pkg/token"
@@ -74,7 +74,7 @@ type appServices struct {
 	logger            logger.Logger
 	authenticator     *middleware.Authenticator
 	tokenProvider     token.Provider
-	cache             cache.Cache
+	cache             *redis.RedisAdapter
 	storageProvider   storage.Provider
 	videoService      *video.Service
 	agentRuntime      video.AgentRuntime
@@ -119,7 +119,7 @@ type apiErrorBody struct {
 	Data    any    `json:"data,omitempty"`
 }
 
-func NewServices(c cache.Cache, t token.Provider, db *gorm.DB, l logger.Logger, cfg *config.Config, videoService *video.Service, agentRuntime video.AgentRuntime) *Services {
+func NewServices(c *redis.RedisAdapter, db *gorm.DB, l logger.Logger, cfg *config.Config, videoService *video.Service, agentRuntime video.AgentRuntime) *Services {
 	var storageProvider storage.Provider
 	if cfg != nil {
 		provider, err := storage.NewS3Provider(cfg)
@@ -157,7 +157,6 @@ func NewServices(c cache.Cache, t token.Provider, db *gorm.DB, l logger.Logger, 
 		db:                db,
 		logger:            l,
 		authenticator:     middleware.NewAuthenticator(db, l, cfg.Internal.Marker),
-		tokenProvider:     t,
 		cache:             c,
 		storageProvider:   storageProvider,
 		videoService:      videoService,

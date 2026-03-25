@@ -12,7 +12,7 @@ const TableNameJob = "jobs"
 
 // Job mapped from table <jobs>
 type Job struct {
-	ID            string     `gorm:"column:id;type:text;primaryKey" json:"id"`
+	ID            string     `gorm:"column:id;type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	Status        *string    `gorm:"column:status;type:text" json:"status"`
 	Priority      *int64     `gorm:"column:priority;type:bigint;index:idx_jobs_priority,priority:1" json:"priority"`
 	InputURL      *string    `gorm:"column:input_url;type:text" json:"input_url"`
@@ -29,6 +29,9 @@ type Job struct {
 	CreatedAt     *time.Time `gorm:"column:created_at;type:timestamp with time zone" json:"created_at"`
 	UpdatedAt     *time.Time `gorm:"column:updated_at;type:timestamp with time zone" json:"updated_at"`
 	Version       *int64     `gorm:"column:version;type:bigint;version" json:"-"`
+	VideoID       *string    `gorm:"column:video_id;type:uuid" json:"video_id"`
+	UserID        *string    `gorm:"column:user_id;type:uuid" json:"user_id"`
+	TimeLimit     *int64     `gorm:"column:time_limit;type:bigint;default:3600000" json:"time_limit"`
 }
 
 // TableName Job's table name

@@ -194,7 +194,7 @@ func (a *Authenticator) maybeCreateSubscriptionReminderPostAuth(ctx context.Cont
 
 	sentAt := now
 	notification := &model.Notification{
-		ID:          uuidString(),
+		ID:          uuid.New().String(),
 		UserID:      user.ID,
 		Type:        "billing.subscription_expiring",
 		Title:       "Plan expiring soon",
@@ -271,8 +271,4 @@ func mustMarshalAuthJSON(value any) string {
 		return "{}"
 	}
 	return string(encoded)
-}
-
-func uuidString() string {
-	return uuid.New().String()
 }

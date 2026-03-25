@@ -10,10 +10,8 @@ type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
 	Redis    RedisConfig
-	JWT      JWTConfig
 	Google   GoogleConfig
 	Frontend FrontendConfig
-	CORS     CORSConfig
 	Email    EmailConfig
 	AWS      AWSConfig
 	Render   RenderConfig
@@ -48,10 +46,6 @@ type RedisConfig struct {
 	DB       int
 }
 
-type JWTConfig struct {
-	Secret string
-}
-
 type GoogleConfig struct {
 	ClientID       string `mapstructure:"client_id"`
 	ClientSecret   string `mapstructure:"client_secret"`
@@ -62,10 +56,6 @@ type GoogleConfig struct {
 type FrontendConfig struct {
 	BaseURL                string `mapstructure:"base_url"`
 	GoogleAuthFinalizePath string `mapstructure:"google_auth_finalize_path"`
-}
-
-type CORSConfig struct {
-	AllowOrigins []string `mapstructure:"allow_origins"`
 }
 
 type EmailConfig struct {
@@ -86,7 +76,6 @@ func LoadConfig() (*Config, error) {
 	v := viper.New()
 
 	// Set defaults
-	v.SetDefault("server.port", "8080")
 	v.SetDefault("server.grpc_port", "9000")
 	v.SetDefault("server.mode", "debug")
 	v.SetDefault("redis.db", 0)
@@ -96,7 +85,6 @@ func LoadConfig() (*Config, error) {
 	v.SetDefault("google.state_ttl_minutes", 10)
 	v.SetDefault("frontend.google_auth_finalize_path", "/auth/google/finalize")
 	v.SetDefault("internal.marker", "")
-	v.SetDefault("cors.allow_origins", []string{"http://localhost:5173", "http://localhost:8080", "http://localhost:8081"})
 
 	// Environment variable settings
 	v.SetEnvPrefix("APP")

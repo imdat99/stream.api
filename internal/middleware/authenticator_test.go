@@ -13,7 +13,6 @@ import (
 	"google.golang.org/grpc/status"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	_ "modernc.org/sqlite"
 	"stream.api/internal/database/model"
 	"stream.api/internal/database/query"
 )

@@ -45,6 +45,9 @@ func newJob(db *gorm.DB, opts ...gen.DOOption) job {
 	_job.CreatedAt = field.NewTime(tableName, "created_at")
 	_job.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_job.Version = field.NewInt64(tableName, "version")
+	_job.VideoID = field.NewString(tableName, "video_id")
+	_job.UserID = field.NewString(tableName, "user_id")
+	_job.TimeLimit = field.NewInt64(tableName, "time_limit")
 
 	_job.fillFieldMap()
 
@@ -72,6 +75,9 @@ type job struct {
 	CreatedAt     field.Time
 	UpdatedAt     field.Time
 	Version       field.Int64
+	VideoID       field.String
+	UserID        field.String
+	TimeLimit     field.Int64
 
 	fieldMap map[string]field.Expr
 }
@@ -105,6 +111,9 @@ func (j *job) updateTableName(table string) *job {
 	j.CreatedAt = field.NewTime(table, "created_at")
 	j.UpdatedAt = field.NewTime(table, "updated_at")
 	j.Version = field.NewInt64(table, "version")
+	j.VideoID = field.NewString(table, "video_id")
+	j.UserID = field.NewString(table, "user_id")
+	j.TimeLimit = field.NewInt64(table, "time_limit")
 
 	j.fillFieldMap()
 
@@ -129,7 +138,7 @@ func (j *job) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (j *job) fillFieldMap() {
-	j.fieldMap = make(map[string]field.Expr, 17)
+	j.fieldMap = make(map[string]field.Expr, 20)
 	j.fieldMap["id"] = j.ID
 	j.fieldMap["status"] = j.Status
 	j.fieldMap["priority"] = j.Priority
@@ -147,6 +156,9 @@ func (j *job) fillFieldMap() {
 	j.fieldMap["created_at"] = j.CreatedAt
 	j.fieldMap["updated_at"] = j.UpdatedAt
 	j.fieldMap["version"] = j.Version
+	j.fieldMap["video_id"] = j.VideoID
+	j.fieldMap["user_id"] = j.UserID
+	j.fieldMap["time_limit"] = j.TimeLimit
 }
 
 func (j job) clone(db *gorm.DB) job {
