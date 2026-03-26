@@ -968,7 +968,7 @@ const file_app_v1_account_proto_rawDesc = "" +
 	"\x1fMarkAllNotificationsReadRequest\"+\n" +
 	"\x19DeleteNotificationRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x1b\n" +
-	"\x19ClearNotificationsRequest2\xc3\x04\n" +
+	"\x19ClearNotificationsRequest2\x90\x05\n" +
 	"\aAccount\x12B\n" +
 	"\x05GetMe\x12\x1b.stream.app.v1.GetMeRequest\x1a\x1c.stream.app.v1.GetMeResponse\x12K\n" +
 	"\bUpdateMe\x12\x1e.stream.app.v1.UpdateMeRequest\x1a\x1f.stream.app.v1.UpdateMeResponse\x12J\n" +
@@ -976,8 +976,7 @@ const file_app_v1_account_proto_rawDesc = "" +
 	"\vClearMyData\x12!.stream.app.v1.ClearMyDataRequest\x1a\x1e.stream.app.v1.MessageResponse\x12B\n" +
 	"\vGetUserById\x12\x1c.google.protobuf.StringValue\x1a\x13.stream.app.v1.User\"\x00\x12]\n" +
 	"\x0eGetPreferences\x12$.stream.app.v1.GetPreferencesRequest\x1a%.stream.app.v1.GetPreferencesResponse\x12f\n" +
-	"\x11UpdatePreferences\x12'.stream.app.v1.UpdatePreferencesRequest\x1a(.stream.app.v1.UpdatePreferencesResponse2T\n" +
-	"\x05Usage\x12K\n" +
+	"\x11UpdatePreferences\x12'.stream.app.v1.UpdatePreferencesRequest\x1a(.stream.app.v1.UpdatePreferencesResponse\x12K\n" +
 	"\bGetUsage\x12\x1e.stream.app.v1.GetUsageRequest\x1a\x1f.stream.app.v1.GetUsageResponse2\x87\x04\n" +
 	"\rNotifications\x12f\n" +
 	"\x11ListNotifications\x12'.stream.app.v1.ListNotificationsRequest\x1a(.stream.app.v1.ListNotificationsResponse\x12b\n" +
@@ -1037,7 +1036,7 @@ var file_app_v1_account_proto_depIdxs = []int32{
 	21, // 9: stream.app.v1.Account.GetUserById:input_type -> google.protobuf.StringValue
 	6,  // 10: stream.app.v1.Account.GetPreferences:input_type -> stream.app.v1.GetPreferencesRequest
 	8,  // 11: stream.app.v1.Account.UpdatePreferences:input_type -> stream.app.v1.UpdatePreferencesRequest
-	10, // 12: stream.app.v1.Usage.GetUsage:input_type -> stream.app.v1.GetUsageRequest
+	10, // 12: stream.app.v1.Account.GetUsage:input_type -> stream.app.v1.GetUsageRequest
 	12, // 13: stream.app.v1.Notifications.ListNotifications:input_type -> stream.app.v1.ListNotificationsRequest
 	14, // 14: stream.app.v1.Notifications.MarkNotificationRead:input_type -> stream.app.v1.MarkNotificationReadRequest
 	15, // 15: stream.app.v1.Notifications.MarkAllNotificationsRead:input_type -> stream.app.v1.MarkAllNotificationsReadRequest
@@ -1050,7 +1049,7 @@ var file_app_v1_account_proto_depIdxs = []int32{
 	18, // 22: stream.app.v1.Account.GetUserById:output_type -> stream.app.v1.User
 	7,  // 23: stream.app.v1.Account.GetPreferences:output_type -> stream.app.v1.GetPreferencesResponse
 	9,  // 24: stream.app.v1.Account.UpdatePreferences:output_type -> stream.app.v1.UpdatePreferencesResponse
-	11, // 25: stream.app.v1.Usage.GetUsage:output_type -> stream.app.v1.GetUsageResponse
+	11, // 25: stream.app.v1.Account.GetUsage:output_type -> stream.app.v1.GetUsageResponse
 	13, // 26: stream.app.v1.Notifications.ListNotifications:output_type -> stream.app.v1.ListNotificationsResponse
 	22, // 27: stream.app.v1.Notifications.MarkNotificationRead:output_type -> stream.app.v1.MessageResponse
 	22, // 28: stream.app.v1.Notifications.MarkAllNotificationsRead:output_type -> stream.app.v1.MessageResponse
@@ -1079,7 +1078,7 @@ func file_app_v1_account_proto_init() {
 			NumEnums:      0,
 			NumMessages:   18,
 			NumExtensions: 0,
-			NumServices:   3,
+			NumServices:   2,
 		},
 		GoTypes:           file_app_v1_account_proto_goTypes,
 		DependencyIndexes: file_app_v1_account_proto_depIdxs,

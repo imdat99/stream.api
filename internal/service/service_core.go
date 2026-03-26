@@ -45,7 +45,6 @@ var allowedTermMonths = map[int32]struct{}{
 type Services struct {
 	appv1.AuthServer
 	appv1.AccountServer
-	appv1.UsageServer
 	appv1.NotificationsServer
 	appv1.DomainsServer
 	appv1.AdTemplatesServer
@@ -58,7 +57,6 @@ type Services struct {
 
 type authAppService struct{ *appServices }
 type accountAppService struct{ *appServices }
-type usageAppService struct{ *appServices }
 type notificationsAppService struct{ *appServices }
 type domainsAppService struct{ *appServices }
 type adTemplatesAppService struct{ *appServices }
@@ -71,7 +69,6 @@ type adminAppService struct{ *appServices }
 type appServices struct {
 	appv1.UnimplementedAuthServer
 	appv1.UnimplementedAccountServer
-	appv1.UnimplementedUsageServer
 	appv1.UnimplementedNotificationsServer
 	appv1.UnimplementedDomainsServer
 	appv1.UnimplementedAdTemplatesServer
@@ -203,7 +200,6 @@ func NewServices(c *redis.RedisAdapter, db *gorm.DB, l logger.Logger, cfg *confi
 	return &Services{
 		AuthServer:          &authAppService{appServices: service},
 		AccountServer:       &accountAppService{appServices: service},
-		UsageServer:         &usageAppService{appServices: service},
 		NotificationsServer: &notificationsAppService{appServices: service},
 		DomainsServer:       &domainsAppService{appServices: service},
 		AdTemplatesServer:   &adTemplatesAppService{appServices: service},

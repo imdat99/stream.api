@@ -14,9 +14,6 @@ service Account {
   rpc GetUserById (google.protobuf.StringValue) returns (User) {}
   rpc GetPreferences(GetPreferencesRequest) returns (GetPreferencesResponse);
   rpc UpdatePreferences(UpdatePreferencesRequest) returns (UpdatePreferencesResponse);
-}
-
-service Usage {
   rpc GetUsage(GetUsageRequest) returns (GetUsageResponse);
 }
 

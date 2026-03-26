@@ -8,7 +8,6 @@ import (
 func Register(server grpc.ServiceRegistrar, services *Services) {
 	appv1.RegisterAuthServer(server, services.AuthServer)
 	appv1.RegisterAccountServer(server, services.AccountServer)
-	appv1.RegisterUsageServer(server, services.UsageServer)
 	appv1.RegisterNotificationsServer(server, services.NotificationsServer)
 	appv1.RegisterDomainsServer(server, services.DomainsServer)
 	appv1.RegisterAdTemplatesServer(server, services.AdTemplatesServer)

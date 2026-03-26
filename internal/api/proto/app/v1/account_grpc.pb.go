@@ -27,6 +27,7 @@ const (
 	Account_GetUserById_FullMethodName       = "/stream.app.v1.Account/GetUserById"
 	Account_GetPreferences_FullMethodName    = "/stream.app.v1.Account/GetPreferences"
 	Account_UpdatePreferences_FullMethodName = "/stream.app.v1.Account/UpdatePreferences"
+	Account_GetUsage_FullMethodName          = "/stream.app.v1.Account/GetUsage"
 )
 
 // AccountClient is the client API for Account service.
@@ -40,6 +41,7 @@ type AccountClient interface {
 	GetUserById(ctx context.Context, in *wrapperspb.StringValue, opts ...grpc.CallOption) (*User, error)
 	GetPreferences(ctx context.Context, in *GetPreferencesRequest, opts ...grpc.CallOption) (*GetPreferencesResponse, error)
 	UpdatePreferences(ctx context.Context, in *UpdatePreferencesRequest, opts ...grpc.CallOption) (*UpdatePreferencesResponse, error)
+	GetUsage(ctx context.Context, in *GetUsageRequest, opts ...grpc.CallOption) (*GetUsageResponse, error)
 }
 
 type accountClient struct {
@@ -120,6 +122,16 @@ func (c *accountClient) UpdatePreferences(ctx context.Context, in *UpdatePrefere
 	return out, nil
 }
 
+func (c *accountClient) GetUsage(ctx context.Context, in *GetUsageRequest, opts ...grpc.CallOption) (*GetUsageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUsageResponse)
+	err := c.cc.Invoke(ctx, Account_GetUsage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AccountServer is the server API for Account service.
 // All implementations must embed UnimplementedAccountServer
 // for forward compatibility.
@@ -131,6 +143,7 @@ type AccountServer interface {
 	GetUserById(context.Context, *wrapperspb.StringValue) (*User, error)
 	GetPreferences(context.Context, *GetPreferencesRequest) (*GetPreferencesResponse, error)
 	UpdatePreferences(context.Context, *UpdatePreferencesRequest) (*UpdatePreferencesResponse, error)
+	GetUsage(context.Context, *GetUsageRequest) (*GetUsageResponse, error)
 	mustEmbedUnimplementedAccountServer()
 }
 
@@ -161,6 +174,9 @@ func (UnimplementedAccountServer) GetPreferences(context.Context, *GetPreference
 }
 func (UnimplementedAccountServer) UpdatePreferences(context.Context, *UpdatePreferencesRequest) (*UpdatePreferencesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdatePreferences not implemented")
+}
+func (UnimplementedAccountServer) GetUsage(context.Context, *GetUsageRequest) (*GetUsageResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetUsage not implemented")
 }
 func (UnimplementedAccountServer) mustEmbedUnimplementedAccountServer() {}
 func (UnimplementedAccountServer) testEmbeddedByValue()                 {}
@@ -309,6 +325,24 @@ func _Account_UpdatePreferences_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Account_GetUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUsageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountServer).GetUsage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Account_GetUsage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountServer).GetUsage(ctx, req.(*GetUsageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Account_ServiceDesc is the grpc.ServiceDesc for Account service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -344,107 +378,9 @@ var Account_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "UpdatePreferences",
 			Handler:    _Account_UpdatePreferences_Handler,
 		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "app/v1/account.proto",
-}
-
-const (
-	Usage_GetUsage_FullMethodName = "/stream.app.v1.Usage/GetUsage"
-)
-
-// UsageClient is the client API for Usage service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type UsageClient interface {
-	GetUsage(ctx context.Context, in *GetUsageRequest, opts ...grpc.CallOption) (*GetUsageResponse, error)
-}
-
-type usageClient struct {
-	cc grpc.ClientConnInterface
-}
-
-func NewUsageClient(cc grpc.ClientConnInterface) UsageClient {
-	return &usageClient{cc}
-}
-
-func (c *usageClient) GetUsage(ctx context.Context, in *GetUsageRequest, opts ...grpc.CallOption) (*GetUsageResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetUsageResponse)
-	err := c.cc.Invoke(ctx, Usage_GetUsage_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// UsageServer is the server API for Usage service.
-// All implementations must embed UnimplementedUsageServer
-// for forward compatibility.
-type UsageServer interface {
-	GetUsage(context.Context, *GetUsageRequest) (*GetUsageResponse, error)
-	mustEmbedUnimplementedUsageServer()
-}
-
-// UnimplementedUsageServer must be embedded to have
-// forward compatible implementations.
-//
-// NOTE: this should be embedded by value instead of pointer to avoid a nil
-// pointer dereference when methods are called.
-type UnimplementedUsageServer struct{}
-
-func (UnimplementedUsageServer) GetUsage(context.Context, *GetUsageRequest) (*GetUsageResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetUsage not implemented")
-}
-func (UnimplementedUsageServer) mustEmbedUnimplementedUsageServer() {}
-func (UnimplementedUsageServer) testEmbeddedByValue()               {}
-
-// UnsafeUsageServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to UsageServer will
-// result in compilation errors.
-type UnsafeUsageServer interface {
-	mustEmbedUnimplementedUsageServer()
-}
-
-func RegisterUsageServer(s grpc.ServiceRegistrar, srv UsageServer) {
-	// If the following call panics, it indicates UnimplementedUsageServer was
-	// embedded by pointer and is nil.  This will cause panics if an
-	// unimplemented method is ever invoked, so we test this at initialization
-	// time to prevent it from happening at runtime later due to I/O.
-	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
-		t.testEmbeddedByValue()
-	}
-	s.RegisterService(&Usage_ServiceDesc, srv)
-}
-
-func _Usage_GetUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUsageRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UsageServer).GetUsage(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Usage_GetUsage_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UsageServer).GetUsage(ctx, req.(*GetUsageRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-// Usage_ServiceDesc is the grpc.ServiceDesc for Usage service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var Usage_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "stream.app.v1.Usage",
-	HandlerType: (*UsageServer)(nil),
-	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "GetUsage",
-			Handler:    _Usage_GetUsage_Handler,
+			Handler:    _Account_GetUsage_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
