@@ -31,13 +31,13 @@ type userPayload struct {
 	UpdatedAt         time.Time  `json:"updated_at"`
 }
 
-func buildUserPayload(ctx context.Context, db *gorm.DB, user *model.User) (*userPayload, error) {
-	pref, err := model.FindOrCreateUserPreference(ctx, db, user.ID)
+func buildUserPayload(ctx context.Context, preferenceRepo UserPreferenceRepository, billingRepo BillingRepository, user *model.User) (*userPayload, error) {
+	pref, err := preferenceRepo.FindOrCreateByUserID(ctx, user.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	walletBalance, err := model.GetWalletBalance(ctx, db, user.ID)
+	walletBalance, err := billingRepo.GetWalletBalance(ctx, user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func buildUserPayload(ctx context.Context, db *gorm.DB, user *model.User) (*user
 	planExpiringSoon := false
 	now := time.Now().UTC()
 
-	subscription, err := model.GetLatestPlanSubscription(ctx, db, user.ID)
+	subscription, err := billingRepo.GetLatestPlanSubscription(ctx, user.ID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}

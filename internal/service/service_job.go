@@ -11,9 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"gorm.io/gorm"
 	"stream.api/internal/database/model"
-	"stream.api/internal/database/query"
 	"stream.api/internal/dto"
+	"stream.api/internal/repository"
 )
 
 type JobQueue interface {
@@ -33,12 +34,17 @@ type LogPubSub interface {
 }
 
 type JobService struct {
-	queue  JobQueue
-	pubsub LogPubSub
+	queue         JobQueue
+	pubsub        LogPubSub
+	jobRepository JobRepository
 }
 
-func NewJobService(queue JobQueue, pubsub LogPubSub) *JobService {
-	return &JobService{queue: queue, pubsub: pubsub}
+func NewJobService(db *gorm.DB, queue JobQueue, pubsub LogPubSub) *JobService {
+	return &JobService{
+		queue:         queue,
+		pubsub:        pubsub,
+		jobRepository: repository.NewJobRepository(db),
+	}
 }
 
 var ErrInvalidJobCursor = errors.New("invalid job cursor")
@@ -127,28 +133,16 @@ func buildJobListCursor(job *model.Job, agentID string) (string, error) {
 	})
 }
 
-func listJobsByOffset(ctx context.Context, agentID string, offset, limit int) (*dto.PaginatedJobs, error) {
+func listJobsByOffset(ctx context.Context, jobRepository JobRepository, agentID string, offset, limit int) (*dto.PaginatedJobs, error) {
 	if offset < 0 {
 		offset = 0
 	}
 	limit = normalizeJobPageSize(limit)
-	q := query.Job.WithContext(ctx).Order(query.Job.CreatedAt.Desc(), query.Job.ID.Desc())
-	if agentID != "" {
-		agentNumeric, err := strconv.ParseInt(agentID, 10, 64)
-		if err != nil {
-			return &dto.PaginatedJobs{Jobs: []*model.Job{}, Total: 0, Offset: offset, Limit: limit, PageSize: limit, HasMore: false}, nil
-		}
-		q = q.Where(query.Job.AgentID.Eq(agentNumeric))
-	}
-	jobs, total, err := q.FindByPage(offset, limit)
+	jobs, total, err := jobRepository.ListByOffset(ctx, agentID, offset, limit)
 	if err != nil {
 		return nil, err
 	}
-	items := make([]*model.Job, 0, len(jobs))
-	for _, job := range jobs {
-		items = append(items, job)
-	}
-	return &dto.PaginatedJobs{Jobs: items, Total: total, Offset: offset, Limit: limit, PageSize: limit, HasMore: offset+len(items) < int(total)}, nil
+	return &dto.PaginatedJobs{Jobs: jobs, Total: total, Offset: offset, Limit: limit, PageSize: limit, HasMore: offset+len(jobs) < int(total)}, nil
 }
 
 func (s *JobService) CreateJob(ctx context.Context, userID string, videoID string, name string, config []byte, priority int, timeLimit int64) (*model.Job, error) {
@@ -165,10 +159,10 @@ func (s *JobService) CreateJob(ctx context.Context, userID string, videoID strin
 		CreatedAt:  timePtr(now),
 		UpdatedAt:  timePtr(now),
 	}
-	if err := query.Job.WithContext(ctx).Create(job); err != nil {
+	if err := s.jobRepository.Create(ctx, job); err != nil {
 		return nil, err
 	}
-	if err := syncVideoStatus(ctx, videoID, dto.JobStatusPending); err != nil {
+	if err := syncVideoStatus(ctx, s.jobRepository, videoID, dto.JobStatusPending); err != nil {
 		return nil, err
 	}
 	// dtoJob := todtoJob(job)
@@ -180,11 +174,11 @@ func (s *JobService) CreateJob(ctx context.Context, userID string, videoID strin
 }
 
 func (s *JobService) ListJobs(ctx context.Context, offset, limit int) (*dto.PaginatedJobs, error) {
-	return listJobsByOffset(ctx, "", offset, limit)
+	return listJobsByOffset(ctx, s.jobRepository, "", offset, limit)
 }
 
 func (s *JobService) ListJobsByAgent(ctx context.Context, agentID string, offset, limit int) (*dto.PaginatedJobs, error) {
-	return listJobsByOffset(ctx, strings.TrimSpace(agentID), offset, limit)
+	return listJobsByOffset(ctx, s.jobRepository, strings.TrimSpace(agentID), offset, limit)
 }
 
 func (s *JobService) ListJobsByCursor(ctx context.Context, agentID string, cursor string, pageSize int) (*dto.PaginatedJobs, error) {
@@ -199,37 +193,17 @@ func (s *JobService) ListJobsByCursor(ctx context.Context, agentID string, curso
 		return nil, ErrInvalidJobCursor
 	}
 
-	q := query.Job.WithContext(ctx).Order(query.Job.CreatedAt.Desc(), query.Job.ID.Desc())
-	if agentID != "" {
-		agentNumeric, err := strconv.ParseInt(agentID, 10, 64)
-		if err != nil {
-			return &dto.PaginatedJobs{Jobs: []*model.Job{}, Total: 0, Limit: pageSize, PageSize: pageSize, HasMore: false}, nil
-		}
-		q = q.Where(query.Job.AgentID.Eq(agentNumeric))
-	}
 	var cursorTime time.Time
 	if decodedCursor != nil {
 		cursorTime = time.Unix(0, decodedCursor.CreatedAtUnixNano).UTC()
 	}
-
-	queryDB := q.UnderlyingDB()
+	cursorID := ""
 	if decodedCursor != nil {
-		queryDB = queryDB.Where("(created_at < ?) OR (created_at = ? AND id < ?)", cursorTime, cursorTime, decodedCursor.ID)
+		cursorID = decodedCursor.ID
 	}
-
-	var jobs []*model.Job
-	if err := queryDB.Limit(pageSize + 1).Find(&jobs).Error; err != nil {
+	jobs, hasMore, err := s.jobRepository.ListByCursor(ctx, agentID, cursorTime, cursorID, pageSize)
+	if err != nil {
 		return nil, err
-	}
-
-	hasMore := len(jobs) > pageSize
-	if hasMore {
-		jobs = jobs[:pageSize]
-	}
-
-	items := make([]*model.Job, 0, len(jobs))
-	for _, job := range jobs {
-		items = append(items, job)
 	}
 
 	nextCursor := ""
@@ -241,7 +215,7 @@ func (s *JobService) ListJobsByCursor(ctx context.Context, agentID string, curso
 	}
 
 	return &dto.PaginatedJobs{
-		Jobs:       items,
+		Jobs:       jobs,
 		Total:      0,
 		Limit:      pageSize,
 		PageSize:   pageSize,
@@ -251,7 +225,7 @@ func (s *JobService) ListJobsByCursor(ctx context.Context, agentID string, curso
 }
 
 func (s *JobService) GetJob(ctx context.Context, id string) (*model.Job, error) {
-	job, err := query.Job.WithContext(ctx).Where(query.Job.ID.Eq(id)).First()
+	job, err := s.jobRepository.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -275,25 +249,25 @@ func (s *JobService) SubscribeJobUpdates(ctx context.Context) (<-chan string, er
 }
 
 func (s *JobService) UpdateJobStatus(ctx context.Context, jobID string, status dto.JobStatus) error {
-	job, err := query.Job.WithContext(ctx).Where(query.Job.ID.Eq(jobID)).First()
+	job, err := s.jobRepository.GetByID(ctx, jobID)
 	if err != nil {
 		return err
 	}
 	now := time.Now()
 	job.Status = strPtr(string(status))
 	job.UpdatedAt = &now
-	if err := query.Job.WithContext(ctx).Save(job); err != nil {
+	if err := s.jobRepository.Save(ctx, job); err != nil {
 		return err
 	}
 	cfg := parseJobConfig(job.Config)
-	if err := syncVideoStatus(ctx, cfg.VideoID, status); err != nil {
+	if err := syncVideoStatus(ctx, s.jobRepository, cfg.VideoID, status); err != nil {
 		return err
 	}
 	return s.pubsub.PublishJobUpdate(ctx, jobID, string(status), cfg.VideoID)
 }
 
 func (s *JobService) AssignJob(ctx context.Context, jobID string, agentID string) error {
-	job, err := query.Job.WithContext(ctx).Where(query.Job.ID.Eq(jobID)).First()
+	job, err := s.jobRepository.GetByID(ctx, jobID)
 	if err != nil {
 		return err
 	}
@@ -306,18 +280,18 @@ func (s *JobService) AssignJob(ctx context.Context, jobID string, agentID string
 	job.AgentID = &agentNumeric
 	job.Status = &status
 	job.UpdatedAt = &now
-	if err := query.Job.WithContext(ctx).Save(job); err != nil {
+	if err := s.jobRepository.Save(ctx, job); err != nil {
 		return err
 	}
 	cfg := parseJobConfig(job.Config)
-	if err := syncVideoStatus(ctx, cfg.VideoID, dto.JobStatusRunning); err != nil {
+	if err := syncVideoStatus(ctx, s.jobRepository, cfg.VideoID, dto.JobStatusRunning); err != nil {
 		return err
 	}
 	return s.pubsub.PublishJobUpdate(ctx, jobID, status, cfg.VideoID)
 }
 
 func (s *JobService) CancelJob(ctx context.Context, jobID string) error {
-	job, err := query.Job.WithContext(ctx).Where(query.Job.ID.Eq(jobID)).First()
+	job, err := s.jobRepository.GetByID(ctx, jobID)
 	if err != nil {
 		return fmt.Errorf("job not found: %w", err)
 	}
@@ -334,11 +308,11 @@ func (s *JobService) CancelJob(ctx context.Context, jobID string) error {
 	job.Cancelled = &cancelled
 	job.Status = &status
 	job.UpdatedAt = &now
-	if err := query.Job.WithContext(ctx).Save(job); err != nil {
+	if err := s.jobRepository.Save(ctx, job); err != nil {
 		return err
 	}
 	cfg := parseJobConfig(job.Config)
-	if err := syncVideoStatus(ctx, cfg.VideoID, dto.JobStatusCancelled); err != nil {
+	if err := syncVideoStatus(ctx, s.jobRepository, cfg.VideoID, dto.JobStatusCancelled); err != nil {
 		return err
 	}
 	_ = s.pubsub.PublishJobUpdate(ctx, jobID, status, cfg.VideoID)
@@ -349,7 +323,7 @@ func (s *JobService) CancelJob(ctx context.Context, jobID string) error {
 }
 
 func (s *JobService) RetryJob(ctx context.Context, jobID string) (*model.Job, error) {
-	job, err := query.Job.WithContext(ctx).Where(query.Job.ID.Eq(jobID)).First()
+	job, err := s.jobRepository.GetByID(ctx, jobID)
 	if err != nil {
 		return nil, fmt.Errorf("job not found: %w", err)
 	}
@@ -381,11 +355,11 @@ func (s *JobService) RetryJob(ctx context.Context, jobID string) (*model.Job, er
 	job.Progress = &progress
 	job.AgentID = nil
 	job.UpdatedAt = &now
-	if err := query.Job.WithContext(ctx).Save(job); err != nil {
+	if err := s.jobRepository.Save(ctx, job); err != nil {
 		return nil, err
 	}
 	cfg := parseJobConfig(job.Config)
-	if err := syncVideoStatus(ctx, cfg.VideoID, dto.JobStatusPending); err != nil {
+	if err := syncVideoStatus(ctx, s.jobRepository, cfg.VideoID, dto.JobStatusPending); err != nil {
 		return nil, err
 	}
 	// dtoJob := todtoJob(job)
@@ -397,14 +371,14 @@ func (s *JobService) RetryJob(ctx context.Context, jobID string) (*model.Job, er
 }
 
 func (s *JobService) UpdateJobProgress(ctx context.Context, jobID string, progress float64) error {
-	job, err := query.Job.WithContext(ctx).Where(query.Job.ID.Eq(jobID)).First()
+	job, err := s.jobRepository.GetByID(ctx, jobID)
 	if err != nil {
 		return err
 	}
 	now := time.Now()
 	job.Progress = float64Ptr(progress)
 	job.UpdatedAt = &now
-	if err := query.Job.WithContext(ctx).Save(job); err != nil {
+	if err := s.jobRepository.Save(ctx, job); err != nil {
 		return err
 	}
 	return s.pubsub.Publish(ctx, jobID, "", progress)
@@ -421,7 +395,7 @@ func (s *JobService) ProcessLog(ctx context.Context, jobID string, logData []byt
 			progress = float64(us) / 1000000.0
 		}
 	}
-	job, err := query.Job.WithContext(ctx).Where(query.Job.ID.Eq(jobID)).First()
+	job, err := s.jobRepository.GetByID(ctx, jobID)
 	if err != nil {
 		return err
 	}
@@ -443,13 +417,13 @@ func (s *JobService) ProcessLog(ctx context.Context, jobID string, logData []byt
 		job.Progress = float64Ptr(progress)
 	}
 	job.UpdatedAt = &now
-	if err := query.Job.WithContext(ctx).Save(job); err != nil {
+	if err := s.jobRepository.Save(ctx, job); err != nil {
 		return err
 	}
 	return s.pubsub.Publish(ctx, jobID, line, progress)
 }
 
-func syncVideoStatus(ctx context.Context, videoID string, status dto.JobStatus) error {
+func syncVideoStatus(ctx context.Context, jobRepository JobRepository, videoID string, status dto.JobStatus) error {
 	videoID = strings.TrimSpace(videoID)
 	if videoID == "" {
 		return nil
@@ -466,10 +440,7 @@ func syncVideoStatus(ctx context.Context, videoID string, status dto.JobStatus) 
 		processingStatus = "FAILED"
 	}
 
-	_, err := query.Video.WithContext(ctx).
-		Where(query.Video.ID.Eq(videoID)).
-		Updates(map[string]any{"status": statusValue, "processing_status": processingStatus})
-	return err
+	return jobRepository.UpdateVideoStatus(ctx, videoID, statusValue, processingStatus)
 }
 
 func (s *JobService) PublishSystemResources(ctx context.Context, agentID string, data []byte) error {

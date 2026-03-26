@@ -74,19 +74,7 @@ func (s *appServices) buildReferralShareLink(username *string) *string {
 }
 
 func (s *appServices) loadReferralUsersByUsername(ctx context.Context, username string) ([]model.User, error) {
-	trimmed := strings.TrimSpace(username)
-	if trimmed == "" {
-		return nil, nil
-	}
-	var users []model.User
-	if err := s.db.WithContext(ctx).
-		Where("LOWER(username) = LOWER(?)", trimmed).
-		Order("created_at ASC, id ASC").
-		Limit(2).
-		Find(&users).Error; err != nil {
-		return nil, err
-	}
-	return users, nil
+	return s.userRepository.FindByReferralUsername(ctx, username, 2)
 }
 
 func (s *appServices) resolveReferralUserByUsername(ctx context.Context, username string) (*model.User, error) {
@@ -160,7 +148,7 @@ func (s *appServices) maybeGrantReferralReward(ctx context.Context, tx *gorm.DB,
 		return &referralRewardResult{}, nil
 	}
 
-	referee, err := lockUserForUpdate(ctx, tx, input.UserID)
+	referee, err := s.userRepository.LockByIDTx(tx, ctx, input.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -171,18 +159,15 @@ func (s *appServices) maybeGrantReferralReward(ctx context.Context, tx *gorm.DB,
 		return &referralRewardResult{}, nil
 	}
 
-	var subscriptionCount int64
-	if err := tx.WithContext(ctx).
-		Model(&model.PlanSubscription{}).
-		Where("user_id = ?", referee.ID).
-		Count(&subscriptionCount).Error; err != nil {
+	subscriptionCount, err := s.userRepository.CountSubscriptionsByUser(ctx, referee.ID)
+	if err != nil {
 		return nil, err
 	}
 	if subscriptionCount != 1 {
 		return &referralRewardResult{}, nil
 	}
 
-	referrer, err := lockUserForUpdate(ctx, tx, strings.TrimSpace(*referee.ReferredByUserID))
+	referrer, err := s.userRepository.LockByIDTx(tx, ctx, strings.TrimSpace(*referee.ReferredByUserID))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &referralRewardResult{}, nil
@@ -217,10 +202,10 @@ func (s *appServices) maybeGrantReferralReward(ctx context.Context, tx *gorm.DB,
 		PaymentID: &paymentRecord.ID,
 		PlanID:    &input.Plan.ID,
 	}
-	if err := tx.Create(rewardTransaction).Error; err != nil {
+	if err := s.paymentRepository.CreateWalletTransactionTx(tx, ctx, rewardTransaction); err != nil {
 		return nil, err
 	}
-	if err := tx.Create(buildReferralRewardNotification(referrer.ID, rewardAmount, referee, paymentRecord)).Error; err != nil {
+	if err := s.paymentRepository.CreateNotificationTx(tx, ctx, buildReferralRewardNotification(referrer.ID, rewardAmount, referee, paymentRecord)); err != nil {
 		return nil, err
 	}
 
@@ -230,7 +215,7 @@ func (s *appServices) maybeGrantReferralReward(ctx context.Context, tx *gorm.DB,
 		"referral_reward_payment_id": paymentRecord.ID,
 		"referral_reward_amount":     rewardAmount,
 	}
-	if err := tx.WithContext(ctx).Model(&model.User{}).Where("id = ?", referee.ID).Updates(updates).Error; err != nil {
+	if err := s.userRepository.UpdateFieldsByIDTx(tx, ctx, referee.ID, updates); err != nil {
 		return nil, err
 	}
 	referee.ReferralRewardGrantedAt = &now

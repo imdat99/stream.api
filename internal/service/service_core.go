@@ -11,6 +11,7 @@ import (
 	"stream.api/internal/config"
 	"stream.api/internal/database/model"
 	"stream.api/internal/middleware"
+	"stream.api/internal/repository"
 	"stream.api/pkg/logger"
 	"stream.api/pkg/storage"
 )
@@ -55,6 +56,18 @@ type Services struct {
 	appv1.AdminServer
 }
 
+type authAppService struct{ *appServices }
+type accountAppService struct{ *appServices }
+type usageAppService struct{ *appServices }
+type notificationsAppService struct{ *appServices }
+type domainsAppService struct{ *appServices }
+type adTemplatesAppService struct{ *appServices }
+type playerConfigsAppService struct{ *appServices }
+type plansAppService struct{ *appServices }
+type paymentsAppService struct{ *appServices }
+type videosAppService struct{ *appServices }
+type adminAppService struct{ *appServices }
+
 type appServices struct {
 	appv1.UnimplementedAuthServer
 	appv1.UnimplementedAccountServer
@@ -68,17 +81,29 @@ type appServices struct {
 	appv1.UnimplementedVideosServer
 	appv1.UnimplementedAdminServer
 
-	db                *gorm.DB
-	logger            logger.Logger
-	authenticator     *middleware.Authenticator
-	cache             *redis.RedisAdapter
-	storageProvider   storage.Provider
-	videoService      *Service
-	agentRuntime      AgentRuntime
-	googleOauth       *oauth2.Config
-	googleStateTTL    time.Duration
-	googleUserInfoURL string
-	frontendBaseURL   string
+	db                   *gorm.DB
+	logger               logger.Logger
+	authenticator        *middleware.Authenticator
+	cache                *redis.RedisAdapter
+	storageProvider      storage.Provider
+	videoWorkflowService VideoWorkflow
+	videoRepository      VideoRepository
+	userRepository       UserRepository
+	preferenceRepository UserPreferenceRepository
+	billingRepository    BillingRepository
+	planRepository       PlanRepository
+	paymentRepository    PaymentRepository
+	accountRepository    AccountRepository
+	notificationRepo     NotificationRepository
+	domainRepository     DomainRepository
+	adTemplateRepository AdTemplateRepository
+	playerConfigRepo     PlayerConfigRepository
+	agentRuntime         AgentRuntime
+	googleOauth          *oauth2.Config
+	googleStateTTL       time.Duration
+	googleUserInfoURL    string
+	frontendBaseURL      string
+	jobRepository        JobRepository
 }
 
 type paymentInvoiceDetails struct {
@@ -116,7 +141,7 @@ type apiErrorBody struct {
 	Data    any    `json:"data,omitempty"`
 }
 
-func NewServices(c *redis.RedisAdapter, db *gorm.DB, l logger.Logger, cfg *config.Config, videoService *Service, agentRuntime AgentRuntime) *Services {
+func NewServices(c *redis.RedisAdapter, db *gorm.DB, l logger.Logger, cfg *config.Config, videoWorkflowService VideoWorkflow, agentRuntime AgentRuntime) *Services {
 	var storageProvider storage.Provider
 	if cfg != nil {
 		provider, err := storage.NewS3Provider(cfg)
@@ -151,29 +176,41 @@ func NewServices(c *redis.RedisAdapter, db *gorm.DB, l logger.Logger, cfg *confi
 	}
 
 	service := &appServices{
-		db:                db,
-		logger:            l,
-		authenticator:     middleware.NewAuthenticator(db, l, cfg.Internal.Marker),
-		cache:             c,
-		storageProvider:   storageProvider,
-		videoService:      videoService,
-		agentRuntime:      agentRuntime,
-		googleOauth:       googleOauth,
-		googleStateTTL:    googleStateTTL,
-		googleUserInfoURL: defaultGoogleUserInfoURL,
-		frontendBaseURL:   frontendBaseURL,
+		db:                   db,
+		logger:               l,
+		authenticator:        middleware.NewAuthenticator(db, l, cfg.Internal.Marker),
+		cache:                c,
+		storageProvider:      storageProvider,
+		videoWorkflowService: videoWorkflowService,
+		videoRepository:      repository.NewVideoRepository(db),
+		userRepository:       repository.NewUserRepository(db),
+		preferenceRepository: repository.NewUserPreferenceRepository(db),
+		billingRepository:    repository.NewBillingRepository(db),
+		planRepository:       repository.NewPlanRepository(db),
+		paymentRepository:    repository.NewPaymentRepository(db),
+		accountRepository:    repository.NewAccountRepository(db),
+		notificationRepo:     repository.NewNotificationRepository(db),
+		domainRepository:     repository.NewDomainRepository(db),
+		adTemplateRepository: repository.NewAdTemplateRepository(db),
+		playerConfigRepo:     repository.NewPlayerConfigRepository(db),
+		jobRepository:        repository.NewJobRepository(db),
+		agentRuntime:         agentRuntime,
+		googleOauth:          googleOauth,
+		googleStateTTL:       googleStateTTL,
+		googleUserInfoURL:    defaultGoogleUserInfoURL,
+		frontendBaseURL:      frontendBaseURL,
 	}
 	return &Services{
-		AuthServer:          service,
-		AccountServer:       service,
-		UsageServer:         service,
-		NotificationsServer: service,
-		DomainsServer:       service,
-		AdTemplatesServer:   service,
-		PlayerConfigsServer: service,
-		PlansServer:         service,
-		PaymentsServer:      service,
-		VideosServer:        service,
-		AdminServer:         service,
+		AuthServer:          &authAppService{appServices: service},
+		AccountServer:       &accountAppService{appServices: service},
+		UsageServer:         &usageAppService{appServices: service},
+		NotificationsServer: &notificationsAppService{appServices: service},
+		DomainsServer:       &domainsAppService{appServices: service},
+		AdTemplatesServer:   &adTemplatesAppService{appServices: service},
+		PlayerConfigsServer: &playerConfigsAppService{appServices: service},
+		PlansServer:         &plansAppService{appServices: service},
+		PaymentsServer:      &paymentsAppService{appServices: service},
+		VideosServer:        &videosAppService{appServices: service},
+		AdminServer:         &adminAppService{appServices: service},
 	}
 }

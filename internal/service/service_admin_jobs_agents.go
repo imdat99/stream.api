@@ -17,7 +17,7 @@ func (s *appServices) ListAdminJobs(ctx context.Context, req *appv1.ListAdminJob
 	if _, err := s.requireAdmin(ctx); err != nil {
 		return nil, err
 	}
-	if s.videoService == nil {
+	if s.videoWorkflowService == nil {
 		return nil, status.Error(codes.Unavailable, "Job service is unavailable")
 	}
 
@@ -32,11 +32,11 @@ func (s *appServices) ListAdminJobs(ctx context.Context, req *appv1.ListAdminJob
 		err    error
 	)
 	if useCursorPagination {
-		result, err = s.videoService.ListJobsByCursor(ctx, agentID, req.GetCursor(), pageSize)
+		result, err = s.videoWorkflowService.ListJobsByCursor(ctx, agentID, req.GetCursor(), pageSize)
 	} else if agentID != "" {
-		result, err = s.videoService.ListJobsByAgent(ctx, agentID, offset, limit)
+		result, err = s.videoWorkflowService.ListJobsByAgent(ctx, agentID, offset, limit)
 	} else {
-		result, err = s.videoService.ListJobs(ctx, offset, limit)
+		result, err = s.videoWorkflowService.ListJobs(ctx, offset, limit)
 	}
 	if err != nil {
 		if errors.Is(err, ErrInvalidJobCursor) {
@@ -67,7 +67,7 @@ func (s *appServices) GetAdminJob(ctx context.Context, req *appv1.GetAdminJobReq
 	if _, err := s.requireAdmin(ctx); err != nil {
 		return nil, err
 	}
-	if s.videoService == nil {
+	if s.videoWorkflowService == nil {
 		return nil, status.Error(codes.Unavailable, "Job service is unavailable")
 	}
 
@@ -75,7 +75,7 @@ func (s *appServices) GetAdminJob(ctx context.Context, req *appv1.GetAdminJobReq
 	if id == "" {
 		return nil, status.Error(codes.NotFound, "Job not found")
 	}
-	job, err := s.videoService.GetJob(ctx, id)
+	job, err := s.videoWorkflowService.GetJob(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Job not found")
@@ -95,7 +95,7 @@ func (s *appServices) CreateAdminJob(ctx context.Context, req *appv1.CreateAdmin
 	if _, err := s.requireAdmin(ctx); err != nil {
 		return nil, err
 	}
-	if s.videoService == nil {
+	if s.videoWorkflowService == nil {
 		return nil, status.Error(codes.Unavailable, "Job service is unavailable")
 	}
 
@@ -124,7 +124,7 @@ func (s *appServices) CreateAdminJob(ctx context.Context, req *appv1.CreateAdmin
 	if req.VideoId != nil {
 		videoID = strings.TrimSpace(req.GetVideoId())
 	}
-	job, err := s.videoService.CreateJob(ctx, strings.TrimSpace(req.GetUserId()), videoID, name, payload, int(req.GetPriority()), req.GetTimeLimit())
+	job, err := s.videoWorkflowService.CreateJob(ctx, strings.TrimSpace(req.GetUserId()), videoID, name, payload, int(req.GetPriority()), req.GetTimeLimit())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to create job")
 	}
@@ -134,7 +134,7 @@ func (s *appServices) CancelAdminJob(ctx context.Context, req *appv1.CancelAdmin
 	if _, err := s.requireAdmin(ctx); err != nil {
 		return nil, err
 	}
-	if s.videoService == nil {
+	if s.videoWorkflowService == nil {
 		return nil, status.Error(codes.Unavailable, "Job service is unavailable")
 	}
 
@@ -142,7 +142,7 @@ func (s *appServices) CancelAdminJob(ctx context.Context, req *appv1.CancelAdmin
 	if id == "" {
 		return nil, status.Error(codes.NotFound, "Job not found")
 	}
-	if err := s.videoService.CancelJob(ctx, id); err != nil {
+	if err := s.videoWorkflowService.CancelJob(ctx, id); err != nil {
 		if strings.Contains(strings.ToLower(err.Error()), "not found") {
 			return nil, status.Error(codes.NotFound, "Job not found")
 		}
@@ -154,7 +154,7 @@ func (s *appServices) RetryAdminJob(ctx context.Context, req *appv1.RetryAdminJo
 	if _, err := s.requireAdmin(ctx); err != nil {
 		return nil, err
 	}
-	if s.videoService == nil {
+	if s.videoWorkflowService == nil {
 		return nil, status.Error(codes.Unavailable, "Job service is unavailable")
 	}
 
@@ -162,7 +162,7 @@ func (s *appServices) RetryAdminJob(ctx context.Context, req *appv1.RetryAdminJo
 	if id == "" {
 		return nil, status.Error(codes.NotFound, "Job not found")
 	}
-	job, err := s.videoService.RetryJob(ctx, id)
+	job, err := s.videoWorkflowService.RetryJob(ctx, id)
 	if err != nil {
 		if strings.Contains(strings.ToLower(err.Error()), "not found") {
 			return nil, status.Error(codes.NotFound, "Job not found")

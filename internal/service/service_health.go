@@ -82,10 +82,6 @@ func (s *HealthService) checkDatabase(ctx context.Context) ComponentHealth {
 	if err := sqlDB.PingContext(ctx); err != nil {
 		return ComponentHealth{Status: HealthStatusUnhealthy, Message: fmt.Sprintf("database ping failed: %v", err), Latency: time.Since(start).String(), CheckedAt: time.Now()}
 	}
-	var result int
-	if err := s.db.WithContext(ctx).Raw("SELECT 1").Scan(&result).Error; err != nil {
-		return ComponentHealth{Status: HealthStatusUnhealthy, Message: fmt.Sprintf("database query failed: %v", err), Latency: time.Since(start).String(), CheckedAt: time.Now()}
-	}
 	return ComponentHealth{Status: HealthStatusHealthy, Latency: time.Since(start).String(), CheckedAt: time.Now()}
 }
 

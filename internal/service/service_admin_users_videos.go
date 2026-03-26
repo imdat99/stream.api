@@ -20,20 +20,55 @@ func (s *appServices) GetAdminDashboard(ctx context.Context, _ *appv1.GetAdminDa
 		return nil, err
 	}
 
-	dashboard := &appv1.AdminDashboard{}
-	db := s.db.WithContext(ctx)
-
-	db.Model(&model.User{}).Count(&dashboard.TotalUsers)
-	db.Model(&model.Video{}).Count(&dashboard.TotalVideos)
-	db.Model(&model.User{}).Select("COALESCE(SUM(storage_used), 0)").Row().Scan(&dashboard.TotalStorageUsed)
-	db.Model(&model.Payment{}).Count(&dashboard.TotalPayments)
-	db.Model(&model.Payment{}).Where("status = ?", "SUCCESS").Select("COALESCE(SUM(amount), 0)").Row().Scan(&dashboard.TotalRevenue)
-	db.Model(&model.PlanSubscription{}).Where("expires_at > ?", time.Now()).Count(&dashboard.ActiveSubscriptions)
-	db.Model(&model.AdTemplate{}).Count(&dashboard.TotalAdTemplates)
-
 	today := time.Now().Truncate(24 * time.Hour)
-	db.Model(&model.User{}).Where("created_at >= ?", today).Count(&dashboard.NewUsersToday)
-	db.Model(&model.Video{}).Where("created_at >= ?", today).Count(&dashboard.NewVideosToday)
+	totalUsers, err := s.userRepository.CountAll(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to load dashboard")
+	}
+	totalVideos, err := s.videoRepository.CountAll(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to load dashboard")
+	}
+	totalStorageUsed, err := s.userRepository.SumStorageUsed(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to load dashboard")
+	}
+	totalPayments, err := s.paymentRepository.CountAll(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to load dashboard")
+	}
+	totalRevenue, err := s.paymentRepository.SumSuccessfulAmount(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to load dashboard")
+	}
+	activeSubscriptions, err := s.billingRepository.CountActiveSubscriptions(ctx, time.Now())
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to load dashboard")
+	}
+	totalAdTemplates, err := s.adTemplateRepository.CountAll(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to load dashboard")
+	}
+	newUsersToday, err := s.userRepository.CountCreatedSince(ctx, today)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to load dashboard")
+	}
+	newVideosToday, err := s.videoRepository.CountCreatedSince(ctx, today)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to load dashboard")
+	}
+
+	dashboard := &appv1.AdminDashboard{
+		TotalUsers:          totalUsers,
+		TotalVideos:         totalVideos,
+		TotalStorageUsed:    totalStorageUsed,
+		TotalPayments:       totalPayments,
+		TotalRevenue:        totalRevenue,
+		ActiveSubscriptions: activeSubscriptions,
+		TotalAdTemplates:    totalAdTemplates,
+		NewUsersToday:       newUsersToday,
+		NewVideosToday:      newVideosToday,
+	}
 
 	return &appv1.GetAdminDashboardResponse{Dashboard: dashboard}, nil
 }
@@ -43,26 +78,11 @@ func (s *appServices) ListAdminUsers(ctx context.Context, req *appv1.ListAdminUs
 	}
 
 	page, limit, offset := adminPageLimitOffset(req.GetPage(), req.GetLimit())
-	limitInt := int(limit)
 	search := strings.TrimSpace(req.GetSearch())
 	role := strings.TrimSpace(req.GetRole())
 
-	db := s.db.WithContext(ctx).Model(&model.User{})
-	if search != "" {
-		like := "%" + search + "%"
-		db = db.Where("email ILIKE ? OR username ILIKE ?", like, like)
-	}
-	if role != "" {
-		db = db.Where("UPPER(role) = ?", strings.ToUpper(role))
-	}
-
-	var total int64
-	if err := db.Count(&total).Error; err != nil {
-		return nil, status.Error(codes.Internal, "Failed to list users")
-	}
-
-	var users []model.User
-	if err := db.Order("created_at DESC").Offset(offset).Limit(limitInt).Find(&users).Error; err != nil {
+	users, total, err := s.userRepository.ListForAdmin(ctx, search, role, limit, offset)
+	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to list users")
 	}
 
@@ -87,8 +107,8 @@ func (s *appServices) GetAdminUser(ctx context.Context, req *appv1.GetAdminUserR
 		return nil, status.Error(codes.NotFound, "User not found")
 	}
 
-	var user model.User
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&user).Error; err != nil {
+	user, err := s.userRepository.GetByID(ctx, id)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "User not found")
 		}
@@ -96,14 +116,13 @@ func (s *appServices) GetAdminUser(ctx context.Context, req *appv1.GetAdminUserR
 	}
 
 	var subscription *model.PlanSubscription
-	var subscriptionRecord model.PlanSubscription
-	if err := s.db.WithContext(ctx).Where("user_id = ?", id).Order("created_at DESC").First(&subscriptionRecord).Error; err == nil {
-		subscription = &subscriptionRecord
+	if subscriptionRecord, err := s.billingRepository.GetLatestPlanSubscription(ctx, id); err == nil {
+		subscription = subscriptionRecord
 	} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, status.Error(codes.Internal, "Failed to get user")
 	}
 
-	detail, err := s.buildAdminUserDetail(ctx, &user, subscription)
+	detail, err := s.buildAdminUserDetail(ctx, user, subscription)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to get user")
 	}
@@ -144,7 +163,7 @@ func (s *appServices) CreateAdminUser(ctx context.Context, req *appv1.CreateAdmi
 		PlanID:   planID,
 	}
 
-	if err := s.db.WithContext(ctx).Create(user).Error; err != nil {
+	if err := s.userRepository.Create(ctx, user); err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			return nil, status.Error(codes.AlreadyExists, "Email already registered")
 		}
@@ -207,36 +226,38 @@ func (s *appServices) UpdateAdminUser(ctx context.Context, req *appv1.UpdateAdmi
 		updates["password"] = string(hashedPassword)
 	}
 	if len(updates) == 0 {
-		var user model.User
-		if err := s.db.WithContext(ctx).Where("id = ?", id).First(&user).Error; err != nil {
+		user, err := s.userRepository.GetByID(ctx, id)
+		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, status.Error(codes.NotFound, "User not found")
 			}
 			return nil, status.Error(codes.Internal, "Failed to update user")
 		}
-		payload, err := s.buildAdminUser(ctx, &user)
+		payload, err := s.buildAdminUser(ctx, user)
 		if err != nil {
 			return nil, status.Error(codes.Internal, "Failed to update user")
 		}
 		return &appv1.UpdateAdminUserResponse{User: payload}, nil
 	}
 
-	result := s.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", id).Updates(updates)
-	if result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
+	if _, err := s.userRepository.GetByID(ctx, id); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.NotFound, "User not found")
+		}
+		return nil, status.Error(codes.Internal, "Failed to update user")
+	}
+	if err := s.userRepository.UpdateFieldsByID(ctx, id, updates); err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			return nil, status.Error(codes.AlreadyExists, "Email already registered")
 		}
 		return nil, status.Error(codes.Internal, "Failed to update user")
 	}
-	if result.RowsAffected == 0 {
-		return nil, status.Error(codes.NotFound, "User not found")
-	}
 
-	var user model.User
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&user).Error; err != nil {
+	user, err := s.userRepository.GetByID(ctx, id)
+	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to update user")
 	}
-	payload, err := s.buildAdminUser(ctx, &user)
+	payload, err := s.buildAdminUser(ctx, user)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to update user")
 	}
@@ -264,8 +285,8 @@ func (s *appServices) UpdateAdminUserReferralSettings(ctx context.Context, req *
 		}
 	}
 
-	var user model.User
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&user).Error; err != nil {
+	user, err := s.userRepository.GetByID(ctx, id)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "User not found")
 		}
@@ -274,7 +295,7 @@ func (s *appServices) UpdateAdminUserReferralSettings(ctx context.Context, req *
 
 	updates := map[string]any{}
 	if req.RefUsername != nil || (req.ClearReferrer != nil && req.GetClearReferrer()) {
-		if referralRewardProcessed(&user) {
+		if referralRewardProcessed(user) {
 			return nil, status.Error(codes.InvalidArgument, "Cannot change referrer after reward has been granted")
 		}
 		if req.ClearReferrer != nil && req.GetClearReferrer() {
@@ -300,26 +321,22 @@ func (s *appServices) UpdateAdminUserReferralSettings(ctx context.Context, req *
 	}
 
 	if len(updates) > 0 {
-		result := s.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", id).Updates(updates)
-		if result.Error != nil {
+		if err := s.userRepository.UpdateFieldsByID(ctx, id, updates); err != nil {
 			return nil, status.Error(codes.Internal, "Failed to update referral settings")
-		}
-		if result.RowsAffected == 0 {
-			return nil, status.Error(codes.NotFound, "User not found")
 		}
 	}
 
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&user).Error; err != nil {
+	user, err = s.userRepository.GetByID(ctx, id)
+	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to update referral settings")
 	}
 	var subscription *model.PlanSubscription
-	var subscriptionRecord model.PlanSubscription
-	if err := s.db.WithContext(ctx).Where("user_id = ?", id).Order("created_at DESC").First(&subscriptionRecord).Error; err == nil {
-		subscription = &subscriptionRecord
+	if subscriptionRecord, err := s.billingRepository.GetLatestPlanSubscription(ctx, id); err == nil {
+		subscription = subscriptionRecord
 	} else if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, status.Error(codes.Internal, "Failed to update referral settings")
 	}
-	payload, err := s.buildAdminUserDetail(ctx, &user, subscription)
+	payload, err := s.buildAdminUserDetail(ctx, user, subscription)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to update referral settings")
 	}
@@ -344,12 +361,14 @@ func (s *appServices) UpdateAdminUserRole(ctx context.Context, req *appv1.Update
 		return nil, status.Error(codes.InvalidArgument, "Invalid role. Must be USER, ADMIN, or BLOCK")
 	}
 
-	result := s.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", id).Update("role", role)
-	if result.Error != nil {
+	if _, err := s.userRepository.GetByID(ctx, id); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.NotFound, "User not found")
+		}
 		return nil, status.Error(codes.Internal, "Failed to update role")
 	}
-	if result.RowsAffected == 0 {
-		return nil, status.Error(codes.NotFound, "User not found")
+	if err := s.userRepository.UpdateFieldsByID(ctx, id, map[string]any{"role": role}); err != nil {
+		return nil, status.Error(codes.Internal, "Failed to update role")
 	}
 
 	return &appv1.UpdateAdminUserRoleResponse{Message: "Role updated", Role: role}, nil
@@ -368,35 +387,14 @@ func (s *appServices) DeleteAdminUser(ctx context.Context, req *appv1.DeleteAdmi
 		return nil, status.Error(codes.InvalidArgument, "Cannot delete your own account")
 	}
 
-	var user model.User
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&user).Error; err != nil {
+	if _, err := s.userRepository.GetByID(ctx, id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "User not found")
 		}
 		return nil, status.Error(codes.Internal, "Failed to find user")
 	}
 
-	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		tables := []struct {
-			model interface{}
-			where string
-		}{
-			{&model.AdTemplate{}, "user_id = ?"},
-			{&model.Notification{}, "user_id = ?"},
-			{&model.Domain{}, "user_id = ?"},
-			{&model.WalletTransaction{}, "user_id = ?"},
-			{&model.PlanSubscription{}, "user_id = ?"},
-			{&model.UserPreference{}, "user_id = ?"},
-			{&model.Video{}, "user_id = ?"},
-			{&model.Payment{}, "user_id = ?"},
-		}
-		for _, item := range tables {
-			if err := tx.Where(item.where, id).Delete(item.model).Error; err != nil {
-				return err
-			}
-		}
-		return tx.Where("id = ?", id).Delete(&model.User{}).Error
-	})
+	err = s.accountRepository.DeleteUserAccount(ctx, id)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to delete user")
 	}
@@ -409,30 +407,12 @@ func (s *appServices) ListAdminVideos(ctx context.Context, req *appv1.ListAdminV
 	}
 
 	page, limit, offset := adminPageLimitOffset(req.GetPage(), req.GetLimit())
-	limitInt := int(limit)
 	search := strings.TrimSpace(req.GetSearch())
 	userID := strings.TrimSpace(req.GetUserId())
 	statusFilter := strings.TrimSpace(req.GetStatus())
 
-	db := s.db.WithContext(ctx).Model(&model.Video{})
-	if search != "" {
-		like := "%" + search + "%"
-		db = db.Where("title ILIKE ?", like)
-	}
-	if userID != "" {
-		db = db.Where("user_id = ?", userID)
-	}
-	if statusFilter != "" && !strings.EqualFold(statusFilter, "all") {
-		db = db.Where("status = ?", normalizeVideoStatusValue(statusFilter))
-	}
-
-	var total int64
-	if err := db.Count(&total).Error; err != nil {
-		return nil, status.Error(codes.Internal, "Failed to list videos")
-	}
-
-	var videos []model.Video
-	if err := db.Order("created_at DESC").Offset(offset).Limit(limitInt).Find(&videos).Error; err != nil {
+	videos, total, err := s.videoRepository.ListForAdmin(ctx, search, userID, normalizeVideoStatusValue(statusFilter), offset, int(limit))
+	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to list videos")
 	}
 
@@ -457,15 +437,15 @@ func (s *appServices) GetAdminVideo(ctx context.Context, req *appv1.GetAdminVide
 		return nil, status.Error(codes.NotFound, "Video not found")
 	}
 
-	var video model.Video
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&video).Error; err != nil {
+	video, err := s.videoRepository.GetByID(ctx, id)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Video not found")
 		}
 		return nil, status.Error(codes.Internal, "Failed to get video")
 	}
 
-	payload, err := s.buildAdminVideo(ctx, &video)
+	payload, err := s.buildAdminVideo(ctx, video)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to get video")
 	}
@@ -476,7 +456,7 @@ func (s *appServices) CreateAdminVideo(ctx context.Context, req *appv1.CreateAdm
 	if _, err := s.requireAdmin(ctx); err != nil {
 		return nil, err
 	}
-	if s.videoService == nil {
+	if s.videoWorkflowService == nil {
 		return nil, status.Error(codes.Unavailable, "Job service is unavailable")
 	}
 
@@ -490,7 +470,7 @@ func (s *appServices) CreateAdminVideo(ctx context.Context, req *appv1.CreateAdm
 		return nil, status.Error(codes.InvalidArgument, "Size must be greater than or equal to 0")
 	}
 
-	created, err := s.videoService.CreateVideo(ctx, CreateVideoInput{
+	created, err := s.videoWorkflowService.CreateVideo(ctx, CreateVideoInput{
 		UserID:       userID,
 		Title:        title,
 		Description:  req.Description,
@@ -538,16 +518,16 @@ func (s *appServices) UpdateAdminVideo(ctx context.Context, req *appv1.UpdateAdm
 		return nil, status.Error(codes.InvalidArgument, "Size must be greater than or equal to 0")
 	}
 
-	var video model.Video
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&video).Error; err != nil {
+	video, err := s.videoRepository.GetByID(ctx, id)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Video not found")
 		}
 		return nil, status.Error(codes.Internal, "Failed to update video")
 	}
 
-	var user model.User
-	if err := s.db.WithContext(ctx).Where("id = ?", userID).First(&user).Error; err != nil {
+	user, err := s.userRepository.GetByID(ctx, userID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.InvalidArgument, "User not found")
 		}
@@ -570,35 +550,15 @@ func (s *appServices) UpdateAdminVideo(ctx context.Context, req *appv1.UpdateAdm
 	video.ProcessingStatus = model.StringPtr(processingStatus)
 	video.StorageType = model.StringPtr(detectStorageType(videoURL))
 
-	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Save(&video).Error; err != nil {
-			return err
-		}
-		if oldUserID == user.ID {
-			delta := video.Size - oldSize
-			if delta != 0 {
-				if err := tx.Model(&model.User{}).Where("id = ?", user.ID).UpdateColumn("storage_used", gorm.Expr("GREATEST(storage_used + ?, 0)", delta)).Error; err != nil {
-					return err
-				}
-			}
-		} else {
-			if err := tx.Model(&model.User{}).Where("id = ?", oldUserID).UpdateColumn("storage_used", gorm.Expr("GREATEST(storage_used - ?, 0)", oldSize)).Error; err != nil {
-				return err
-			}
-			if err := tx.Model(&model.User{}).Where("id = ?", user.ID).UpdateColumn("storage_used", gorm.Expr("storage_used + ?", video.Size)).Error; err != nil {
-				return err
-			}
-		}
-		return s.saveAdminVideoAdConfig(ctx, tx, &video, user.ID, nullableTrimmedString(req.AdTemplateId))
-	})
+	err = s.videoRepository.UpdateAdminVideo(ctx, video, oldUserID, oldSize, nullableTrimmedString(req.AdTemplateId))
 	if err != nil {
-		if strings.Contains(err.Error(), "Ad template not found") {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.InvalidArgument, "Ad template not found")
 		}
 		return nil, status.Error(codes.Internal, "Failed to update video")
 	}
 
-	payload, err := s.buildAdminVideo(ctx, &video)
+	payload, err := s.buildAdminVideo(ctx, video)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to update video")
 	}
@@ -614,21 +574,15 @@ func (s *appServices) DeleteAdminVideo(ctx context.Context, req *appv1.DeleteAdm
 		return nil, status.Error(codes.NotFound, "Video not found")
 	}
 
-	var video model.Video
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&video).Error; err != nil {
+	video, err := s.videoRepository.GetByID(ctx, id)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Video not found")
 		}
 		return nil, status.Error(codes.Internal, "Failed to find video")
 	}
 
-	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("id = ?", video.ID).Delete(&model.Video{}).Error; err != nil {
-			return err
-		}
-		return tx.Model(&model.User{}).Where("id = ?", video.UserID).UpdateColumn("storage_used", gorm.Expr("GREATEST(storage_used - ?, 0)", video.Size)).Error
-	})
-	if err != nil {
+	if err := s.videoRepository.DeleteByIDWithStorageUpdate(ctx, video.ID, video.UserID, video.Size); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to delete video")
 	}
 

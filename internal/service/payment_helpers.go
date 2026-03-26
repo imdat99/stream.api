@@ -15,7 +15,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 	appv1 "stream.api/internal/api/proto/app/v1"
 	"stream.api/internal/database/model"
 )
@@ -33,9 +32,9 @@ func statusErrorWithBody(ctx context.Context, grpcCode codes.Code, httpCode int,
 	return status.Error(grpcCode, message)
 }
 
-func (s *appServices) loadPaymentPlanForUser(ctx context.Context, planID string) (*model.Plan, error) {
-	var planRecord model.Plan
-	if err := s.db.WithContext(ctx).Where("id = ?", planID).First(&planRecord).Error; err != nil {
+func (s *paymentsAppService) loadPaymentPlanForUser(ctx context.Context, planID string) (*model.Plan, error) {
+	planRecord, err := s.planRepository.GetByID(ctx, planID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Plan not found")
 		}
@@ -45,12 +44,12 @@ func (s *appServices) loadPaymentPlanForUser(ctx context.Context, planID string)
 	if planRecord.IsActive == nil || !*planRecord.IsActive {
 		return nil, status.Error(codes.InvalidArgument, "Plan is not active")
 	}
-	return &planRecord, nil
+	return planRecord, nil
 }
 
 func (s *appServices) loadPaymentPlanForAdmin(ctx context.Context, planID string) (*model.Plan, error) {
-	var planRecord model.Plan
-	if err := s.db.WithContext(ctx).Where("id = ?", planID).First(&planRecord).Error; err != nil {
+	planRecord, err := s.planRepository.GetByID(ctx, planID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.InvalidArgument, "Plan not found")
 		}
@@ -59,18 +58,18 @@ func (s *appServices) loadPaymentPlanForAdmin(ctx context.Context, planID string
 	if planRecord.IsActive == nil || !*planRecord.IsActive {
 		return nil, status.Error(codes.InvalidArgument, "Plan is not active")
 	}
-	return &planRecord, nil
+	return planRecord, nil
 }
 
 func (s *appServices) loadPaymentUserForAdmin(ctx context.Context, userID string) (*model.User, error) {
-	var user model.User
-	if err := s.db.WithContext(ctx).Where("id = ?", userID).First(&user).Error; err != nil {
+	user, err := s.userRepository.GetByID(ctx, userID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.InvalidArgument, "User not found")
 		}
 		return nil, status.Error(codes.Internal, "Failed to create payment")
 	}
-	return &user, nil
+	return user, nil
 }
 
 func (s *appServices) executePaymentFlow(ctx context.Context, input paymentExecutionInput) (*paymentExecutionResult, error) {
@@ -101,67 +100,25 @@ func (s *appServices) executePaymentFlow(ctx context.Context, input paymentExecu
 		InvoiceID: invoiceID,
 	}
 
-	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if _, err := lockUserForUpdate(ctx, tx, input.UserID); err != nil {
-			return err
-		}
-
-		newExpiry, err := loadPaymentExpiry(ctx, tx, input.UserID, input.TermMonths, now)
-		if err != nil {
-			return err
-		}
-		currentWalletBalance, err := model.GetWalletBalance(ctx, tx, input.UserID)
-		if err != nil {
-			return err
-		}
-		validatedTopupAmount, err := validatePaymentFunding(ctx, input, totalAmount, currentWalletBalance)
-		if err != nil {
-			return err
-		}
-		if err := tx.Create(paymentRecord).Error; err != nil {
-			return err
-		}
-		if err := createPaymentWalletTransactions(tx, input, paymentRecord, totalAmount, validatedTopupAmount, currency); err != nil {
-			return err
-		}
-		subscription := buildPaymentSubscription(input, paymentRecord, totalAmount, validatedTopupAmount, now, newExpiry)
-		if err := tx.Create(subscription).Error; err != nil {
-			return err
-		}
-		if err := tx.Model(&model.User{}).Where("id = ?", input.UserID).Update("plan_id", input.Plan.ID).Error; err != nil {
-			return err
-		}
-		notification := buildSubscriptionNotification(input.UserID, paymentRecord.ID, invoiceID, input.Plan, subscription)
-		if err := tx.Create(notification).Error; err != nil {
-			return err
-		}
-		if _, err := s.maybeGrantReferralReward(ctx, tx, input, paymentRecord, subscription); err != nil {
-			return err
-		}
-		walletBalance, err := model.GetWalletBalance(ctx, tx, input.UserID)
-		if err != nil {
-			return err
-		}
-		result.Subscription = subscription
-		result.WalletBalance = walletBalance
-		return nil
-	})
+	subscription, walletBalance, err := s.paymentRepository.ExecuteSubscriptionPayment(
+		ctx,
+		input.UserID,
+		input.Plan,
+		input.TermMonths,
+		input.PaymentMethod,
+		paymentRecord,
+		invoiceID,
+		now,
+		func(currentWalletBalance float64) (float64, error) {
+			return validatePaymentFunding(ctx, input, totalAmount, currentWalletBalance)
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
+	result.Subscription = subscription
+	result.WalletBalance = walletBalance
 	return result, nil
-}
-
-func loadPaymentExpiry(ctx context.Context, tx *gorm.DB, userID string, termMonths int32, now time.Time) (time.Time, error) {
-	currentSubscription, err := model.GetLatestPlanSubscription(ctx, tx, userID)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return time.Time{}, err
-	}
-	baseExpiry := now
-	if currentSubscription != nil && currentSubscription.ExpiresAt.After(baseExpiry) {
-		baseExpiry = currentSubscription.ExpiresAt.UTC()
-	}
-	return baseExpiry.AddDate(0, int(termMonths), 0), nil
 }
 
 func validatePaymentFunding(ctx context.Context, input paymentExecutionInput, totalAmount, currentWalletBalance float64) (float64, error) {
@@ -206,73 +163,7 @@ func validatePaymentFunding(ctx context.Context, input paymentExecutionInput, to
 	return topupAmount, nil
 }
 
-func createPaymentWalletTransactions(tx *gorm.DB, input paymentExecutionInput, paymentRecord *model.Payment, totalAmount, topupAmount float64, currency string) error {
-	if input.PaymentMethod == paymentMethodTopup {
-		topupTransaction := &model.WalletTransaction{
-			ID:         uuid.New().String(),
-			UserID:     input.UserID,
-			Type:       walletTransactionTypeTopup,
-			Amount:     topupAmount,
-			Currency:   model.StringPtr(currency),
-			Note:       model.StringPtr(fmt.Sprintf("Wallet top-up for %s (%d months)", input.Plan.Name, input.TermMonths)),
-			PaymentID:  &paymentRecord.ID,
-			PlanID:     &input.Plan.ID,
-			TermMonths: int32Ptr(input.TermMonths),
-		}
-		if err := tx.Create(topupTransaction).Error; err != nil {
-			return err
-		}
-	}
-	debitTransaction := &model.WalletTransaction{
-		ID:         uuid.New().String(),
-		UserID:     input.UserID,
-		Type:       walletTransactionTypeSubscriptionDebit,
-		Amount:     -totalAmount,
-		Currency:   model.StringPtr(currency),
-		Note:       model.StringPtr(fmt.Sprintf("Subscription payment for %s (%d months)", input.Plan.Name, input.TermMonths)),
-		PaymentID:  &paymentRecord.ID,
-		PlanID:     &input.Plan.ID,
-		TermMonths: int32Ptr(input.TermMonths),
-	}
-	return tx.Create(debitTransaction).Error
-}
-
-func buildPaymentSubscription(input paymentExecutionInput, paymentRecord *model.Payment, totalAmount, topupAmount float64, now, newExpiry time.Time) *model.PlanSubscription {
-	return &model.PlanSubscription{
-		ID:            uuid.New().String(),
-		UserID:        input.UserID,
-		PaymentID:     paymentRecord.ID,
-		PlanID:        input.Plan.ID,
-		TermMonths:    input.TermMonths,
-		PaymentMethod: input.PaymentMethod,
-		WalletAmount:  totalAmount,
-		TopupAmount:   topupAmount,
-		StartedAt:     now,
-		ExpiresAt:     newExpiry,
-	}
-}
-
-func buildSubscriptionNotification(userID, paymentID, invoiceID string, planRecord *model.Plan, subscription *model.PlanSubscription) *model.Notification {
-	return &model.Notification{
-		ID:      uuid.New().String(),
-		UserID:  userID,
-		Type:    "billing.subscription",
-		Title:   "Subscription activated",
-		Message: fmt.Sprintf("Your subscription to %s is active until %s.", planRecord.Name, subscription.ExpiresAt.UTC().Format("2006-01-02")),
-		Metadata: model.StringPtr(mustMarshalJSON(map[string]any{
-			"payment_id":      paymentID,
-			"invoice_id":      invoiceID,
-			"plan_id":         planRecord.ID,
-			"term_months":     subscription.TermMonths,
-			"payment_method":  subscription.PaymentMethod,
-			"wallet_amount":   subscription.WalletAmount,
-			"topup_amount":    subscription.TopupAmount,
-			"plan_expires_at": subscription.ExpiresAt.UTC().Format(time.RFC3339),
-		})),
-	}
-}
-
-func (s *appServices) buildPaymentInvoice(ctx context.Context, paymentRecord *model.Payment) (string, string, error) {
+func (s *paymentsAppService) buildPaymentInvoice(ctx context.Context, paymentRecord *model.Payment) (string, string, error) {
 	details, err := s.loadPaymentInvoiceDetails(ctx, paymentRecord)
 	if err != nil {
 		return "", "", err
@@ -324,15 +215,15 @@ func buildTopupInvoice(transaction *model.WalletTransaction) string {
 	}, "\n")
 }
 
-func (s *appServices) loadPaymentInvoiceDetails(ctx context.Context, paymentRecord *model.Payment) (*paymentInvoiceDetails, error) {
+func (s *paymentsAppService) loadPaymentInvoiceDetails(ctx context.Context, paymentRecord *model.Payment) (*paymentInvoiceDetails, error) {
 	details := &paymentInvoiceDetails{
 		PlanName:      "Unknown plan",
 		PaymentMethod: paymentMethodWallet,
 	}
 
 	if paymentRecord.PlanID != nil && strings.TrimSpace(*paymentRecord.PlanID) != "" {
-		var planRecord model.Plan
-		if err := s.db.WithContext(ctx).Where("id = ?", *paymentRecord.PlanID).First(&planRecord).Error; err != nil {
+		planRecord, err := s.planRepository.GetByID(ctx, *paymentRecord.PlanID)
+		if err != nil {
 			if !errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, err
 			}
@@ -341,11 +232,8 @@ func (s *appServices) loadPaymentInvoiceDetails(ctx context.Context, paymentReco
 		}
 	}
 
-	var subscription model.PlanSubscription
-	if err := s.db.WithContext(ctx).
-		Where("payment_id = ?", paymentRecord.ID).
-		Order("created_at DESC").
-		First(&subscription).Error; err != nil {
+	subscription, err := s.paymentRepository.GetSubscriptionByPaymentID(ctx, paymentRecord.ID)
+	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, err
 		}
@@ -367,27 +255,6 @@ func (s *appServices) loadPaymentInvoiceDetails(ctx context.Context, paymentReco
 func isAllowedTermMonths(value int32) bool {
 	_, ok := allowedTermMonths[value]
 	return ok
-}
-
-func lockUserForUpdate(ctx context.Context, tx *gorm.DB, userID string) (*model.User, error) {
-	if tx.Dialector.Name() == "sqlite" {
-		res := tx.WithContext(ctx).Exec("UPDATE user SET id = id WHERE id = ?", userID)
-		if res.Error != nil {
-			return nil, res.Error
-		}
-		if res.RowsAffected == 0 {
-			return nil, gorm.ErrRecordNotFound
-		}
-	}
-
-	var user model.User
-	if err := tx.WithContext(ctx).
-		Clauses(clause.Locking{Strength: "UPDATE"}).
-		Where("id = ?", userID).
-		First(&user).Error; err != nil {
-		return nil, err
-	}
-	return &user, nil
 }
 
 func maxFloat(left, right float64) float64 {

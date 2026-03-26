@@ -13,17 +13,14 @@ import (
 	"stream.api/internal/database/model"
 )
 
-func (s *appServices) ListNotifications(ctx context.Context, _ *appv1.ListNotificationsRequest) (*appv1.ListNotificationsResponse, error) {
+func (s *notificationsAppService) ListNotifications(ctx context.Context, _ *appv1.ListNotificationsRequest) (*appv1.ListNotificationsResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var rows []model.Notification
-	if err := s.db.WithContext(ctx).
-		Where("user_id = ?", result.UserID).
-		Order("created_at DESC").
-		Find(&rows).Error; err != nil {
+	rows, err := s.notificationRepo.ListByUser(ctx, result.UserID)
+	if err != nil {
 		s.logger.Error("Failed to list notifications", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to load notifications")
 	}
@@ -35,7 +32,7 @@ func (s *appServices) ListNotifications(ctx context.Context, _ *appv1.ListNotifi
 
 	return &appv1.ListNotificationsResponse{Notifications: items}, nil
 }
-func (s *appServices) MarkNotificationRead(ctx context.Context, req *appv1.MarkNotificationReadRequest) (*appv1.MessageResponse, error) {
+func (s *notificationsAppService) MarkNotificationRead(ctx context.Context, req *appv1.MarkNotificationReadRequest) (*appv1.MessageResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -46,37 +43,31 @@ func (s *appServices) MarkNotificationRead(ctx context.Context, req *appv1.MarkN
 		return nil, status.Error(codes.NotFound, "Notification not found")
 	}
 
-	res := s.db.WithContext(ctx).
-		Model(&model.Notification{}).
-		Where("id = ? AND user_id = ?", id, result.UserID).
-		Update("is_read", true)
-	if res.Error != nil {
-		s.logger.Error("Failed to update notification", "error", res.Error)
+	rowsAffected, err := s.notificationRepo.MarkReadByIDAndUser(ctx, id, result.UserID)
+	if err != nil {
+		s.logger.Error("Failed to update notification", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to update notification")
 	}
-	if res.RowsAffected == 0 {
+	if rowsAffected == 0 {
 		return nil, status.Error(codes.NotFound, "Notification not found")
 	}
 
 	return messageResponse("Notification updated"), nil
 }
-func (s *appServices) MarkAllNotificationsRead(ctx context.Context, _ *appv1.MarkAllNotificationsReadRequest) (*appv1.MessageResponse, error) {
+func (s *notificationsAppService) MarkAllNotificationsRead(ctx context.Context, _ *appv1.MarkAllNotificationsReadRequest) (*appv1.MessageResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := s.db.WithContext(ctx).
-		Model(&model.Notification{}).
-		Where("user_id = ? AND is_read = ?", result.UserID, false).
-		Update("is_read", true).Error; err != nil {
+	if err := s.notificationRepo.MarkAllReadByUser(ctx, result.UserID); err != nil {
 		s.logger.Error("Failed to mark all notifications as read", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to update notifications")
 	}
 
 	return messageResponse("All notifications marked as read"), nil
 }
-func (s *appServices) DeleteNotification(ctx context.Context, req *appv1.DeleteNotificationRequest) (*appv1.MessageResponse, error) {
+func (s *notificationsAppService) DeleteNotification(ctx context.Context, req *appv1.DeleteNotificationRequest) (*appv1.MessageResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -87,43 +78,38 @@ func (s *appServices) DeleteNotification(ctx context.Context, req *appv1.DeleteN
 		return nil, status.Error(codes.NotFound, "Notification not found")
 	}
 
-	res := s.db.WithContext(ctx).
-		Where("id = ? AND user_id = ?", id, result.UserID).
-		Delete(&model.Notification{})
-	if res.Error != nil {
-		s.logger.Error("Failed to delete notification", "error", res.Error)
+	rowsAffected, err := s.notificationRepo.DeleteByIDAndUser(ctx, id, result.UserID)
+	if err != nil {
+		s.logger.Error("Failed to delete notification", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to delete notification")
 	}
-	if res.RowsAffected == 0 {
+	if rowsAffected == 0 {
 		return nil, status.Error(codes.NotFound, "Notification not found")
 	}
 
 	return messageResponse("Notification deleted"), nil
 }
-func (s *appServices) ClearNotifications(ctx context.Context, _ *appv1.ClearNotificationsRequest) (*appv1.MessageResponse, error) {
+func (s *notificationsAppService) ClearNotifications(ctx context.Context, _ *appv1.ClearNotificationsRequest) (*appv1.MessageResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := s.db.WithContext(ctx).Where("user_id = ?", result.UserID).Delete(&model.Notification{}).Error; err != nil {
+	if err := s.notificationRepo.DeleteAllByUser(ctx, result.UserID); err != nil {
 		s.logger.Error("Failed to clear notifications", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to clear notifications")
 	}
 
 	return messageResponse("All notifications deleted"), nil
 }
-func (s *appServices) ListDomains(ctx context.Context, _ *appv1.ListDomainsRequest) (*appv1.ListDomainsResponse, error) {
+func (s *domainsAppService) ListDomains(ctx context.Context, _ *appv1.ListDomainsRequest) (*appv1.ListDomainsResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var rows []model.Domain
-	if err := s.db.WithContext(ctx).
-		Where("user_id = ?", result.UserID).
-		Order("created_at DESC").
-		Find(&rows).Error; err != nil {
+	rows, err := s.domainRepository.ListByUser(ctx, result.UserID)
+	if err != nil {
 		s.logger.Error("Failed to list domains", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to load domains")
 	}
@@ -136,7 +122,7 @@ func (s *appServices) ListDomains(ctx context.Context, _ *appv1.ListDomainsReque
 
 	return &appv1.ListDomainsResponse{Domains: items}, nil
 }
-func (s *appServices) CreateDomain(ctx context.Context, req *appv1.CreateDomainRequest) (*appv1.CreateDomainResponse, error) {
+func (s *domainsAppService) CreateDomain(ctx context.Context, req *appv1.CreateDomainRequest) (*appv1.CreateDomainResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -147,11 +133,8 @@ func (s *appServices) CreateDomain(ctx context.Context, req *appv1.CreateDomainR
 		return nil, status.Error(codes.InvalidArgument, "Invalid domain")
 	}
 
-	var count int64
-	if err := s.db.WithContext(ctx).
-		Model(&model.Domain{}).
-		Where("user_id = ? AND name = ?", result.UserID, name).
-		Count(&count).Error; err != nil {
+	count, err := s.domainRepository.CountByUserAndName(ctx, result.UserID, name)
+	if err != nil {
 		s.logger.Error("Failed to validate domain", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to create domain")
 	}
@@ -164,14 +147,14 @@ func (s *appServices) CreateDomain(ctx context.Context, req *appv1.CreateDomainR
 		UserID: result.UserID,
 		Name:   name,
 	}
-	if err := s.db.WithContext(ctx).Create(item).Error; err != nil {
+	if err := s.domainRepository.Create(ctx, item); err != nil {
 		s.logger.Error("Failed to create domain", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to create domain")
 	}
 
 	return &appv1.CreateDomainResponse{Domain: toProtoDomain(item)}, nil
 }
-func (s *appServices) DeleteDomain(ctx context.Context, req *appv1.DeleteDomainRequest) (*appv1.MessageResponse, error) {
+func (s *domainsAppService) DeleteDomain(ctx context.Context, req *appv1.DeleteDomainRequest) (*appv1.MessageResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -182,31 +165,25 @@ func (s *appServices) DeleteDomain(ctx context.Context, req *appv1.DeleteDomainR
 		return nil, status.Error(codes.NotFound, "Domain not found")
 	}
 
-	res := s.db.WithContext(ctx).
-		Where("id = ? AND user_id = ?", id, result.UserID).
-		Delete(&model.Domain{})
-	if res.Error != nil {
-		s.logger.Error("Failed to delete domain", "error", res.Error)
+	rowsAffected, err := s.domainRepository.DeleteByIDAndUser(ctx, id, result.UserID)
+	if err != nil {
+		s.logger.Error("Failed to delete domain", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to delete domain")
 	}
-	if res.RowsAffected == 0 {
+	if rowsAffected == 0 {
 		return nil, status.Error(codes.NotFound, "Domain not found")
 	}
 
 	return messageResponse("Domain deleted"), nil
 }
-func (s *appServices) ListAdTemplates(ctx context.Context, _ *appv1.ListAdTemplatesRequest) (*appv1.ListAdTemplatesResponse, error) {
+func (s *adTemplatesAppService) ListAdTemplates(ctx context.Context, _ *appv1.ListAdTemplatesRequest) (*appv1.ListAdTemplatesResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var items []model.AdTemplate
-	if err := s.db.WithContext(ctx).
-		Where("user_id = ?", result.UserID).
-		Order("is_default DESC").
-		Order("created_at DESC").
-		Find(&items).Error; err != nil {
+	items, err := s.adTemplateRepository.ListByUser(ctx, result.UserID)
+	if err != nil {
 		s.logger.Error("Failed to list ad templates", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to load ad templates")
 	}
@@ -219,7 +196,7 @@ func (s *appServices) ListAdTemplates(ctx context.Context, _ *appv1.ListAdTempla
 
 	return &appv1.ListAdTemplatesResponse{Templates: payload}, nil
 }
-func (s *appServices) CreateAdTemplate(ctx context.Context, req *appv1.CreateAdTemplateRequest) (*appv1.CreateAdTemplateResponse, error) {
+func (s *adTemplatesAppService) CreateAdTemplate(ctx context.Context, req *appv1.CreateAdTemplateRequest) (*appv1.CreateAdTemplateResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -254,21 +231,14 @@ func (s *appServices) CreateAdTemplate(ctx context.Context, req *appv1.CreateAdT
 		item.IsDefault = false
 	}
 
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if item.IsDefault {
-			if err := unsetDefaultTemplates(tx, result.UserID, ""); err != nil {
-				return err
-			}
-		}
-		return tx.Create(item).Error
-	}); err != nil {
+	if err := s.adTemplateRepository.CreateWithDefault(ctx, result.UserID, item); err != nil {
 		s.logger.Error("Failed to create ad template", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to save ad template")
 	}
 
 	return &appv1.CreateAdTemplateResponse{Template: toProtoAdTemplate(item)}, nil
 }
-func (s *appServices) UpdateAdTemplate(ctx context.Context, req *appv1.UpdateAdTemplateRequest) (*appv1.UpdateAdTemplateResponse, error) {
+func (s *adTemplatesAppService) UpdateAdTemplate(ctx context.Context, req *appv1.UpdateAdTemplateRequest) (*appv1.UpdateAdTemplateResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -293,8 +263,8 @@ func (s *appServices) UpdateAdTemplate(ctx context.Context, req *appv1.UpdateAdT
 		return nil, status.Error(codes.InvalidArgument, "Duration is required for mid-roll templates")
 	}
 
-	var item model.AdTemplate
-	if err := s.db.WithContext(ctx).Where("id = ? AND user_id = ?", id, result.UserID).First(&item).Error; err != nil {
+	item, err := s.adTemplateRepository.GetByIDAndUser(ctx, id, result.UserID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Ad template not found")
 		}
@@ -317,21 +287,14 @@ func (s *appServices) UpdateAdTemplate(ctx context.Context, req *appv1.UpdateAdT
 		item.IsDefault = false
 	}
 
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if item.IsDefault {
-			if err := unsetDefaultTemplates(tx, result.UserID, item.ID); err != nil {
-				return err
-			}
-		}
-		return tx.Save(&item).Error
-	}); err != nil {
+	if err := s.adTemplateRepository.SaveWithDefault(ctx, result.UserID, item); err != nil {
 		s.logger.Error("Failed to update ad template", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to save ad template")
 	}
 
-	return &appv1.UpdateAdTemplateResponse{Template: toProtoAdTemplate(&item)}, nil
+	return &appv1.UpdateAdTemplateResponse{Template: toProtoAdTemplate(item)}, nil
 }
-func (s *appServices) DeleteAdTemplate(ctx context.Context, req *appv1.DeleteAdTemplateRequest) (*appv1.MessageResponse, error) {
+func (s *adTemplatesAppService) DeleteAdTemplate(ctx context.Context, req *appv1.DeleteAdTemplateRequest) (*appv1.MessageResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -345,22 +308,7 @@ func (s *appServices) DeleteAdTemplate(ctx context.Context, req *appv1.DeleteAdT
 		return nil, status.Error(codes.NotFound, "Ad template not found")
 	}
 
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&model.Video{}).
-			Where("user_id = ? AND ad_id = ?", result.UserID, id).
-			Update("ad_id", nil).Error; err != nil {
-			return err
-		}
-
-		res := tx.Where("id = ? AND user_id = ?", id, result.UserID).Delete(&model.AdTemplate{})
-		if res.Error != nil {
-			return res.Error
-		}
-		if res.RowsAffected == 0 {
-			return gorm.ErrRecordNotFound
-		}
-		return nil
-	}); err != nil {
+	if err := s.adTemplateRepository.DeleteByIDAndUserAndClearVideos(ctx, id, result.UserID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Ad template not found")
 		}
@@ -370,13 +318,13 @@ func (s *appServices) DeleteAdTemplate(ctx context.Context, req *appv1.DeleteAdT
 
 	return messageResponse("Ad template deleted"), nil
 }
-func (s *appServices) ListPlans(ctx context.Context, _ *appv1.ListPlansRequest) (*appv1.ListPlansResponse, error) {
+func (s *plansAppService) ListPlans(ctx context.Context, _ *appv1.ListPlansRequest) (*appv1.ListPlansResponse, error) {
 	if _, err := s.authenticate(ctx); err != nil {
 		return nil, err
 	}
 
-	var plans []model.Plan
-	if err := s.db.WithContext(ctx).Where("is_active = ?", true).Find(&plans).Error; err != nil {
+	plans, err := s.planRepository.ListActive(ctx)
+	if err != nil {
 		s.logger.Error("Failed to fetch plans", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to fetch plans")
 	}
@@ -390,18 +338,14 @@ func (s *appServices) ListPlans(ctx context.Context, _ *appv1.ListPlansRequest) 
 	return &appv1.ListPlansResponse{Plans: items}, nil
 }
 
-func (s *appServices) ListPlayerConfigs(ctx context.Context, _ *appv1.ListPlayerConfigsRequest) (*appv1.ListPlayerConfigsResponse, error) {
+func (s *playerConfigsAppService) ListPlayerConfigs(ctx context.Context, _ *appv1.ListPlayerConfigsRequest) (*appv1.ListPlayerConfigsResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var items []model.PlayerConfig
-	if err := s.db.WithContext(ctx).
-		Where("user_id = ?", result.UserID).
-		Order("is_default DESC").
-		Order("created_at DESC").
-		Find(&items).Error; err != nil {
+	items, err := s.playerConfigRepo.ListByUser(ctx, result.UserID)
+	if err != nil {
 		s.logger.Error("Failed to list player configs", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to load player configs")
 	}
@@ -415,7 +359,7 @@ func (s *appServices) ListPlayerConfigs(ctx context.Context, _ *appv1.ListPlayer
 	return &appv1.ListPlayerConfigsResponse{Configs: payload}, nil
 }
 
-func (s *appServices) CreatePlayerConfig(ctx context.Context, req *appv1.CreatePlayerConfigRequest) (*appv1.CreatePlayerConfigResponse, error) {
+func (s *playerConfigsAppService) CreatePlayerConfig(ctx context.Context, req *appv1.CreatePlayerConfigRequest) (*appv1.CreatePlayerConfigResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -447,29 +391,8 @@ func (s *appServices) CreatePlayerConfig(ctx context.Context, req *appv1.CreateP
 		item.IsDefault = false
 	}
 
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		lockedUser, err := lockUserForUpdate(ctx, tx, result.UserID)
-		if err != nil {
-			return err
-		}
-
-		var configCount int64
-		if err := tx.WithContext(ctx).
-			Model(&model.PlayerConfig{}).
-			Where("user_id = ?", result.UserID).
-			Count(&configCount).Error; err != nil {
-			return err
-		}
-		if err := playerConfigActionAllowed(lockedUser, configCount, "create"); err != nil {
-			return err
-		}
-
-		if item.IsDefault {
-			if err := unsetDefaultPlayerConfigs(tx, result.UserID, ""); err != nil {
-				return err
-			}
-		}
-		return tx.Create(item).Error
+	if err := s.playerConfigRepo.CreateManaged(ctx, result.UserID, item, func(lockedUser *model.User, configCount int64) error {
+		return playerConfigActionAllowed(lockedUser, configCount, "create")
 	}); err != nil {
 		if status.Code(err) != codes.Unknown {
 			return nil, err
@@ -481,7 +404,7 @@ func (s *appServices) CreatePlayerConfig(ctx context.Context, req *appv1.CreateP
 	return &appv1.CreatePlayerConfigResponse{Config: toProtoPlayerConfig(item)}, nil
 }
 
-func (s *appServices) UpdatePlayerConfig(ctx context.Context, req *appv1.UpdatePlayerConfigRequest) (*appv1.UpdatePlayerConfigResponse, error) {
+func (s *playerConfigsAppService) UpdatePlayerConfig(ctx context.Context, req *appv1.UpdatePlayerConfigRequest) (*appv1.UpdatePlayerConfigResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -497,25 +420,7 @@ func (s *appServices) UpdatePlayerConfig(ctx context.Context, req *appv1.UpdateP
 		return nil, status.Error(codes.InvalidArgument, "Name is required")
 	}
 
-	var item model.PlayerConfig
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		lockedUser, err := lockUserForUpdate(ctx, tx, result.UserID)
-		if err != nil {
-			return err
-		}
-
-		var configCount int64
-		if err := tx.WithContext(ctx).
-			Model(&model.PlayerConfig{}).
-			Where("user_id = ?", result.UserID).
-			Count(&configCount).Error; err != nil {
-			return err
-		}
-
-		if err := tx.WithContext(ctx).Where("id = ? AND user_id = ?", id, result.UserID).First(&item).Error; err != nil {
-			return err
-		}
-
+	item, err := s.playerConfigRepo.UpdateManaged(ctx, result.UserID, id, func(item *model.PlayerConfig, lockedUser *model.User, configCount int64) error {
 		action := "update"
 		wasActive := playerConfigIsActive(item.IsActive)
 		if req.IsActive != nil && *req.IsActive != wasActive {
@@ -552,14 +457,9 @@ func (s *appServices) UpdatePlayerConfig(ctx context.Context, req *appv1.UpdateP
 		if !playerConfigIsActive(item.IsActive) {
 			item.IsDefault = false
 		}
-
-		if item.IsDefault {
-			if err := unsetDefaultPlayerConfigs(tx, result.UserID, item.ID); err != nil {
-				return err
-			}
-		}
-		return tx.Save(&item).Error
-	}); err != nil {
+		return nil
+	})
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Player config not found")
 		}
@@ -570,10 +470,10 @@ func (s *appServices) UpdatePlayerConfig(ctx context.Context, req *appv1.UpdateP
 		return nil, status.Error(codes.Internal, "Failed to save player config")
 	}
 
-	return &appv1.UpdatePlayerConfigResponse{Config: toProtoPlayerConfig(&item)}, nil
+	return &appv1.UpdatePlayerConfigResponse{Config: toProtoPlayerConfig(item)}, nil
 }
 
-func (s *appServices) DeletePlayerConfig(ctx context.Context, req *appv1.DeletePlayerConfigRequest) (*appv1.MessageResponse, error) {
+func (s *playerConfigsAppService) DeletePlayerConfig(ctx context.Context, req *appv1.DeletePlayerConfigRequest) (*appv1.MessageResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -584,31 +484,8 @@ func (s *appServices) DeletePlayerConfig(ctx context.Context, req *appv1.DeleteP
 		return nil, status.Error(codes.NotFound, "Player config not found")
 	}
 
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		lockedUser, err := lockUserForUpdate(ctx, tx, result.UserID)
-		if err != nil {
-			return err
-		}
-
-		var configCount int64
-		if err := tx.WithContext(ctx).
-			Model(&model.PlayerConfig{}).
-			Where("user_id = ?", result.UserID).
-			Count(&configCount).Error; err != nil {
-			return err
-		}
-		if err := playerConfigActionAllowed(lockedUser, configCount, "delete"); err != nil {
-			return err
-		}
-
-		res := tx.Where("id = ? AND user_id = ?", id, result.UserID).Delete(&model.PlayerConfig{})
-		if res.Error != nil {
-			return res.Error
-		}
-		if res.RowsAffected == 0 {
-			return gorm.ErrRecordNotFound
-		}
-		return nil
+	if err := s.playerConfigRepo.DeleteManaged(ctx, result.UserID, id, func(lockedUser *model.User, configCount int64) error {
+		return playerConfigActionAllowed(lockedUser, configCount, "delete")
 	}); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Player config not found")

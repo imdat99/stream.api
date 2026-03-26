@@ -12,10 +12,9 @@ import (
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 	appv1 "stream.api/internal/api/proto/app/v1"
-	"stream.api/internal/database/model"
 )
 
-func (s *appServices) GetUploadUrl(ctx context.Context, req *appv1.GetUploadUrlRequest) (*appv1.GetUploadUrlResponse, error) {
+func (s *videosAppService) GetUploadUrl(ctx context.Context, req *appv1.GetUploadUrlRequest) (*appv1.GetUploadUrlResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -39,12 +38,12 @@ func (s *appServices) GetUploadUrl(ctx context.Context, req *appv1.GetUploadUrlR
 
 	return &appv1.GetUploadUrlResponse{UploadUrl: uploadURL, Key: key, FileId: fileID}, nil
 }
-func (s *appServices) CreateVideo(ctx context.Context, req *appv1.CreateVideoRequest) (*appv1.CreateVideoResponse, error) {
+func (s *videosAppService) CreateVideo(ctx context.Context, req *appv1.CreateVideoRequest) (*appv1.CreateVideoResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if s.videoService == nil {
+	if s.videoWorkflowService == nil {
 		return nil, status.Error(codes.Unavailable, "Job service is unavailable")
 	}
 
@@ -58,7 +57,7 @@ func (s *appServices) CreateVideo(ctx context.Context, req *appv1.CreateVideoReq
 	}
 	description := strings.TrimSpace(req.GetDescription())
 
-	created, err := s.videoService.CreateVideo(ctx, CreateVideoInput{
+	created, err := s.videoWorkflowService.CreateVideo(ctx, CreateVideoInput{
 		UserID:      result.UserID,
 		Title:       title,
 		Description: &description,
@@ -79,7 +78,7 @@ func (s *appServices) CreateVideo(ctx context.Context, req *appv1.CreateVideoReq
 
 	return &appv1.CreateVideoResponse{Video: toProtoVideo(created.Video, created.Job.ID)}, nil
 }
-func (s *appServices) ListVideos(ctx context.Context, req *appv1.ListVideosRequest) (*appv1.ListVideosResponse, error) {
+func (s *videosAppService) ListVideos(ctx context.Context, req *appv1.ListVideosRequest) (*appv1.ListVideosResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -97,24 +96,12 @@ func (s *appServices) ListVideos(ctx context.Context, req *appv1.ListVideosReque
 		limit = 100
 	}
 	offset := int((page - 1) * limit)
-
-	db := s.db.WithContext(ctx).Model(&model.Video{}).Where("user_id = ?", result.UserID)
-	if search := strings.TrimSpace(req.GetSearch()); search != "" {
-		like := "%" + search + "%"
-		db = db.Where("title ILIKE ? OR description ILIKE ?", like, like)
-	}
-	if st := strings.TrimSpace(req.GetStatus()); st != "" && !strings.EqualFold(st, "all") {
-		db = db.Where("status = ?", normalizeVideoStatusValue(st))
+	if s.videoRepository == nil {
+		return nil, status.Error(codes.Internal, "Video repository is unavailable")
 	}
 
-	var total int64
-	if err := db.Count(&total).Error; err != nil {
-		s.logger.Error("Failed to count videos", "error", err)
-		return nil, status.Error(codes.Internal, "Failed to fetch videos")
-	}
-
-	var videos []model.Video
-	if err := db.Order("created_at DESC").Offset(offset).Limit(int(limit)).Find(&videos).Error; err != nil {
+	videos, total, err := s.videoRepository.ListByUser(ctx, result.UserID, req.GetSearch(), normalizeVideoStatusFilter(req.GetStatus()), offset, int(limit))
+	if err != nil {
 		s.logger.Error("Failed to list videos", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to fetch videos")
 	}
@@ -131,7 +118,7 @@ func (s *appServices) ListVideos(ctx context.Context, req *appv1.ListVideosReque
 
 	return &appv1.ListVideosResponse{Videos: items, Total: total, Page: page, Limit: limit}, nil
 }
-func (s *appServices) GetVideo(ctx context.Context, req *appv1.GetVideoRequest) (*appv1.GetVideoResponse, error) {
+func (s *videosAppService) GetVideo(ctx context.Context, req *appv1.GetVideoRequest) (*appv1.GetVideoResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -142,12 +129,14 @@ func (s *appServices) GetVideo(ctx context.Context, req *appv1.GetVideoRequest) 
 		return nil, status.Error(codes.NotFound, "Video not found")
 	}
 
-	_ = s.db.WithContext(ctx).Model(&model.Video{}).
-		Where("id = ? AND user_id = ?", id, result.UserID).
-		UpdateColumn("views", gorm.Expr("views + ?", 1)).Error
+	if s.videoRepository == nil {
+		return nil, status.Error(codes.Internal, "Video repository is unavailable")
+	}
 
-	var video model.Video
-	if err := s.db.WithContext(ctx).Where("id = ? AND user_id = ?", id, result.UserID).First(&video).Error; err != nil {
+	_ = s.videoRepository.IncrementViews(ctx, id, result.UserID)
+
+	video, err := s.videoRepository.GetByIDAndUser(ctx, id, result.UserID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Video not found")
 		}
@@ -155,14 +144,14 @@ func (s *appServices) GetVideo(ctx context.Context, req *appv1.GetVideoRequest) 
 		return nil, status.Error(codes.Internal, "Failed to fetch video")
 	}
 
-	payload, err := s.buildVideo(ctx, &video)
+	payload, err := s.buildVideo(ctx, video)
 	if err != nil {
 		s.logger.Error("Failed to build video payload", "error", err, "video_id", video.ID)
 		return nil, status.Error(codes.Internal, "Failed to fetch video")
 	}
 	return &appv1.GetVideoResponse{Video: payload}, nil
 }
-func (s *appServices) UpdateVideo(ctx context.Context, req *appv1.UpdateVideoRequest) (*appv1.UpdateVideoResponse, error) {
+func (s *videosAppService) UpdateVideo(ctx context.Context, req *appv1.UpdateVideoRequest) (*appv1.UpdateVideoResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -201,32 +190,33 @@ func (s *appServices) UpdateVideo(ctx context.Context, req *appv1.UpdateVideoReq
 		return nil, status.Error(codes.InvalidArgument, "No changes provided")
 	}
 
-	res := s.db.WithContext(ctx).
-		Model(&model.Video{}).
-		Where("id = ? AND user_id = ?", id, result.UserID).
-		Updates(updates)
-	if res.Error != nil {
-		s.logger.Error("Failed to update video", "error", res.Error)
+	if s.videoRepository == nil {
+		return nil, status.Error(codes.Internal, "Video repository is unavailable")
+	}
+
+	rowsAffected, err := s.videoRepository.UpdateByIDAndUser(ctx, id, result.UserID, updates)
+	if err != nil {
+		s.logger.Error("Failed to update video", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to update video")
 	}
-	if res.RowsAffected == 0 {
+	if rowsAffected == 0 {
 		return nil, status.Error(codes.NotFound, "Video not found")
 	}
 
-	var video model.Video
-	if err := s.db.WithContext(ctx).Where("id = ? AND user_id = ?", id, result.UserID).First(&video).Error; err != nil {
+	video, err := s.videoRepository.GetByIDAndUser(ctx, id, result.UserID)
+	if err != nil {
 		s.logger.Error("Failed to reload video", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to update video")
 	}
 
-	payload, err := s.buildVideo(ctx, &video)
+	payload, err := s.buildVideo(ctx, video)
 	if err != nil {
 		s.logger.Error("Failed to build video payload", "error", err, "video_id", video.ID)
 		return nil, status.Error(codes.Internal, "Failed to update video")
 	}
 	return &appv1.UpdateVideoResponse{Video: payload}, nil
 }
-func (s *appServices) DeleteVideo(ctx context.Context, req *appv1.DeleteVideoRequest) (*appv1.MessageResponse, error) {
+func (s *videosAppService) DeleteVideo(ctx context.Context, req *appv1.DeleteVideoRequest) (*appv1.MessageResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -237,8 +227,12 @@ func (s *appServices) DeleteVideo(ctx context.Context, req *appv1.DeleteVideoReq
 		return nil, status.Error(codes.NotFound, "Video not found")
 	}
 
-	var video model.Video
-	if err := s.db.WithContext(ctx).Where("id = ? AND user_id = ?", id, result.UserID).First(&video).Error; err != nil {
+	if s.videoRepository == nil {
+		return nil, status.Error(codes.Internal, "Video repository is unavailable")
+	}
+
+	video, err := s.videoRepository.GetByIDAndUser(ctx, id, result.UserID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Video not found")
 		}
@@ -260,14 +254,7 @@ func (s *appServices) DeleteVideo(ctx context.Context, req *appv1.DeleteVideoReq
 		}
 	}
 
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("id = ? AND user_id = ?", video.ID, result.UserID).Delete(&model.Video{}).Error; err != nil {
-			return err
-		}
-		return tx.Model(&model.User{}).
-			Where("id = ?", result.UserID).
-			UpdateColumn("storage_used", gorm.Expr("storage_used - ?", video.Size)).Error
-	}); err != nil {
+	if err := s.videoRepository.DeleteByIDAndUserWithStorageUpdate(ctx, video.ID, result.UserID, video.Size); err != nil {
 		s.logger.Error("Failed to delete video", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to delete video")
 	}

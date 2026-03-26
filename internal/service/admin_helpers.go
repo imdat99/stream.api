@@ -36,42 +36,12 @@ func (s *appServices) ensurePlanExists(ctx context.Context, planID *string) erro
 	if trimmed == "" {
 		return nil
 	}
-	var count int64
-	if err := s.db.WithContext(ctx).Model(&model.Plan{}).Where("id = ?", trimmed).Count(&count).Error; err != nil {
+	if _, err := s.planRepository.GetByID(ctx, trimmed); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return status.Error(codes.InvalidArgument, "Plan not found")
+		}
 		return status.Error(codes.Internal, "Failed to validate plan")
 	}
-	if count == 0 {
-		return status.Error(codes.InvalidArgument, "Plan not found")
-	}
-	return nil
-}
-
-func (s *appServices) saveAdminVideoAdConfig(ctx context.Context, tx *gorm.DB, video *model.Video, userID string, adTemplateID *string) error {
-	if video == nil || adTemplateID == nil {
-		return nil
-	}
-
-	trimmed := strings.TrimSpace(*adTemplateID)
-	if trimmed == "" {
-		if err := tx.WithContext(ctx).Model(&model.Video{}).Where("id = ?", video.ID).Update("ad_id", nil).Error; err != nil {
-			return err
-		}
-		video.AdID = nil
-		return nil
-	}
-
-	var template model.AdTemplate
-	if err := tx.WithContext(ctx).Select("id").Where("id = ? AND user_id = ?", trimmed, userID).First(&template).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("Ad template not found")
-		}
-		return err
-	}
-
-	if err := tx.WithContext(ctx).Model(&model.Video{}).Where("id = ?", video.ID).Update("ad_id", template.ID).Error; err != nil {
-		return err
-	}
-	video.AdID = &template.ID
 	return nil
 }
 
@@ -181,7 +151,7 @@ func (s *appServices) buildAdminUser(ctx context.Context, user *model.User) (*ap
 	}
 	payload.VideoCount = videoCount
 
-	walletBalance, err := model.GetWalletBalance(ctx, s.db, user.ID)
+	walletBalance, err := s.billingRepository.GetWalletBalance(ctx, user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -338,30 +308,26 @@ func (s *appServices) buildAdminPayment(ctx context.Context, payment *model.Paym
 }
 
 func (s *appServices) loadAdminUserVideoCount(ctx context.Context, userID string) (int64, error) {
-	var videoCount int64
-	if err := s.db.WithContext(ctx).Model(&model.Video{}).Where("user_id = ?", userID).Count(&videoCount).Error; err != nil {
-		return 0, err
-	}
-	return videoCount, nil
+	return s.videoRepository.CountByUser(ctx, userID)
 }
 
 func (s *appServices) loadAdminUserEmail(ctx context.Context, userID string) (*string, error) {
-	var user model.User
-	if err := s.db.WithContext(ctx).Select("id, email").Where("id = ?", userID).First(&user).Error; err != nil {
+	email, err := s.userRepository.GetEmailByID(ctx, userID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	return nullableTrimmedString(&user.Email), nil
+	return nullableTrimmedString(email), nil
 }
 
 func (s *appServices) loadReferralUserSummary(ctx context.Context, userID string) (*appv1.ReferralUserSummary, error) {
 	if strings.TrimSpace(userID) == "" {
 		return nil, nil
 	}
-	var user model.User
-	if err := s.db.WithContext(ctx).Select("id, email, username").Where("id = ?", userID).First(&user).Error; err != nil {
+	user, err := s.userRepository.GetReferralSummaryByID(ctx, userID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -378,8 +344,8 @@ func (s *appServices) loadAdminPlanName(ctx context.Context, planID *string) (*s
 	if planID == nil || strings.TrimSpace(*planID) == "" {
 		return nil, nil
 	}
-	var plan model.Plan
-	if err := s.db.WithContext(ctx).Select("id, name").Where("id = ?", *planID).First(&plan).Error; err != nil {
+	plan, err := s.planRepository.GetByID(ctx, *planID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -404,8 +370,8 @@ func (s *appServices) loadAdminVideoAdTemplateDetails(ctx context.Context, video
 }
 
 func (s *appServices) loadAdminAdTemplateName(ctx context.Context, adTemplateID string) (*string, error) {
-	var template model.AdTemplate
-	if err := s.db.WithContext(ctx).Select("id, name").Where("id = ?", adTemplateID).First(&template).Error; err != nil {
+	template, err := s.adTemplateRepository.GetByID(ctx, adTemplateID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -420,11 +386,8 @@ func (s *appServices) loadLatestVideoJobID(ctx context.Context, videoID string) 
 		return nil, nil
 	}
 
-	var job model.Job
-	if err := s.db.WithContext(ctx).
-		Where("config::jsonb ->> 'video_id' = ?", videoID).
-		Order("created_at DESC").
-		First(&job).Error; err != nil {
+	job, err := s.jobRepository.GetLatestByVideoID(ctx, videoID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -434,8 +397,8 @@ func (s *appServices) loadLatestVideoJobID(ctx context.Context, videoID string) 
 }
 
 func (s *appServices) loadAdminPaymentSubscriptionDetails(ctx context.Context, paymentID string) (*int32, *string, *string, *float64, *float64, error) {
-	var subscription model.PlanSubscription
-	if err := s.db.WithContext(ctx).Where("payment_id = ?", paymentID).Order("created_at DESC").First(&subscription).Error; err != nil {
+	subscription, err := s.paymentRepository.GetSubscriptionByPaymentID(ctx, paymentID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil, nil, nil, nil, nil
 		}
@@ -450,18 +413,18 @@ func (s *appServices) loadAdminPaymentSubscriptionDetails(ctx context.Context, p
 }
 
 func (s *appServices) loadAdminPlanUsageCounts(ctx context.Context, planID string) (int64, int64, int64, error) {
-	var userCount int64
-	if err := s.db.WithContext(ctx).Model(&model.User{}).Where("plan_id = ?", planID).Count(&userCount).Error; err != nil {
+	userCount, err := s.userRepository.CountByPlanID(ctx, planID)
+	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	var paymentCount int64
-	if err := s.db.WithContext(ctx).Model(&model.Payment{}).Where("plan_id = ?", planID).Count(&paymentCount).Error; err != nil {
+	paymentCount, err := s.paymentRepository.CountByPlanID(ctx, planID)
+	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	var subscriptionCount int64
-	if err := s.db.WithContext(ctx).Model(&model.PlanSubscription{}).Where("plan_id = ?", planID).Count(&subscriptionCount).Error; err != nil {
+	subscriptionCount, err := s.planRepository.CountSubscriptionsByPlan(ctx, planID)
+	if err != nil {
 		return 0, 0, 0, err
 	}
 
@@ -509,22 +472,6 @@ func validateAdminPlayerConfigInput(userID, name string) string {
 		return "Name is required"
 	}
 	return ""
-}
-
-func (s *appServices) unsetAdminDefaultTemplates(ctx context.Context, tx *gorm.DB, userID, excludeID string) error {
-	query := tx.WithContext(ctx).Model(&model.AdTemplate{}).Where("user_id = ?", userID)
-	if excludeID != "" {
-		query = query.Where("id <> ?", excludeID)
-	}
-	return query.Update("is_default", false).Error
-}
-
-func (s *appServices) unsetAdminDefaultPlayerConfigs(ctx context.Context, tx *gorm.DB, userID, excludeID string) error {
-	query := tx.WithContext(ctx).Model(&model.PlayerConfig{}).Where("user_id = ?", userID)
-	if excludeID != "" {
-		query = query.Where("id <> ?", excludeID)
-	}
-	return query.Update("is_default", false).Error
 }
 
 func (s *appServices) buildAdminPlan(ctx context.Context, plan *model.Plan) (*appv1.AdminPlan, error) {

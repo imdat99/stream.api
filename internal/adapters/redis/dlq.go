@@ -1,5 +1,6 @@
 package redis
 
+// DeadLetterQueue provides a simple implementation of a dead letter queue using Redis sorted sets and hashes. Each failed job is stored as a JSON-encoded entry with metadata such as failure time, reason, and retry count. The sorted set allows for efficient retrieval of jobs in order of failure time, while the hash stores the detailed metadata for each job.
 import (
 	"context"
 	"encoding/json"

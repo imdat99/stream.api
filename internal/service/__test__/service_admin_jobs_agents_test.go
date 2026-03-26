@@ -10,7 +10,7 @@ import (
 	appv1 "stream.api/internal/api/proto/app/v1"
 	"stream.api/internal/database/model"
 	runtimeservices "stream.api/internal/service/runtime/services"
-	"stream.api/internal/service/video"
+	renderworkflow "stream.api/internal/workflow/render"
 )
 
 func TestListAdminJobsCursorPagination(t *testing.T) {
@@ -18,7 +18,7 @@ func TestListAdminJobsCursorPagination(t *testing.T) {
 	ensureTestJobsTable(t, db)
 
 	services := newTestAppServices(t, db)
-	services.videoService = video.NewService(db, runtimeservices.NewJobService(nil, nil))
+	services.videoWorkflowService = renderworkflow.New(db, runtimeservices.NewJobService(db, nil, nil))
 	admin := seedTestUser(t, db, model.User{ID: uuid.NewString(), Email: "admin@example.com", Role: ptrString("ADMIN")})
 
 	baseTime := time.Date(2026, 3, 22, 10, 0, 0, 0, time.UTC)
@@ -67,7 +67,7 @@ func TestListAdminJobsInvalidCursor(t *testing.T) {
 	ensureTestJobsTable(t, db)
 
 	services := newTestAppServices(t, db)
-	services.videoService = video.NewService(db, runtimeservices.NewJobService(nil, nil))
+	services.videoWorkflowService = renderworkflow.New(db, runtimeservices.NewJobService(db, nil, nil))
 	admin := seedTestUser(t, db, model.User{ID: uuid.NewString(), Email: "admin@example.com", Role: ptrString("ADMIN")})
 
 	conn, cleanup := newTestGRPCServer(t, services)
@@ -86,7 +86,7 @@ func TestListAdminJobsCursorRejectsAgentMismatch(t *testing.T) {
 	ensureTestJobsTable(t, db)
 
 	services := newTestAppServices(t, db)
-	services.videoService = video.NewService(db, runtimeservices.NewJobService(nil, nil))
+	services.videoWorkflowService = renderworkflow.New(db, runtimeservices.NewJobService(db, nil, nil))
 	admin := seedTestUser(t, db, model.User{ID: uuid.NewString(), Email: "admin@example.com", Role: ptrString("ADMIN")})
 
 	baseTime := time.Date(2026, 3, 22, 11, 0, 0, 0, time.UTC)

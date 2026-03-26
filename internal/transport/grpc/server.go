@@ -11,6 +11,7 @@ import (
 	"stream.api/internal/dto"
 	"stream.api/internal/service"
 	"stream.api/internal/transport/mqtt"
+	renderworkflow "stream.api/internal/workflow/render"
 	"stream.api/pkg/logger"
 )
 
@@ -23,9 +24,9 @@ type GRPCModule struct {
 }
 
 func NewGRPCModule(ctx context.Context, cfg *config.Config, db *gorm.DB, rds *redisadapter.RedisAdapter, appLogger logger.Logger) (*GRPCModule, error) {
-	jobService := service.NewJobService(rds, rds)
+	jobService := service.NewJobService(db, rds, rds)
 	agentRuntime := NewServer(jobService, cfg.Render.AgentSecret)
-	videoService := service.NewService(db, jobService)
+	videoService := renderworkflow.New(db, jobService)
 	grpcServer := grpcpkg.NewServer()
 
 	module := &GRPCModule{

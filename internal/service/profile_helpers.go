@@ -7,7 +7,6 @@ import (
 
 	"gorm.io/gorm"
 	"stream.api/internal/database/model"
-	"stream.api/internal/database/query"
 	"stream.api/pkg/logger"
 )
 
@@ -23,7 +22,7 @@ type updateProfileInput struct {
 	Locale   *string
 }
 
-func updateUserProfile(ctx context.Context, db *gorm.DB, l logger.Logger, userID string, req updateProfileInput) (*model.User, error) {
+func updateUserProfile(ctx context.Context, userRepo UserRepository, prefRepo UserPreferenceRepository, l logger.Logger, userID string, req updateProfileInput) (*model.User, error) {
 	updates := map[string]any{}
 	if req.Username != nil {
 		username := strings.TrimSpace(*req.Username)
@@ -38,7 +37,7 @@ func updateUserProfile(ctx context.Context, db *gorm.DB, l logger.Logger, userID
 	}
 
 	if len(updates) > 0 {
-		if err := db.WithContext(ctx).Model(&model.User{}).Where("id = ?", userID).Updates(updates).Error; err != nil {
+		if err := userRepo.UpdateFieldsByID(ctx, userID, updates); err != nil {
 			if errors.Is(err, gorm.ErrDuplicatedKey) {
 				return nil, errEmailAlreadyRegistered
 			}
@@ -47,7 +46,7 @@ func updateUserProfile(ctx context.Context, db *gorm.DB, l logger.Logger, userID
 		}
 	}
 
-	pref, err := model.FindOrCreateUserPreference(ctx, db, userID)
+	pref, err := prefRepo.FindOrCreateByUserID(ctx, userID)
 	if err != nil {
 		l.Error("Failed to load user preference", "error", err)
 		return nil, err
@@ -71,17 +70,11 @@ func updateUserProfile(ctx context.Context, db *gorm.DB, l logger.Logger, userID
 		prefChanged = true
 	}
 	if prefChanged {
-		if err := db.WithContext(ctx).Save(pref).Error; err != nil {
+		if err := prefRepo.Save(ctx, pref); err != nil {
 			l.Error("Failed to save user preference", "error", err)
 			return nil, err
 		}
 	}
 
-	u := query.User
-	user, err := u.WithContext(ctx).Where(u.ID.Eq(userID)).First()
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
+	return userRepo.GetByID(ctx, userID)
 }

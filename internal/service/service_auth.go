@@ -16,18 +16,16 @@ import (
 	"gorm.io/gorm"
 	appv1 "stream.api/internal/api/proto/app/v1"
 	"stream.api/internal/database/model"
-	"stream.api/internal/database/query"
 )
 
-func (s *appServices) Login(ctx context.Context, req *appv1.LoginRequest) (*appv1.LoginResponse, error) {
+func (s *authAppService) Login(ctx context.Context, req *appv1.LoginRequest) (*appv1.LoginResponse, error) {
 	email := strings.TrimSpace(req.GetEmail())
 	password := req.GetPassword()
 	if email == "" || password == "" {
 		return nil, status.Error(codes.InvalidArgument, "Email and password are required")
 	}
 
-	u := query.User
-	user, err := u.WithContext(ctx).Where(u.Email.Eq(email)).First()
+	user, err := s.userRepository.GetByEmail(ctx, email)
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, "Invalid credentials")
 	}
@@ -38,13 +36,13 @@ func (s *appServices) Login(ctx context.Context, req *appv1.LoginRequest) (*appv
 		return nil, status.Error(codes.Unauthenticated, "Invalid credentials")
 	}
 
-	payload, err := buildUserPayload(ctx, s.db, user)
+	payload, err := buildUserPayload(ctx, s.preferenceRepository, s.billingRepository, user)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to build user payload")
 	}
 	return &appv1.LoginResponse{User: toProtoUser(payload)}, nil
 }
-func (s *appServices) Register(ctx context.Context, req *appv1.RegisterRequest) (*appv1.RegisterResponse, error) {
+func (s *authAppService) Register(ctx context.Context, req *appv1.RegisterRequest) (*appv1.RegisterResponse, error) {
 	email := strings.TrimSpace(req.GetEmail())
 	username := strings.TrimSpace(req.GetUsername())
 	password := req.GetPassword()
@@ -53,8 +51,7 @@ func (s *appServices) Register(ctx context.Context, req *appv1.RegisterRequest) 
 		return nil, status.Error(codes.InvalidArgument, "Username, email and password are required")
 	}
 
-	u := query.User
-	count, err := u.WithContext(ctx).Where(u.Email.Eq(email)).Count()
+	count, err := s.userRepository.CountByEmail(ctx, email)
 	if err != nil {
 		s.logger.Error("Failed to check existing user", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to register")
@@ -85,21 +82,21 @@ func (s *appServices) Register(ctx context.Context, req *appv1.RegisterRequest) 
 		ReferredByUserID: referrerID,
 		ReferralEligible: model.BoolPtr(true),
 	}
-	if err := u.WithContext(ctx).Create(newUser); err != nil {
+	if err := s.userRepository.Create(ctx, newUser); err != nil {
 		s.logger.Error("Failed to create user", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to register")
 	}
 
-	payload, err := buildUserPayload(ctx, s.db, newUser)
+	payload, err := buildUserPayload(ctx, s.preferenceRepository, s.billingRepository, newUser)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to build user payload")
 	}
 	return &appv1.RegisterResponse{User: toProtoUser(payload)}, nil
 }
-func (s *appServices) Logout(ctx context.Context, _ *appv1.LogoutRequest) (*appv1.MessageResponse, error) {
+func (s *authAppService) Logout(ctx context.Context, _ *appv1.LogoutRequest) (*appv1.MessageResponse, error) {
 	return messageResponse("Logged out"), nil
 }
-func (s *appServices) ChangePassword(ctx context.Context, req *appv1.ChangePasswordRequest) (*appv1.MessageResponse, error) {
+func (s *authAppService) ChangePassword(ctx context.Context, req *appv1.ChangePasswordRequest) (*appv1.MessageResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -122,22 +119,19 @@ func (s *appServices) ChangePassword(ctx context.Context, req *appv1.ChangePassw
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to change password")
 	}
-	if _, err := query.User.WithContext(ctx).
-		Where(query.User.ID.Eq(result.UserID)).
-		Update(query.User.Password, string(newHash)); err != nil {
+	if err := s.userRepository.UpdatePassword(ctx, result.UserID, string(newHash)); err != nil {
 		s.logger.Error("Failed to change password", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to change password")
 	}
 	return messageResponse("Password changed successfully"), nil
 }
-func (s *appServices) ForgotPassword(ctx context.Context, req *appv1.ForgotPasswordRequest) (*appv1.MessageResponse, error) {
+func (s *authAppService) ForgotPassword(ctx context.Context, req *appv1.ForgotPasswordRequest) (*appv1.MessageResponse, error) {
 	email := strings.TrimSpace(req.GetEmail())
 	if email == "" {
 		return nil, status.Error(codes.InvalidArgument, "Email is required")
 	}
 
-	u := query.User
-	user, err := u.WithContext(ctx).Where(u.Email.Eq(email)).First()
+	user, err := s.userRepository.GetByEmail(ctx, email)
 	if err != nil {
 		return messageResponse("If email exists, a reset link has been sent"), nil
 	}
@@ -151,7 +145,7 @@ func (s *appServices) ForgotPassword(ctx context.Context, req *appv1.ForgotPassw
 	s.logger.Info("Generated password reset token", "email", email, "token", tokenID)
 	return messageResponse("If email exists, a reset link has been sent"), nil
 }
-func (s *appServices) ResetPassword(ctx context.Context, req *appv1.ResetPasswordRequest) (*appv1.MessageResponse, error) {
+func (s *authAppService) ResetPassword(ctx context.Context, req *appv1.ResetPasswordRequest) (*appv1.MessageResponse, error) {
 	resetToken := strings.TrimSpace(req.GetToken())
 	newPassword := req.GetNewPassword()
 	if resetToken == "" || newPassword == "" {
@@ -168,9 +162,7 @@ func (s *appServices) ResetPassword(ctx context.Context, req *appv1.ResetPasswor
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
 
-	if _, err := query.User.WithContext(ctx).
-		Where(query.User.ID.Eq(userID)).
-		Update(query.User.Password, string(hashedPassword)); err != nil {
+	if err := s.userRepository.UpdatePassword(ctx, userID, string(hashedPassword)); err != nil {
 		s.logger.Error("Failed to update password", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to update password")
 	}
@@ -178,7 +170,7 @@ func (s *appServices) ResetPassword(ctx context.Context, req *appv1.ResetPasswor
 	_ = s.cache.Del(ctx, "reset_pw:"+resetToken)
 	return messageResponse("Password reset successfully"), nil
 }
-func (s *appServices) GetGoogleLoginUrl(ctx context.Context, _ *appv1.GetGoogleLoginUrlRequest) (*appv1.GetGoogleLoginUrlResponse, error) {
+func (s *authAppService) GetGoogleLoginUrl(ctx context.Context, _ *appv1.GetGoogleLoginUrlRequest) (*appv1.GetGoogleLoginUrlResponse, error) {
 	if err := s.authenticator.RequireInternalCall(ctx); err != nil {
 		return nil, err
 	}
@@ -200,7 +192,7 @@ func (s *appServices) GetGoogleLoginUrl(ctx context.Context, _ *appv1.GetGoogleL
 	loginURL := s.googleOauth.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	return &appv1.GetGoogleLoginUrlResponse{Url: loginURL}, nil
 }
-func (s *appServices) CompleteGoogleLogin(ctx context.Context, req *appv1.CompleteGoogleLoginRequest) (*appv1.CompleteGoogleLoginResponse, error) {
+func (s *authAppService) CompleteGoogleLogin(ctx context.Context, req *appv1.CompleteGoogleLoginRequest) (*appv1.CompleteGoogleLoginResponse, error) {
 	if err := s.authenticator.RequireInternalCall(ctx); err != nil {
 		return nil, err
 	}
@@ -249,8 +241,7 @@ func (s *appServices) CompleteGoogleLogin(ctx context.Context, req *appv1.Comple
 		return nil, status.Error(codes.InvalidArgument, "missing_email")
 	}
 
-	u := query.User
-	user, err := u.WithContext(ctx).Where(u.Email.Eq(email)).First()
+	user, err := s.userRepository.GetByEmail(ctx, email)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			s.logger.Error("Failed to load Google user", "error", err)
@@ -272,7 +263,7 @@ func (s *appServices) CompleteGoogleLogin(ctx context.Context, req *appv1.Comple
 			ReferredByUserID: referrerID,
 			ReferralEligible: model.BoolPtr(true),
 		}
-		if err := u.WithContext(ctx).Create(user); err != nil {
+		if err := s.userRepository.Create(ctx, user); err != nil {
 			s.logger.Error("Failed to create Google user", "error", err)
 			return nil, status.Error(codes.Internal, "create_user_failed")
 		}
@@ -288,11 +279,11 @@ func (s *appServices) CompleteGoogleLogin(ctx context.Context, req *appv1.Comple
 			updates["username"] = googleUser.Name
 		}
 		if len(updates) > 0 {
-			if err := s.db.WithContext(ctx).Model(&model.User{}).Where("id = ?", user.ID).Updates(updates).Error; err != nil {
+			if err := s.userRepository.UpdateFieldsByID(ctx, user.ID, updates); err != nil {
 				s.logger.Error("Failed to update Google user", "error", err)
 				return nil, status.Error(codes.Internal, "update_user_failed")
 			}
-			user, err = u.WithContext(ctx).Where(u.ID.Eq(user.ID)).First()
+			user, err = s.userRepository.GetByID(ctx, user.ID)
 			if err != nil {
 				s.logger.Error("Failed to reload Google user", "error", err)
 				return nil, status.Error(codes.Internal, "reload_user_failed")
@@ -300,7 +291,7 @@ func (s *appServices) CompleteGoogleLogin(ctx context.Context, req *appv1.Comple
 		}
 	}
 
-	payload, err := buildUserPayload(ctx, s.db, user)
+	payload, err := buildUserPayload(ctx, s.preferenceRepository, s.billingRepository, user)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to build user payload")
 	}

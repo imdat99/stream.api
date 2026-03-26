@@ -19,25 +19,11 @@ func (s *appServices) ListAdminPayments(ctx context.Context, req *appv1.ListAdmi
 	}
 
 	page, limit, offset := adminPageLimitOffset(req.GetPage(), req.GetLimit())
-	limitInt := int(limit)
 	userID := strings.TrimSpace(req.GetUserId())
 	statusFilter := strings.TrimSpace(req.GetStatus())
 
-	db := s.db.WithContext(ctx).Model(&model.Payment{})
-	if userID != "" {
-		db = db.Where("user_id = ?", userID)
-	}
-	if statusFilter != "" {
-		db = db.Where("UPPER(status) = ?", strings.ToUpper(statusFilter))
-	}
-
-	var total int64
-	if err := db.Count(&total).Error; err != nil {
-		return nil, status.Error(codes.Internal, "Failed to list payments")
-	}
-
-	var payments []model.Payment
-	if err := db.Order("created_at DESC").Offset(offset).Limit(limitInt).Find(&payments).Error; err != nil {
+	payments, total, err := s.paymentRepository.ListForAdmin(ctx, userID, statusFilter, limit, offset)
+	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to list payments")
 	}
 
@@ -62,15 +48,15 @@ func (s *appServices) GetAdminPayment(ctx context.Context, req *appv1.GetAdminPa
 		return nil, status.Error(codes.NotFound, "Payment not found")
 	}
 
-	var payment model.Payment
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&payment).Error; err != nil {
+	payment, err := s.paymentRepository.GetByID(ctx, id)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Payment not found")
 		}
 		return nil, status.Error(codes.Internal, "Failed to get payment")
 	}
 
-	payload, err := s.buildAdminPayment(ctx, &payment)
+	payload, err := s.buildAdminPayment(ctx, payment)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to get payment")
 	}
@@ -148,8 +134,8 @@ func (s *appServices) UpdateAdminPayment(ctx context.Context, req *appv1.UpdateA
 		return nil, status.Error(codes.InvalidArgument, "Invalid payment status")
 	}
 
-	var payment model.Payment
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&payment).Error; err != nil {
+	payment, err := s.paymentRepository.GetByID(ctx, id)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Payment not found")
 		}
@@ -162,12 +148,12 @@ func (s *appServices) UpdateAdminPayment(ctx context.Context, req *appv1.UpdateA
 			return nil, status.Error(codes.InvalidArgument, "Cannot transition payment to SUCCESS from admin update; recreate through the payment flow instead")
 		}
 		payment.Status = model.StringPtr(newStatus)
-		if err := s.db.WithContext(ctx).Save(&payment).Error; err != nil {
+		if err := s.paymentRepository.Save(ctx, payment); err != nil {
 			return nil, status.Error(codes.Internal, "Failed to update payment")
 		}
 	}
 
-	payload, err := s.buildAdminPayment(ctx, &payment)
+	payload, err := s.buildAdminPayment(ctx, payment)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to update payment")
 	}
@@ -178,8 +164,8 @@ func (s *appServices) ListAdminPlans(ctx context.Context, _ *appv1.ListAdminPlan
 		return nil, err
 	}
 
-	var plans []model.Plan
-	if err := s.db.WithContext(ctx).Order("price ASC").Find(&plans).Error; err != nil {
+	plans, err := s.planRepository.ListAll(ctx)
+	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to list plans")
 	}
 
@@ -216,7 +202,7 @@ func (s *appServices) CreateAdminPlan(ctx context.Context, req *appv1.CreateAdmi
 		IsActive:      model.BoolPtr(req.GetIsActive()),
 	}
 
-	if err := s.db.WithContext(ctx).Create(plan).Error; err != nil {
+	if err := s.planRepository.Create(ctx, plan); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to create plan")
 	}
 
@@ -239,8 +225,8 @@ func (s *appServices) UpdateAdminPlan(ctx context.Context, req *appv1.UpdateAdmi
 		return nil, status.Error(codes.InvalidArgument, msg)
 	}
 
-	var plan model.Plan
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&plan).Error; err != nil {
+	plan, err := s.planRepository.GetByID(ctx, id)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Plan not found")
 		}
@@ -256,11 +242,11 @@ func (s *appServices) UpdateAdminPlan(ctx context.Context, req *appv1.UpdateAdmi
 	plan.UploadLimit = req.GetUploadLimit()
 	plan.IsActive = model.BoolPtr(req.GetIsActive())
 
-	if err := s.db.WithContext(ctx).Save(&plan).Error; err != nil {
+	if err := s.planRepository.Save(ctx, plan); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to update plan")
 	}
 
-	payload, err := s.buildAdminPlan(ctx, &plan)
+	payload, err := s.buildAdminPlan(ctx, plan)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to update plan")
 	}
@@ -276,32 +262,32 @@ func (s *appServices) DeleteAdminPlan(ctx context.Context, req *appv1.DeleteAdmi
 		return nil, status.Error(codes.NotFound, "Plan not found")
 	}
 
-	var plan model.Plan
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&plan).Error; err != nil {
+	_, err := s.planRepository.GetByID(ctx, id)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Plan not found")
 		}
 		return nil, status.Error(codes.Internal, "Failed to delete plan")
 	}
 
-	var paymentCount int64
-	if err := s.db.WithContext(ctx).Model(&model.Payment{}).Where("plan_id = ?", id).Count(&paymentCount).Error; err != nil {
+	paymentCount, err := s.planRepository.CountPaymentsByPlan(ctx, id)
+	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to delete plan")
 	}
-	var subscriptionCount int64
-	if err := s.db.WithContext(ctx).Model(&model.PlanSubscription{}).Where("plan_id = ?", id).Count(&subscriptionCount).Error; err != nil {
+	subscriptionCount, err := s.planRepository.CountSubscriptionsByPlan(ctx, id)
+	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to delete plan")
 	}
 
 	if paymentCount > 0 || subscriptionCount > 0 {
 		inactive := false
-		if err := s.db.WithContext(ctx).Model(&model.Plan{}).Where("id = ?", id).Update("is_active", inactive).Error; err != nil {
+		if err := s.planRepository.SetActive(ctx, id, inactive); err != nil {
 			return nil, status.Error(codes.Internal, "Failed to deactivate plan")
 		}
 		return &appv1.DeleteAdminPlanResponse{Message: "Plan deactivated", Mode: "deactivated"}, nil
 	}
 
-	if err := s.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Plan{}).Error; err != nil {
+	if err := s.planRepository.DeleteByID(ctx, id); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to delete plan")
 	}
 	return &appv1.DeleteAdminPlanResponse{Message: "Plan deleted", Mode: "deleted"}, nil
@@ -312,26 +298,11 @@ func (s *appServices) ListAdminAdTemplates(ctx context.Context, req *appv1.ListA
 	}
 
 	page, limit, offset := adminPageLimitOffset(req.GetPage(), req.GetLimit())
-	limitInt := int(limit)
 	search := strings.TrimSpace(protoStringValue(req.Search))
 	userID := strings.TrimSpace(protoStringValue(req.UserId))
 
-	db := s.db.WithContext(ctx).Model(&model.AdTemplate{})
-	if search != "" {
-		like := "%" + search + "%"
-		db = db.Where("name ILIKE ?", like)
-	}
-	if userID != "" {
-		db = db.Where("user_id = ?", userID)
-	}
-
-	var total int64
-	if err := db.Count(&total).Error; err != nil {
-		return nil, status.Error(codes.Internal, "Failed to list ad templates")
-	}
-
-	var templates []model.AdTemplate
-	if err := db.Order("created_at DESC").Offset(offset).Limit(limitInt).Find(&templates).Error; err != nil {
+	templates, total, err := s.adTemplateRepository.ListForAdmin(ctx, search, userID, limit, offset)
+	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to list ad templates")
 	}
 
@@ -361,15 +332,15 @@ func (s *appServices) GetAdminAdTemplate(ctx context.Context, req *appv1.GetAdmi
 		return nil, status.Error(codes.NotFound, "Ad template not found")
 	}
 
-	var item model.AdTemplate
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&item).Error; err != nil {
+	item, err := s.adTemplateRepository.GetByID(ctx, id)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Ad template not found")
 		}
 		return nil, status.Error(codes.Internal, "Failed to load ad template")
 	}
 
-	payload, err := s.buildAdminAdTemplate(ctx, &item)
+	payload, err := s.buildAdminAdTemplate(ctx, item)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to load ad template")
 	}
@@ -385,8 +356,8 @@ func (s *appServices) CreateAdminAdTemplate(ctx context.Context, req *appv1.Crea
 		return nil, status.Error(codes.InvalidArgument, msg)
 	}
 
-	var user model.User
-	if err := s.db.WithContext(ctx).Where("id = ?", strings.TrimSpace(req.GetUserId())).First(&user).Error; err != nil {
+	user, err := s.userRepository.GetByID(ctx, strings.TrimSpace(req.GetUserId()))
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.InvalidArgument, "User not found")
 		}
@@ -408,14 +379,7 @@ func (s *appServices) CreateAdminAdTemplate(ctx context.Context, req *appv1.Crea
 		item.IsDefault = false
 	}
 
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if item.IsDefault {
-			if err := s.unsetAdminDefaultTemplates(ctx, tx, item.UserID, ""); err != nil {
-				return err
-			}
-		}
-		return tx.Create(item).Error
-	}); err != nil {
+	if err := s.adTemplateRepository.CreateWithDefault(ctx, item.UserID, item); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to save ad template")
 	}
 
@@ -439,16 +403,16 @@ func (s *appServices) UpdateAdminAdTemplate(ctx context.Context, req *appv1.Upda
 		return nil, status.Error(codes.InvalidArgument, msg)
 	}
 
-	var user model.User
-	if err := s.db.WithContext(ctx).Where("id = ?", strings.TrimSpace(req.GetUserId())).First(&user).Error; err != nil {
+	user, err := s.userRepository.GetByID(ctx, strings.TrimSpace(req.GetUserId()))
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.InvalidArgument, "User not found")
 		}
 		return nil, status.Error(codes.Internal, "Failed to save ad template")
 	}
 
-	var item model.AdTemplate
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&item).Error; err != nil {
+	item, err := s.adTemplateRepository.GetByID(ctx, id)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Ad template not found")
 		}
@@ -467,18 +431,11 @@ func (s *appServices) UpdateAdminAdTemplate(ctx context.Context, req *appv1.Upda
 		item.IsDefault = false
 	}
 
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if item.IsDefault {
-			if err := s.unsetAdminDefaultTemplates(ctx, tx, item.UserID, item.ID); err != nil {
-				return err
-			}
-		}
-		return tx.Save(&item).Error
-	}); err != nil {
+	if err := s.adTemplateRepository.SaveWithDefault(ctx, item.UserID, item); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to save ad template")
 	}
 
-	payload, err := s.buildAdminAdTemplate(ctx, &item)
+	payload, err := s.buildAdminAdTemplate(ctx, item)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to save ad template")
 	}
@@ -494,19 +451,7 @@ func (s *appServices) DeleteAdminAdTemplate(ctx context.Context, req *appv1.Dele
 		return nil, status.Error(codes.NotFound, "Ad template not found")
 	}
 
-	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&model.Video{}).Where("ad_id = ?", id).Update("ad_id", nil).Error; err != nil {
-			return err
-		}
-		res := tx.Where("id = ?", id).Delete(&model.AdTemplate{})
-		if res.Error != nil {
-			return res.Error
-		}
-		if res.RowsAffected == 0 {
-			return gorm.ErrRecordNotFound
-		}
-		return nil
-	})
+	err := s.adTemplateRepository.DeleteByIDAndClearVideos(ctx, id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Ad template not found")
@@ -522,26 +467,11 @@ func (s *appServices) ListAdminPlayerConfigs(ctx context.Context, req *appv1.Lis
 	}
 
 	page, limit, offset := adminPageLimitOffset(req.GetPage(), req.GetLimit())
-	limitInt := int(limit)
 	search := strings.TrimSpace(protoStringValue(req.Search))
 	userID := strings.TrimSpace(protoStringValue(req.UserId))
 
-	db := s.db.WithContext(ctx).Model(&model.PlayerConfig{})
-	if search != "" {
-		like := "%" + search + "%"
-		db = db.Where("name ILIKE ?", like)
-	}
-	if userID != "" {
-		db = db.Where("user_id = ?", userID)
-	}
-
-	var total int64
-	if err := db.Count(&total).Error; err != nil {
-		return nil, status.Error(codes.Internal, "Failed to list player configs")
-	}
-
-	var configs []model.PlayerConfig
-	if err := db.Order("created_at DESC").Offset(offset).Limit(limitInt).Find(&configs).Error; err != nil {
+	configs, total, err := s.playerConfigRepo.ListForAdmin(ctx, search, userID, limit, offset)
+	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to list player configs")
 	}
 
@@ -572,15 +502,15 @@ func (s *appServices) GetAdminPlayerConfig(ctx context.Context, req *appv1.GetAd
 		return nil, status.Error(codes.NotFound, "Player config not found")
 	}
 
-	var item model.PlayerConfig
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&item).Error; err != nil {
+	item, err := s.playerConfigRepo.GetByID(ctx, id)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Player config not found")
 		}
 		return nil, status.Error(codes.Internal, "Failed to load player config")
 	}
 
-	payload, err := s.buildAdminPlayerConfig(ctx, &item)
+	payload, err := s.buildAdminPlayerConfig(ctx, item)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to load player config")
 	}
@@ -596,8 +526,8 @@ func (s *appServices) CreateAdminPlayerConfig(ctx context.Context, req *appv1.Cr
 		return nil, status.Error(codes.InvalidArgument, msg)
 	}
 
-	var user model.User
-	if err := s.db.WithContext(ctx).Where("id = ?", strings.TrimSpace(req.GetUserId())).First(&user).Error; err != nil {
+	user, err := s.userRepository.GetByID(ctx, strings.TrimSpace(req.GetUserId()))
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.InvalidArgument, "User not found")
 		}
@@ -625,14 +555,7 @@ func (s *appServices) CreateAdminPlayerConfig(ctx context.Context, req *appv1.Cr
 		item.IsDefault = false
 	}
 
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if item.IsDefault {
-			if err := s.unsetAdminDefaultPlayerConfigs(ctx, tx, item.UserID, ""); err != nil {
-				return err
-			}
-		}
-		return tx.Create(item).Error
-	}); err != nil {
+	if err := s.playerConfigRepo.CreateWithDefault(ctx, item.UserID, item); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to save player config")
 	}
 
@@ -657,16 +580,16 @@ func (s *appServices) UpdateAdminPlayerConfig(ctx context.Context, req *appv1.Up
 		return nil, status.Error(codes.InvalidArgument, msg)
 	}
 
-	var user model.User
-	if err := s.db.WithContext(ctx).Where("id = ?", strings.TrimSpace(req.GetUserId())).First(&user).Error; err != nil {
+	user, err := s.userRepository.GetByID(ctx, strings.TrimSpace(req.GetUserId()))
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.InvalidArgument, "User not found")
 		}
 		return nil, status.Error(codes.Internal, "Failed to save player config")
 	}
 
-	var item model.PlayerConfig
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&item).Error; err != nil {
+	item, err := s.playerConfigRepo.GetByID(ctx, id)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.NotFound, "Player config not found")
 		}
@@ -695,18 +618,11 @@ func (s *appServices) UpdateAdminPlayerConfig(ctx context.Context, req *appv1.Up
 		item.IsDefault = false
 	}
 
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if item.IsDefault {
-			if err := s.unsetAdminDefaultPlayerConfigs(ctx, tx, item.UserID, item.ID); err != nil {
-				return err
-			}
-		}
-		return tx.Save(&item).Error
-	}); err != nil {
+	if err := s.playerConfigRepo.SaveWithDefault(ctx, item.UserID, item); err != nil {
 		return nil, status.Error(codes.Internal, "Failed to save player config")
 	}
 
-	payload, err := s.buildAdminPlayerConfig(ctx, &item)
+	payload, err := s.buildAdminPlayerConfig(ctx, item)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to save player config")
 	}
@@ -723,11 +639,11 @@ func (s *appServices) DeleteAdminPlayerConfig(ctx context.Context, req *appv1.De
 		return nil, status.Error(codes.NotFound, "Player config not found")
 	}
 
-	res := s.db.WithContext(ctx).Where("id = ?", id).Delete(&model.PlayerConfig{})
-	if res.Error != nil {
+	rowsAffected, err := s.playerConfigRepo.DeleteByID(ctx, id)
+	if err != nil {
 		return nil, status.Error(codes.Internal, "Failed to delete player config")
 	}
-	if res.RowsAffected == 0 {
+	if rowsAffected == 0 {
 		return nil, status.Error(codes.NotFound, "Player config not found")
 	}
 

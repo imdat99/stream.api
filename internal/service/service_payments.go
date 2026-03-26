@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -13,10 +12,9 @@ import (
 	"gorm.io/gorm"
 	appv1 "stream.api/internal/api/proto/app/v1"
 	"stream.api/internal/database/model"
-	"stream.api/internal/database/query"
 )
 
-func (s *appServices) CreatePayment(ctx context.Context, req *appv1.CreatePaymentRequest) (*appv1.CreatePaymentResponse, error) {
+func (s *paymentsAppService) CreatePayment(ctx context.Context, req *appv1.CreatePaymentRequest) (*appv1.CreatePaymentResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -63,7 +61,7 @@ func (s *appServices) CreatePayment(ctx context.Context, req *appv1.CreatePaymen
 		Message:       "Payment completed successfully",
 	}, nil
 }
-func (s *appServices) ListPaymentHistory(ctx context.Context, req *appv1.ListPaymentHistoryRequest) (*appv1.ListPaymentHistoryResponse, error) {
+func (s *paymentsAppService) ListPaymentHistory(ctx context.Context, req *appv1.ListPaymentHistoryRequest) (*appv1.ListPaymentHistoryResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -71,71 +69,8 @@ func (s *appServices) ListPaymentHistory(ctx context.Context, req *appv1.ListPay
 
 	page, limit, offset := adminPageLimitOffset(req.GetPage(), req.GetLimit())
 
-	type paymentHistoryRow struct {
-		ID            string     `gorm:"column:id"`
-		Amount        float64    `gorm:"column:amount"`
-		Currency      *string    `gorm:"column:currency"`
-		Status        *string    `gorm:"column:status"`
-		PlanID        *string    `gorm:"column:plan_id"`
-		PlanName      *string    `gorm:"column:plan_name"`
-		InvoiceID     string     `gorm:"column:invoice_id"`
-		Kind          string     `gorm:"column:kind"`
-		TermMonths    *int32     `gorm:"column:term_months"`
-		PaymentMethod *string    `gorm:"column:payment_method"`
-		ExpiresAt     *time.Time `gorm:"column:expires_at"`
-		CreatedAt     *time.Time `gorm:"column:created_at"`
-	}
-
-	baseQuery := `
-		WITH history AS (
-			SELECT
-				p.id AS id,
-				p.amount AS amount,
-				p.currency AS currency,
-				p.status AS status,
-				p.plan_id AS plan_id,
-				pl.name AS plan_name,
-				p.id AS invoice_id,
-				? AS kind,
-				ps.term_months AS term_months,
-				ps.payment_method AS payment_method,
-				ps.expires_at AS expires_at,
-				p.created_at AS created_at
-			FROM payment AS p
-			LEFT JOIN plan AS pl ON pl.id = p.plan_id
-			LEFT JOIN plan_subscriptions AS ps ON ps.payment_id = p.id
-			WHERE p.user_id = ?
-			UNION ALL
-			SELECT
-				wt.id AS id,
-				wt.amount AS amount,
-				wt.currency AS currency,
-				'SUCCESS' AS status,
-				NULL AS plan_id,
-				NULL AS plan_name,
-				wt.id AS invoice_id,
-				? AS kind,
-				NULL AS term_months,
-				NULL AS payment_method,
-				NULL AS expires_at,
-				wt.created_at AS created_at
-			FROM wallet_transactions AS wt
-			WHERE wt.user_id = ? AND wt.type = ? AND wt.payment_id IS NULL
-		)
-	`
-
-	var total int64
-	if err := s.db.WithContext(ctx).
-		Raw(baseQuery+`SELECT COUNT(*) FROM history`, paymentKindSubscription, result.UserID, paymentKindWalletTopup, result.UserID, walletTransactionTypeTopup).
-		Scan(&total).Error; err != nil {
-		s.logger.Error("Failed to count payment history", "error", err)
-		return nil, status.Error(codes.Internal, "Failed to fetch payment history")
-	}
-
-	var rows []paymentHistoryRow
-	if err := s.db.WithContext(ctx).
-		Raw(baseQuery+`SELECT * FROM history ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`, paymentKindSubscription, result.UserID, paymentKindWalletTopup, result.UserID, walletTransactionTypeTopup, limit, offset).
-		Scan(&rows).Error; err != nil {
+	rows, total, err := s.paymentRepository.ListHistoryByUser(ctx, result.UserID, paymentKindSubscription, paymentKindWalletTopup, walletTransactionTypeTopup, limit, offset)
+	if err != nil {
 		s.logger.Error("Failed to fetch payment history", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to fetch payment history")
 	}
@@ -170,7 +105,7 @@ func (s *appServices) ListPaymentHistory(ctx context.Context, req *appv1.ListPay
 	}, nil
 }
 
-func (s *appServices) TopupWallet(ctx context.Context, req *appv1.TopupWalletRequest) (*appv1.TopupWalletResponse, error) {
+func (s *paymentsAppService) TopupWallet(ctx context.Context, req *appv1.TopupWalletRequest) (*appv1.TopupWalletResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -202,23 +137,12 @@ func (s *appServices) TopupWallet(ctx context.Context, req *appv1.TopupWalletReq
 		})),
 	}
 
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if _, err := lockUserForUpdate(ctx, tx, result.UserID); err != nil {
-			return err
-		}
-		if err := tx.Create(transaction).Error; err != nil {
-			return err
-		}
-		if err := tx.Create(notification).Error; err != nil {
-			return err
-		}
-		return nil
-	}); err != nil {
+	if err := s.paymentRepository.CreateWalletTopupAndNotification(ctx, result.UserID, transaction, notification); err != nil {
 		s.logger.Error("Failed to top up wallet", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to top up wallet")
 	}
 
-	balance, err := model.GetWalletBalance(ctx, s.db, result.UserID)
+	balance, err := s.billingRepository.GetWalletBalance(ctx, result.UserID)
 	if err != nil {
 		s.logger.Error("Failed to calculate wallet balance", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to top up wallet")
@@ -230,7 +154,7 @@ func (s *appServices) TopupWallet(ctx context.Context, req *appv1.TopupWalletReq
 		InvoiceId:         buildInvoiceID(transaction.ID),
 	}, nil
 }
-func (s *appServices) DownloadInvoice(ctx context.Context, req *appv1.DownloadInvoiceRequest) (*appv1.DownloadInvoiceResponse, error) {
+func (s *paymentsAppService) DownloadInvoice(ctx context.Context, req *appv1.DownloadInvoiceRequest) (*appv1.DownloadInvoiceResponse, error) {
 	result, err := s.authenticate(ctx)
 	if err != nil {
 		return nil, err
@@ -241,9 +165,7 @@ func (s *appServices) DownloadInvoice(ctx context.Context, req *appv1.DownloadIn
 		return nil, status.Error(codes.NotFound, "Invoice not found")
 	}
 
-	paymentRecord, err := query.Payment.WithContext(ctx).
-		Where(query.Payment.ID.Eq(id), query.Payment.UserID.Eq(result.UserID)).
-		First()
+	paymentRecord, err := s.paymentRepository.GetByIDAndUser(ctx, id, result.UserID)
 	if err == nil {
 		invoiceText, filename, buildErr := s.buildPaymentInvoice(ctx, paymentRecord)
 		if buildErr != nil {
@@ -261,14 +183,12 @@ func (s *appServices) DownloadInvoice(ctx context.Context, req *appv1.DownloadIn
 		return nil, status.Error(codes.Internal, "Failed to download invoice")
 	}
 
-	var topup model.WalletTransaction
-	if err := s.db.WithContext(ctx).
-		Where("id = ? AND user_id = ? AND type = ? AND payment_id IS NULL", id, result.UserID, walletTransactionTypeTopup).
-		First(&topup).Error; err == nil {
+	topup, err := s.paymentRepository.GetStandaloneTopupByIDAndUser(ctx, id, result.UserID, walletTransactionTypeTopup)
+	if err == nil {
 		return &appv1.DownloadInvoiceResponse{
 			Filename:    buildInvoiceFilename(topup.ID),
 			ContentType: "text/plain; charset=utf-8",
-			Content:     buildTopupInvoice(&topup),
+			Content:     buildTopupInvoice(topup),
 		}, nil
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		s.logger.Error("Failed to load topup invoice", "error", err)

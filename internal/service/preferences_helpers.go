@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"gorm.io/gorm"
 	"stream.api/internal/database/model"
 	"stream.api/pkg/logger"
 )
@@ -18,12 +17,12 @@ type updatePreferencesInput struct {
 	Locale                 *string
 }
 
-func loadUserPreferences(ctx context.Context, db *gorm.DB, userID string) (*model.UserPreference, error) {
-	return model.FindOrCreateUserPreference(ctx, db, userID)
+func loadUserPreferences(ctx context.Context, prefRepo UserPreferenceRepository, userID string) (*model.UserPreference, error) {
+	return prefRepo.FindOrCreateByUserID(ctx, userID)
 }
 
-func updateUserPreferences(ctx context.Context, db *gorm.DB, l logger.Logger, userID string, req updatePreferencesInput) (*model.UserPreference, error) {
-	pref, err := model.FindOrCreateUserPreference(ctx, db, userID)
+func updateUserPreferences(ctx context.Context, prefRepo UserPreferenceRepository, l logger.Logger, userID string, req updatePreferencesInput) (*model.UserPreference, error) {
+	pref, err := prefRepo.FindOrCreateByUserID(ctx, userID)
 	if err != nil {
 		l.Error("Failed to load preferences", "error", err)
 		return nil, err
@@ -54,7 +53,7 @@ func updateUserPreferences(ctx context.Context, db *gorm.DB, l logger.Logger, us
 		pref.Locale = model.StringPtr(model.StringValue(pref.Language))
 	}
 
-	if err := db.WithContext(ctx).Save(pref).Error; err != nil {
+	if err := prefRepo.Save(ctx, pref); err != nil {
 		l.Error("Failed to save preferences", "error", err)
 		return nil, err
 	}
