@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"stream.api/internal/video/runtime/domain"
+	"stream.api/internal/dto"
 )
 
 type AgentInfo struct {
@@ -95,17 +95,17 @@ func (am *AgentManager) Unregister(id string) {
 	delete(am.agents, id)
 }
 
-func (am *AgentManager) ListAll() []*domain.Agent {
+func (am *AgentManager) ListAll() []*dto.Agent {
 	am.mu.RLock()
 	defer am.mu.RUnlock()
 	now := time.Now()
-	all := make([]*domain.Agent, 0, len(am.agents))
+	all := make([]*dto.Agent, 0, len(am.agents))
 	for _, info := range am.agents {
-		status := domain.AgentStatusOnline
+		status := dto.AgentStatusOnline
 		if now.Sub(info.LastHeartbeat) >= 60*time.Second {
-			status = domain.AgentStatusOffline
+			status = dto.AgentStatusOffline
 		}
-		all = append(all, &domain.Agent{ID: info.ID, Name: info.Name, Platform: info.Platform, Backend: info.Backend, Version: info.Version, Capacity: info.Capacity, Status: status, CPU: info.CPU, RAM: info.RAM, LastHeartbeat: info.LastHeartbeat, CreatedAt: info.ConnectedAt, UpdatedAt: info.LastHeartbeat})
+		all = append(all, &dto.Agent{ID: info.ID, Name: info.Name, Platform: info.Platform, Backend: info.Backend, Version: info.Version, Capacity: info.Capacity, Status: status, CPU: info.CPU, RAM: info.RAM, LastHeartbeat: info.LastHeartbeat, CreatedAt: info.ConnectedAt, UpdatedAt: info.LastHeartbeat})
 	}
 	return all
 }

@@ -13,7 +13,6 @@ import (
 	"gorm.io/gorm"
 	appv1 "stream.api/internal/api/proto/app/v1"
 	"stream.api/internal/database/model"
-	"stream.api/internal/video"
 )
 
 func (s *appServices) GetUploadUrl(ctx context.Context, req *appv1.GetUploadUrlRequest) (*appv1.GetUploadUrlResponse, error) {
@@ -59,7 +58,7 @@ func (s *appServices) CreateVideo(ctx context.Context, req *appv1.CreateVideoReq
 	}
 	description := strings.TrimSpace(req.GetDescription())
 
-	created, err := s.videoService.CreateVideo(ctx, video.CreateVideoInput{
+	created, err := s.videoService.CreateVideo(ctx, CreateVideoInput{
 		UserID:      result.UserID,
 		Title:       title,
 		Description: &description,
@@ -71,7 +70,7 @@ func (s *appServices) CreateVideo(ctx context.Context, req *appv1.CreateVideoReq
 	if err != nil {
 		s.logger.Error("Failed to create video", "error", err)
 		switch {
-		case errors.Is(err, video.ErrJobServiceUnavailable):
+		case errors.Is(err, ErrJobServiceUnavailable):
 			return nil, status.Error(codes.Unavailable, "Job service is unavailable")
 		default:
 			return nil, status.Error(codes.Internal, "Failed to create video")

@@ -13,7 +13,6 @@ import (
 	"gorm.io/gorm"
 	appv1 "stream.api/internal/api/proto/app/v1"
 	"stream.api/internal/database/model"
-	"stream.api/internal/video"
 )
 
 func (s *appServices) GetAdminDashboard(ctx context.Context, _ *appv1.GetAdminDashboardRequest) (*appv1.GetAdminDashboardResponse, error) {
@@ -491,7 +490,7 @@ func (s *appServices) CreateAdminVideo(ctx context.Context, req *appv1.CreateAdm
 		return nil, status.Error(codes.InvalidArgument, "Size must be greater than or equal to 0")
 	}
 
-	created, err := s.videoService.CreateVideo(ctx, video.CreateVideoInput{
+	created, err := s.videoService.CreateVideo(ctx, CreateVideoInput{
 		UserID:       userID,
 		Title:        title,
 		Description:  req.Description,
@@ -503,11 +502,11 @@ func (s *appServices) CreateAdminVideo(ctx context.Context, req *appv1.CreateAdm
 	})
 	if err != nil {
 		switch {
-		case errors.Is(err, video.ErrUserNotFound):
+		case errors.Is(err, ErrUserNotFound):
 			return nil, status.Error(codes.InvalidArgument, "User not found")
-		case errors.Is(err, video.ErrAdTemplateNotFound):
+		case errors.Is(err, ErrAdTemplateNotFound):
 			return nil, status.Error(codes.InvalidArgument, "Ad template not found")
-		case errors.Is(err, video.ErrJobServiceUnavailable):
+		case errors.Is(err, ErrJobServiceUnavailable):
 			return nil, status.Error(codes.Unavailable, "Job service is unavailable")
 		default:
 			return nil, status.Error(codes.Internal, "Failed to create video")

@@ -11,7 +11,6 @@ import (
 	"stream.api/internal/config"
 	"stream.api/internal/database/model"
 	"stream.api/internal/middleware"
-	"stream.api/internal/video"
 	"stream.api/pkg/logger"
 	"stream.api/pkg/storage"
 )
@@ -74,8 +73,8 @@ type appServices struct {
 	authenticator     *middleware.Authenticator
 	cache             *redis.RedisAdapter
 	storageProvider   storage.Provider
-	videoService      *video.Service
-	agentRuntime      video.AgentRuntime
+	videoService      *Service
+	agentRuntime      AgentRuntime
 	googleOauth       *oauth2.Config
 	googleStateTTL    time.Duration
 	googleUserInfoURL string
@@ -117,7 +116,7 @@ type apiErrorBody struct {
 	Data    any    `json:"data,omitempty"`
 }
 
-func NewServices(c *redis.RedisAdapter, db *gorm.DB, l logger.Logger, cfg *config.Config, videoService *video.Service, agentRuntime video.AgentRuntime) *Services {
+func NewServices(c *redis.RedisAdapter, db *gorm.DB, l logger.Logger, cfg *config.Config, videoService *Service, agentRuntime AgentRuntime) *Services {
 	var storageProvider storage.Provider
 	if cfg != nil {
 		provider, err := storage.NewS3Provider(cfg)

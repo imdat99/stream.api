@@ -1,4 +1,4 @@
-package domain
+package dto
 
 import "time"
 
@@ -23,4 +23,8 @@ type Agent struct {
 	LastHeartbeat time.Time   `json:"last_heartbeat"`
 	CreatedAt     time.Time   `json:"created_at"`
 	UpdatedAt     time.Time   `json:"updated_at"`
+}
+type AgentWithStats struct {
+	*Agent
+	ActiveJobCount int64 `json:"active_job_count"`
 }

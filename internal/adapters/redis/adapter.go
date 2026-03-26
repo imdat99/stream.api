@@ -8,7 +8,7 @@ import (
 
 	goredis "github.com/redis/go-redis/v9"
 	"stream.api/internal/database/model"
-	"stream.api/internal/video/runtime/domain"
+	"stream.api/internal/dto"
 )
 
 const (
@@ -78,21 +78,21 @@ func (r *RedisAdapter) Dequeue(ctx context.Context) (*model.Job, error) {
 }
 
 func (r *RedisAdapter) Publish(ctx context.Context, jobID string, logLine string, progress float64) error {
-	payload, err := json.Marshal(domain.LogEntry{JobID: jobID, Line: logLine, Progress: progress})
+	payload, err := json.Marshal(dto.LogEntry{JobID: jobID, Line: logLine, Progress: progress})
 	if err != nil {
 		return err
 	}
 	return r.client.Publish(ctx, LogChannel, payload).Err()
 }
 
-func (r *RedisAdapter) Subscribe(ctx context.Context, jobID string) (<-chan domain.LogEntry, error) {
+func (r *RedisAdapter) Subscribe(ctx context.Context, jobID string) (<-chan dto.LogEntry, error) {
 	pubsub := r.client.Subscribe(ctx, LogChannel)
-	ch := make(chan domain.LogEntry)
+	ch := make(chan dto.LogEntry)
 	go func() {
 		defer close(ch)
 		defer pubsub.Close()
 		for msg := range pubsub.Channel() {
-			var entry domain.LogEntry
+			var entry dto.LogEntry
 			if err := json.Unmarshal([]byte(msg.Payload), &entry); err != nil {
 				continue
 			}
@@ -112,21 +112,21 @@ func (r *RedisAdapter) PublishResource(ctx context.Context, agentID string, data
 	if err := json.Unmarshal(data, &decoded); err != nil {
 		return err
 	}
-	payload, err := json.Marshal(domain.SystemResource{AgentID: agentID, CPU: decoded.CPU, RAM: decoded.RAM})
+	payload, err := json.Marshal(dto.SystemResource{AgentID: agentID, CPU: decoded.CPU, RAM: decoded.RAM})
 	if err != nil {
 		return err
 	}
 	return r.client.Publish(ctx, ResourceChannel, payload).Err()
 }
 
-func (r *RedisAdapter) SubscribeResources(ctx context.Context) (<-chan domain.SystemResource, error) {
+func (r *RedisAdapter) SubscribeResources(ctx context.Context) (<-chan dto.SystemResource, error) {
 	pubsub := r.client.Subscribe(ctx, ResourceChannel)
-	ch := make(chan domain.SystemResource)
+	ch := make(chan dto.SystemResource)
 	go func() {
 		defer close(ch)
 		defer pubsub.Close()
 		for msg := range pubsub.Channel() {
-			var entry domain.SystemResource
+			var entry dto.SystemResource
 			if err := json.Unmarshal([]byte(msg.Payload), &entry); err != nil {
 				continue
 			}

@@ -9,8 +9,8 @@ import (
 	"gorm.io/gorm"
 	appv1 "stream.api/internal/api/proto/app/v1"
 	"stream.api/internal/database/model"
-	"stream.api/internal/video"
-	runtimeservices "stream.api/internal/video/runtime/services"
+	runtimeservices "stream.api/internal/service/runtime/services"
+	"stream.api/internal/service/video"
 )
 
 func TestListAdminJobsCursorPagination(t *testing.T) {

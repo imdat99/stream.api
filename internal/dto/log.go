@@ -1,4 +1,4 @@
-package domain
+package dto
 
 type LogEntry struct {
 	JobID    string  `json:"job_id"`

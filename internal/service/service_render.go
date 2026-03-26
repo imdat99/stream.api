@@ -1,17 +1,21 @@
-package video
+package service
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
-	"net/url"
 	"strings"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"stream.api/internal/database/model"
-	"stream.api/internal/video/runtime/services"
+	"stream.api/internal/dto"
 )
+
+type AgentRuntime interface {
+	ListAgentsWithStats() []*dto.AgentWithStats
+	SendCommand(agentID string, cmd string) bool
+}
 
 var (
 	ErrUserNotFound          = errors.New("user not found")
@@ -21,7 +25,7 @@ var (
 
 type Service struct {
 	db         *gorm.DB
-	jobService *services.JobService
+	jobService *JobService
 }
 
 type CreateVideoInput struct {
@@ -40,11 +44,11 @@ type CreateVideoResult struct {
 	Job   model.Job
 }
 
-func NewService(db *gorm.DB, jobService *services.JobService) *Service {
+func NewService(db *gorm.DB, jobService *JobService) *Service {
 	return &Service{db: db, jobService: jobService}
 }
 
-func (s *Service) JobService() *services.JobService {
+func (s *Service) JobService() *JobService {
 	if s == nil {
 		return nil
 	}
@@ -122,21 +126,21 @@ func (s *Service) CreateVideo(ctx context.Context, input CreateVideoInput) (*Cre
 	return &CreateVideoResult{Video: video, Job: *job}, nil
 }
 
-func (s *Service) ListJobs(ctx context.Context, offset, limit int) (*PaginatedJobs, error) {
+func (s *Service) ListJobs(ctx context.Context, offset, limit int) (*dto.PaginatedJobs, error) {
 	if s == nil || s.jobService == nil {
 		return nil, ErrJobServiceUnavailable
 	}
 	return s.jobService.ListJobs(ctx, offset, limit)
 }
 
-func (s *Service) ListJobsByAgent(ctx context.Context, agentID string, offset, limit int) (*PaginatedJobs, error) {
+func (s *Service) ListJobsByAgent(ctx context.Context, agentID string, offset, limit int) (*dto.PaginatedJobs, error) {
 	if s == nil || s.jobService == nil {
 		return nil, ErrJobServiceUnavailable
 	}
 	return s.jobService.ListJobsByAgent(ctx, agentID, offset, limit)
 }
 
-func (s *Service) ListJobsByCursor(ctx context.Context, agentID string, cursor string, pageSize int) (*PaginatedJobs, error) {
+func (s *Service) ListJobsByCursor(ctx context.Context, agentID string, cursor string, pageSize int) (*dto.PaginatedJobs, error) {
 	if s == nil || s.jobService == nil {
 		return nil, ErrJobServiceUnavailable
 	}
@@ -218,34 +222,4 @@ func markVideoJobFailed(ctx context.Context, db *gorm.DB, videoID string) error 
 		Model(&model.Video{}).
 		Where("id = ?", strings.TrimSpace(videoID)).
 		Updates(map[string]any{"status": "failed", "processing_status": "FAILED"}).Error
-}
-
-func detectStorageType(rawURL string) string {
-	if shouldDeleteStoredObject(rawURL) {
-		return "S3"
-	}
-	return "WORKER"
-}
-
-func shouldDeleteStoredObject(rawURL string) bool {
-	trimmed := strings.TrimSpace(rawURL)
-	if trimmed == "" {
-		return false
-	}
-	parsed, err := url.Parse(trimmed)
-	if err != nil {
-		return !strings.HasPrefix(trimmed, "/")
-	}
-	return parsed.Scheme == "" && parsed.Host == "" && !strings.HasPrefix(trimmed, "/")
-}
-
-func nullableTrimmedString(value *string) *string {
-	if value == nil {
-		return nil
-	}
-	trimmed := strings.TrimSpace(*value)
-	if trimmed == "" {
-		return nil
-	}
-	return &trimmed
 }

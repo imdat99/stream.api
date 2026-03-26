@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 	appv1 "stream.api/internal/api/proto/app/v1"
-	"stream.api/internal/video"
+	"stream.api/internal/dto"
 )
 
 func (s *appServices) ListAdminJobs(ctx context.Context, req *appv1.ListAdminJobsRequest) (*appv1.ListAdminJobsResponse, error) {
@@ -28,7 +28,7 @@ func (s *appServices) ListAdminJobs(ctx context.Context, req *appv1.ListAdminJob
 	useCursorPagination := req.Cursor != nil || pageSize > 0
 
 	var (
-		result *video.PaginatedJobs
+		result *dto.PaginatedJobs
 		err    error
 	)
 	if useCursorPagination {
@@ -39,7 +39,7 @@ func (s *appServices) ListAdminJobs(ctx context.Context, req *appv1.ListAdminJob
 		result, err = s.videoService.ListJobs(ctx, offset, limit)
 	}
 	if err != nil {
-		if errors.Is(err, video.ErrInvalidJobCursor) {
+		if errors.Is(err, ErrInvalidJobCursor) {
 			return nil, status.Error(codes.InvalidArgument, "Invalid job cursor")
 		}
 		return nil, status.Error(codes.Internal, "Failed to list jobs")
