@@ -15,6 +15,7 @@ import (
 	"stream.api/internal/database/model"
 	appv1 "stream.api/internal/gen/proto/app/v1"
 	"stream.api/internal/middleware"
+	"stream.api/internal/modules/common"
 )
 
 func TestPlayerConfigsPolicy(t *testing.T) {
@@ -50,8 +51,8 @@ func TestPlayerConfigsPolicy(t *testing.T) {
 
 		_, err := services.CreatePlayerConfig(testActorIncomingContext(user.ID, "USER"), &appv1.CreatePlayerConfigRequest{Name: "Second"})
 		assertGRPCCode(t, err, codes.FailedPrecondition)
-		if got := status.Convert(err).Message(); got != playerConfigFreePlanLimitMessage {
-			t.Fatalf("grpc message = %q, want %q", got, playerConfigFreePlanLimitMessage)
+		if got := status.Convert(err).Message(); got != common.PlayerConfigFreePlanLimitMessage {
+			t.Fatalf("grpc message = %q, want %q", got, common.PlayerConfigFreePlanLimitMessage)
 		}
 	})
 
@@ -107,8 +108,8 @@ func TestPlayerConfigsPolicy(t *testing.T) {
 			IsActive:     ptrBool(true),
 		})
 		assertGRPCCode(t, err, codes.FailedPrecondition)
-		if got := status.Convert(err).Message(); got != playerConfigFreePlanReconciliationMessage {
-			t.Fatalf("grpc message = %q, want %q", got, playerConfigFreePlanReconciliationMessage)
+		if got := status.Convert(err).Message(); got != common.PlayerConfigFreePlanReconciliationMessage {
+			t.Fatalf("grpc message = %q, want %q", got, common.PlayerConfigFreePlanReconciliationMessage)
 		}
 
 		_, err = services.DeletePlayerConfig(testActorIncomingContext(user.ID, "USER"), &appv1.DeletePlayerConfigRequest{Id: second.ID})
@@ -212,7 +213,7 @@ func TestPlayerConfigsPolicy(t *testing.T) {
 			t.Fatalf("player config count = %d, want 1", len(items))
 		}
 		for _, message := range messages {
-			if message != playerConfigFreePlanLimitMessage && !strings.Contains(strings.ToLower(message), "locked") {
+			if message != common.PlayerConfigFreePlanLimitMessage && !strings.Contains(strings.ToLower(message), "locked") {
 				t.Fatalf("unexpected concurrent create error message: %q", message)
 			}
 		}

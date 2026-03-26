@@ -244,7 +244,7 @@ func newTestAppServices(t *testing.T, db *gorm.DB) *appServices {
 		db = newTestDB(t)
 	}
 
-	return &appServices{
+	services := &appServices{
 		db:                db,
 		logger:            testLogger{},
 		authenticator:     middleware.NewAuthenticator(db, testLogger{}, testTrustedMarker),
@@ -252,6 +252,8 @@ func newTestAppServices(t *testing.T, db *gorm.DB) *appServices {
 		tokenProvider:     fakeTokenProvider{},
 		googleUserInfoURL: defaultGoogleUserInfoURL,
 	}
+	services.initModules()
+	return services
 }
 
 func newTestGRPCServer(t *testing.T, services *appServices) (*grpc.ClientConn, func()) {
@@ -260,18 +262,18 @@ func newTestGRPCServer(t *testing.T, services *appServices) (*grpc.ClientConn, f
 	lis := bufconn.Listen(testBufDialerListenerSize)
 	server := grpc.NewServer()
 	Register(server, &Services{
-		AuthServiceServer:          services,
-		AccountServiceServer:       services,
-		PreferencesServiceServer:   services,
-		UsageServiceServer:         services,
-		NotificationsServiceServer: services,
-		DomainsServiceServer:       services,
-		AdTemplatesServiceServer:   services,
-		PlayerConfigsServiceServer: services,
-		PlansServiceServer:         services,
-		PaymentsServiceServer:      services,
-		VideosServiceServer:        services,
-		AdminServiceServer:         services,
+		AuthServiceServer:          services.authHandler,
+		AccountServiceServer:       services.accountHandler,
+		PreferencesServiceServer:   services.preferencesHandler,
+		UsageServiceServer:         services.usageHandler,
+		NotificationsServiceServer: services.notificationsHandler,
+		DomainsServiceServer:       services.domainsHandler,
+		AdTemplatesServiceServer:   services.adTemplatesHandler,
+		PlayerConfigsServiceServer: services.playerConfigsHandler,
+		PlansServiceServer:         services.plansHandler,
+		PaymentsServiceServer:      services.paymentsHandler,
+		VideosServiceServer:        services.videosHandler,
+		AdminServiceServer:         services.adminHandler,
 	})
 
 	go func() {
