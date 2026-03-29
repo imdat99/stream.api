@@ -45,6 +45,11 @@ const (
 	Admin_CreateAdminAdTemplate_FullMethodName           = "/stream.app.v1.Admin/CreateAdminAdTemplate"
 	Admin_UpdateAdminAdTemplate_FullMethodName           = "/stream.app.v1.Admin/UpdateAdminAdTemplate"
 	Admin_DeleteAdminAdTemplate_FullMethodName           = "/stream.app.v1.Admin/DeleteAdminAdTemplate"
+	Admin_ListAdminPopupAds_FullMethodName               = "/stream.app.v1.Admin/ListAdminPopupAds"
+	Admin_GetAdminPopupAd_FullMethodName                 = "/stream.app.v1.Admin/GetAdminPopupAd"
+	Admin_CreateAdminPopupAd_FullMethodName              = "/stream.app.v1.Admin/CreateAdminPopupAd"
+	Admin_UpdateAdminPopupAd_FullMethodName              = "/stream.app.v1.Admin/UpdateAdminPopupAd"
+	Admin_DeleteAdminPopupAd_FullMethodName              = "/stream.app.v1.Admin/DeleteAdminPopupAd"
 	Admin_ListAdminPlayerConfigs_FullMethodName          = "/stream.app.v1.Admin/ListAdminPlayerConfigs"
 	Admin_GetAdminPlayerConfig_FullMethodName            = "/stream.app.v1.Admin/GetAdminPlayerConfig"
 	Admin_CreateAdminPlayerConfig_FullMethodName         = "/stream.app.v1.Admin/CreateAdminPlayerConfig"
@@ -91,6 +96,11 @@ type AdminClient interface {
 	CreateAdminAdTemplate(ctx context.Context, in *CreateAdminAdTemplateRequest, opts ...grpc.CallOption) (*CreateAdminAdTemplateResponse, error)
 	UpdateAdminAdTemplate(ctx context.Context, in *UpdateAdminAdTemplateRequest, opts ...grpc.CallOption) (*UpdateAdminAdTemplateResponse, error)
 	DeleteAdminAdTemplate(ctx context.Context, in *DeleteAdminAdTemplateRequest, opts ...grpc.CallOption) (*MessageResponse, error)
+	ListAdminPopupAds(ctx context.Context, in *ListAdminPopupAdsRequest, opts ...grpc.CallOption) (*ListAdminPopupAdsResponse, error)
+	GetAdminPopupAd(ctx context.Context, in *GetAdminPopupAdRequest, opts ...grpc.CallOption) (*GetAdminPopupAdResponse, error)
+	CreateAdminPopupAd(ctx context.Context, in *CreateAdminPopupAdRequest, opts ...grpc.CallOption) (*CreateAdminPopupAdResponse, error)
+	UpdateAdminPopupAd(ctx context.Context, in *UpdateAdminPopupAdRequest, opts ...grpc.CallOption) (*UpdateAdminPopupAdResponse, error)
+	DeleteAdminPopupAd(ctx context.Context, in *DeleteAdminPopupAdRequest, opts ...grpc.CallOption) (*MessageResponse, error)
 	ListAdminPlayerConfigs(ctx context.Context, in *ListAdminPlayerConfigsRequest, opts ...grpc.CallOption) (*ListAdminPlayerConfigsResponse, error)
 	GetAdminPlayerConfig(ctx context.Context, in *GetAdminPlayerConfigRequest, opts ...grpc.CallOption) (*GetAdminPlayerConfigResponse, error)
 	CreateAdminPlayerConfig(ctx context.Context, in *CreateAdminPlayerConfigRequest, opts ...grpc.CallOption) (*CreateAdminPlayerConfigResponse, error)
@@ -375,6 +385,56 @@ func (c *adminClient) DeleteAdminAdTemplate(ctx context.Context, in *DeleteAdmin
 	return out, nil
 }
 
+func (c *adminClient) ListAdminPopupAds(ctx context.Context, in *ListAdminPopupAdsRequest, opts ...grpc.CallOption) (*ListAdminPopupAdsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListAdminPopupAdsResponse)
+	err := c.cc.Invoke(ctx, Admin_ListAdminPopupAds_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminClient) GetAdminPopupAd(ctx context.Context, in *GetAdminPopupAdRequest, opts ...grpc.CallOption) (*GetAdminPopupAdResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetAdminPopupAdResponse)
+	err := c.cc.Invoke(ctx, Admin_GetAdminPopupAd_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminClient) CreateAdminPopupAd(ctx context.Context, in *CreateAdminPopupAdRequest, opts ...grpc.CallOption) (*CreateAdminPopupAdResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateAdminPopupAdResponse)
+	err := c.cc.Invoke(ctx, Admin_CreateAdminPopupAd_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminClient) UpdateAdminPopupAd(ctx context.Context, in *UpdateAdminPopupAdRequest, opts ...grpc.CallOption) (*UpdateAdminPopupAdResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateAdminPopupAdResponse)
+	err := c.cc.Invoke(ctx, Admin_UpdateAdminPopupAd_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminClient) DeleteAdminPopupAd(ctx context.Context, in *DeleteAdminPopupAdRequest, opts ...grpc.CallOption) (*MessageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MessageResponse)
+	err := c.cc.Invoke(ctx, Admin_DeleteAdminPopupAd_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *adminClient) ListAdminPlayerConfigs(ctx context.Context, in *ListAdminPlayerConfigsRequest, opts ...grpc.CallOption) (*ListAdminPlayerConfigsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListAdminPlayerConfigsResponse)
@@ -545,6 +605,11 @@ type AdminServer interface {
 	CreateAdminAdTemplate(context.Context, *CreateAdminAdTemplateRequest) (*CreateAdminAdTemplateResponse, error)
 	UpdateAdminAdTemplate(context.Context, *UpdateAdminAdTemplateRequest) (*UpdateAdminAdTemplateResponse, error)
 	DeleteAdminAdTemplate(context.Context, *DeleteAdminAdTemplateRequest) (*MessageResponse, error)
+	ListAdminPopupAds(context.Context, *ListAdminPopupAdsRequest) (*ListAdminPopupAdsResponse, error)
+	GetAdminPopupAd(context.Context, *GetAdminPopupAdRequest) (*GetAdminPopupAdResponse, error)
+	CreateAdminPopupAd(context.Context, *CreateAdminPopupAdRequest) (*CreateAdminPopupAdResponse, error)
+	UpdateAdminPopupAd(context.Context, *UpdateAdminPopupAdRequest) (*UpdateAdminPopupAdResponse, error)
+	DeleteAdminPopupAd(context.Context, *DeleteAdminPopupAdRequest) (*MessageResponse, error)
 	ListAdminPlayerConfigs(context.Context, *ListAdminPlayerConfigsRequest) (*ListAdminPlayerConfigsResponse, error)
 	GetAdminPlayerConfig(context.Context, *GetAdminPlayerConfigRequest) (*GetAdminPlayerConfigResponse, error)
 	CreateAdminPlayerConfig(context.Context, *CreateAdminPlayerConfigRequest) (*CreateAdminPlayerConfigResponse, error)
@@ -646,6 +711,21 @@ func (UnimplementedAdminServer) UpdateAdminAdTemplate(context.Context, *UpdateAd
 }
 func (UnimplementedAdminServer) DeleteAdminAdTemplate(context.Context, *DeleteAdminAdTemplateRequest) (*MessageResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteAdminAdTemplate not implemented")
+}
+func (UnimplementedAdminServer) ListAdminPopupAds(context.Context, *ListAdminPopupAdsRequest) (*ListAdminPopupAdsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListAdminPopupAds not implemented")
+}
+func (UnimplementedAdminServer) GetAdminPopupAd(context.Context, *GetAdminPopupAdRequest) (*GetAdminPopupAdResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetAdminPopupAd not implemented")
+}
+func (UnimplementedAdminServer) CreateAdminPopupAd(context.Context, *CreateAdminPopupAdRequest) (*CreateAdminPopupAdResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateAdminPopupAd not implemented")
+}
+func (UnimplementedAdminServer) UpdateAdminPopupAd(context.Context, *UpdateAdminPopupAdRequest) (*UpdateAdminPopupAdResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateAdminPopupAd not implemented")
+}
+func (UnimplementedAdminServer) DeleteAdminPopupAd(context.Context, *DeleteAdminPopupAdRequest) (*MessageResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteAdminPopupAd not implemented")
 }
 func (UnimplementedAdminServer) ListAdminPlayerConfigs(context.Context, *ListAdminPlayerConfigsRequest) (*ListAdminPlayerConfigsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListAdminPlayerConfigs not implemented")
@@ -1178,6 +1258,96 @@ func _Admin_DeleteAdminAdTemplate_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Admin_ListAdminPopupAds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAdminPopupAdsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServer).ListAdminPopupAds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Admin_ListAdminPopupAds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServer).ListAdminPopupAds(ctx, req.(*ListAdminPopupAdsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Admin_GetAdminPopupAd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAdminPopupAdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServer).GetAdminPopupAd(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Admin_GetAdminPopupAd_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServer).GetAdminPopupAd(ctx, req.(*GetAdminPopupAdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Admin_CreateAdminPopupAd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAdminPopupAdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServer).CreateAdminPopupAd(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Admin_CreateAdminPopupAd_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServer).CreateAdminPopupAd(ctx, req.(*CreateAdminPopupAdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Admin_UpdateAdminPopupAd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAdminPopupAdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServer).UpdateAdminPopupAd(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Admin_UpdateAdminPopupAd_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServer).UpdateAdminPopupAd(ctx, req.(*UpdateAdminPopupAdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Admin_DeleteAdminPopupAd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteAdminPopupAdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServer).DeleteAdminPopupAd(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Admin_DeleteAdminPopupAd_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServer).DeleteAdminPopupAd(ctx, req.(*DeleteAdminPopupAdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Admin_ListAdminPlayerConfigs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListAdminPlayerConfigsRequest)
 	if err := dec(in); err != nil {
@@ -1540,6 +1710,26 @@ var Admin_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteAdminAdTemplate",
 			Handler:    _Admin_DeleteAdminAdTemplate_Handler,
+		},
+		{
+			MethodName: "ListAdminPopupAds",
+			Handler:    _Admin_ListAdminPopupAds_Handler,
+		},
+		{
+			MethodName: "GetAdminPopupAd",
+			Handler:    _Admin_GetAdminPopupAd_Handler,
+		},
+		{
+			MethodName: "CreateAdminPopupAd",
+			Handler:    _Admin_CreateAdminPopupAd_Handler,
+		},
+		{
+			MethodName: "UpdateAdminPopupAd",
+			Handler:    _Admin_UpdateAdminPopupAd_Handler,
+		},
+		{
+			MethodName: "DeleteAdminPopupAd",
+			Handler:    _Admin_DeleteAdminPopupAd_Handler,
 		},
 		{
 			MethodName: "ListAdminPlayerConfigs",

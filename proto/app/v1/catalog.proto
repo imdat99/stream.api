@@ -19,6 +19,14 @@ service AdTemplates {
   rpc DeleteAdTemplate(DeleteAdTemplateRequest) returns (MessageResponse);
 }
 
+service PopupAds {
+  rpc ListPopupAds(ListPopupAdsRequest) returns (ListPopupAdsResponse);
+  rpc CreatePopupAd(CreatePopupAdRequest) returns (CreatePopupAdResponse);
+  rpc UpdatePopupAd(UpdatePopupAdRequest) returns (UpdatePopupAdResponse);
+  rpc DeletePopupAd(DeletePopupAdRequest) returns (MessageResponse);
+  rpc GetActivePopupAd(GetActivePopupAdRequest) returns (GetActivePopupAdResponse);
+}
+
 service PlayerConfigs {
   rpc ListPlayerConfigs(ListPlayerConfigsRequest) returns (ListPlayerConfigsResponse);
   rpc CreatePlayerConfig(CreatePlayerConfigRequest) returns (CreatePlayerConfigResponse);
@@ -85,6 +93,53 @@ message UpdateAdTemplateResponse {
 
 message DeleteAdTemplateRequest {
   string id = 1;
+}
+
+message ListPopupAdsRequest {
+  int32 page = 1;
+  int32 limit = 2;
+}
+
+message ListPopupAdsResponse {
+  repeated PopupAd items = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+}
+
+message CreatePopupAdRequest {
+  string type = 1;
+  string label = 2;
+  string value = 3;
+  optional bool is_active = 4;
+  optional int32 max_triggers_per_session = 5;
+}
+
+message CreatePopupAdResponse {
+  PopupAd item = 1;
+}
+
+message UpdatePopupAdRequest {
+  string id = 1;
+  string type = 2;
+  string label = 3;
+  string value = 4;
+  optional bool is_active = 5;
+  optional int32 max_triggers_per_session = 6;
+}
+
+message UpdatePopupAdResponse {
+  PopupAd item = 1;
+}
+
+message DeletePopupAdRequest {
+  string id = 1;
+}
+
+message GetActivePopupAdRequest {}
+
+message GetActivePopupAdResponse {
+  optional PopupAd item = 1;
 }
 
 message ListPlayerConfigsRequest {}

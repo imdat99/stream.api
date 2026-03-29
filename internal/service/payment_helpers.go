@@ -118,6 +118,9 @@ func (s *appServices) executePaymentFlow(ctx context.Context, input paymentExecu
 	}
 	result.Subscription = subscription
 	result.WalletBalance = walletBalance
+	if notification := latestNotificationForPayment(result.Payment, subscription, input.Plan, invoiceID); notification != nil {
+		s.publishNotificationCreated(ctx, notification)
+	}
 	return result, nil
 }
 

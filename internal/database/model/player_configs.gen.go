@@ -24,7 +24,7 @@ type PlayerConfig struct {
 	Airplay       *bool      `gorm:"column:airplay;type:boolean;not null;default:true" json:"airplay"`
 	Chromecast    *bool      `gorm:"column:chromecast;type:boolean;not null;default:true" json:"chromecast"`
 	IsActive      *bool      `gorm:"column:is_active;type:boolean;not null;default:true" json:"is_active"`
-	IsDefault     bool       `gorm:"column:is_default;type:boolean;not null;index:idx_player_configs_user_default,priority:1;index:idx_player_configs_is_default,priority:1" json:"is_default"`
+	IsDefault     bool       `gorm:"column:is_default;type:boolean;not null;index:idx_player_configs_is_default,priority:1;index:idx_player_configs_user_default,priority:1" json:"is_default"`
 	CreatedAt     *time.Time `gorm:"column:created_at;type:timestamp(3) without time zone;not null;default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt     time.Time  `gorm:"column:updated_at;type:timestamp(3) without time zone;not null" json:"updated_at"`
 	Version       *int64     `gorm:"column:version;type:bigint;not null;default:1;version" json:"-"`

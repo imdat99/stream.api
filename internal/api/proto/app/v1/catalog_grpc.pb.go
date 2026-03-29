@@ -413,6 +413,260 @@ var AdTemplates_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
+	PopupAds_ListPopupAds_FullMethodName     = "/stream.app.v1.PopupAds/ListPopupAds"
+	PopupAds_CreatePopupAd_FullMethodName    = "/stream.app.v1.PopupAds/CreatePopupAd"
+	PopupAds_UpdatePopupAd_FullMethodName    = "/stream.app.v1.PopupAds/UpdatePopupAd"
+	PopupAds_DeletePopupAd_FullMethodName    = "/stream.app.v1.PopupAds/DeletePopupAd"
+	PopupAds_GetActivePopupAd_FullMethodName = "/stream.app.v1.PopupAds/GetActivePopupAd"
+)
+
+// PopupAdsClient is the client API for PopupAds service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type PopupAdsClient interface {
+	ListPopupAds(ctx context.Context, in *ListPopupAdsRequest, opts ...grpc.CallOption) (*ListPopupAdsResponse, error)
+	CreatePopupAd(ctx context.Context, in *CreatePopupAdRequest, opts ...grpc.CallOption) (*CreatePopupAdResponse, error)
+	UpdatePopupAd(ctx context.Context, in *UpdatePopupAdRequest, opts ...grpc.CallOption) (*UpdatePopupAdResponse, error)
+	DeletePopupAd(ctx context.Context, in *DeletePopupAdRequest, opts ...grpc.CallOption) (*MessageResponse, error)
+	GetActivePopupAd(ctx context.Context, in *GetActivePopupAdRequest, opts ...grpc.CallOption) (*GetActivePopupAdResponse, error)
+}
+
+type popupAdsClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewPopupAdsClient(cc grpc.ClientConnInterface) PopupAdsClient {
+	return &popupAdsClient{cc}
+}
+
+func (c *popupAdsClient) ListPopupAds(ctx context.Context, in *ListPopupAdsRequest, opts ...grpc.CallOption) (*ListPopupAdsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListPopupAdsResponse)
+	err := c.cc.Invoke(ctx, PopupAds_ListPopupAds_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *popupAdsClient) CreatePopupAd(ctx context.Context, in *CreatePopupAdRequest, opts ...grpc.CallOption) (*CreatePopupAdResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreatePopupAdResponse)
+	err := c.cc.Invoke(ctx, PopupAds_CreatePopupAd_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *popupAdsClient) UpdatePopupAd(ctx context.Context, in *UpdatePopupAdRequest, opts ...grpc.CallOption) (*UpdatePopupAdResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdatePopupAdResponse)
+	err := c.cc.Invoke(ctx, PopupAds_UpdatePopupAd_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *popupAdsClient) DeletePopupAd(ctx context.Context, in *DeletePopupAdRequest, opts ...grpc.CallOption) (*MessageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MessageResponse)
+	err := c.cc.Invoke(ctx, PopupAds_DeletePopupAd_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *popupAdsClient) GetActivePopupAd(ctx context.Context, in *GetActivePopupAdRequest, opts ...grpc.CallOption) (*GetActivePopupAdResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetActivePopupAdResponse)
+	err := c.cc.Invoke(ctx, PopupAds_GetActivePopupAd_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// PopupAdsServer is the server API for PopupAds service.
+// All implementations must embed UnimplementedPopupAdsServer
+// for forward compatibility.
+type PopupAdsServer interface {
+	ListPopupAds(context.Context, *ListPopupAdsRequest) (*ListPopupAdsResponse, error)
+	CreatePopupAd(context.Context, *CreatePopupAdRequest) (*CreatePopupAdResponse, error)
+	UpdatePopupAd(context.Context, *UpdatePopupAdRequest) (*UpdatePopupAdResponse, error)
+	DeletePopupAd(context.Context, *DeletePopupAdRequest) (*MessageResponse, error)
+	GetActivePopupAd(context.Context, *GetActivePopupAdRequest) (*GetActivePopupAdResponse, error)
+	mustEmbedUnimplementedPopupAdsServer()
+}
+
+// UnimplementedPopupAdsServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedPopupAdsServer struct{}
+
+func (UnimplementedPopupAdsServer) ListPopupAds(context.Context, *ListPopupAdsRequest) (*ListPopupAdsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListPopupAds not implemented")
+}
+func (UnimplementedPopupAdsServer) CreatePopupAd(context.Context, *CreatePopupAdRequest) (*CreatePopupAdResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreatePopupAd not implemented")
+}
+func (UnimplementedPopupAdsServer) UpdatePopupAd(context.Context, *UpdatePopupAdRequest) (*UpdatePopupAdResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdatePopupAd not implemented")
+}
+func (UnimplementedPopupAdsServer) DeletePopupAd(context.Context, *DeletePopupAdRequest) (*MessageResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeletePopupAd not implemented")
+}
+func (UnimplementedPopupAdsServer) GetActivePopupAd(context.Context, *GetActivePopupAdRequest) (*GetActivePopupAdResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetActivePopupAd not implemented")
+}
+func (UnimplementedPopupAdsServer) mustEmbedUnimplementedPopupAdsServer() {}
+func (UnimplementedPopupAdsServer) testEmbeddedByValue()                  {}
+
+// UnsafePopupAdsServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to PopupAdsServer will
+// result in compilation errors.
+type UnsafePopupAdsServer interface {
+	mustEmbedUnimplementedPopupAdsServer()
+}
+
+func RegisterPopupAdsServer(s grpc.ServiceRegistrar, srv PopupAdsServer) {
+	// If the following call panics, it indicates UnimplementedPopupAdsServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&PopupAds_ServiceDesc, srv)
+}
+
+func _PopupAds_ListPopupAds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListPopupAdsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PopupAdsServer).ListPopupAds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PopupAds_ListPopupAds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PopupAdsServer).ListPopupAds(ctx, req.(*ListPopupAdsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PopupAds_CreatePopupAd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreatePopupAdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PopupAdsServer).CreatePopupAd(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PopupAds_CreatePopupAd_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PopupAdsServer).CreatePopupAd(ctx, req.(*CreatePopupAdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PopupAds_UpdatePopupAd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdatePopupAdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PopupAdsServer).UpdatePopupAd(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PopupAds_UpdatePopupAd_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PopupAdsServer).UpdatePopupAd(ctx, req.(*UpdatePopupAdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PopupAds_DeletePopupAd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeletePopupAdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PopupAdsServer).DeletePopupAd(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PopupAds_DeletePopupAd_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PopupAdsServer).DeletePopupAd(ctx, req.(*DeletePopupAdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PopupAds_GetActivePopupAd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetActivePopupAdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PopupAdsServer).GetActivePopupAd(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PopupAds_GetActivePopupAd_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PopupAdsServer).GetActivePopupAd(ctx, req.(*GetActivePopupAdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// PopupAds_ServiceDesc is the grpc.ServiceDesc for PopupAds service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var PopupAds_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "stream.app.v1.PopupAds",
+	HandlerType: (*PopupAdsServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListPopupAds",
+			Handler:    _PopupAds_ListPopupAds_Handler,
+		},
+		{
+			MethodName: "CreatePopupAd",
+			Handler:    _PopupAds_CreatePopupAd_Handler,
+		},
+		{
+			MethodName: "UpdatePopupAd",
+			Handler:    _PopupAds_UpdatePopupAd_Handler,
+		},
+		{
+			MethodName: "DeletePopupAd",
+			Handler:    _PopupAds_DeletePopupAd_Handler,
+		},
+		{
+			MethodName: "GetActivePopupAd",
+			Handler:    _PopupAds_GetActivePopupAd_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "app/v1/catalog.proto",
+}
+
+const (
 	PlayerConfigs_ListPlayerConfigs_FullMethodName  = "/stream.app.v1.PlayerConfigs/ListPlayerConfigs"
 	PlayerConfigs_CreatePlayerConfig_FullMethodName = "/stream.app.v1.PlayerConfigs/CreatePlayerConfig"
 	PlayerConfigs_UpdatePlayerConfig_FullMethodName = "/stream.app.v1.PlayerConfigs/UpdatePlayerConfig"

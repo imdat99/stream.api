@@ -36,17 +36,19 @@ func NewGRPCModule(ctx context.Context, cfg *config.Config, db *gorm.DB, rds *re
 		cfg:          cfg,
 	}
 
+	var notificationPublisher service.NotificationEventPublisher = nil
 	if publisher, err := mqtt.NewMQTTBootstrap(jobService, agentRuntime, appLogger); err != nil {
 		appLogger.Error("Failed to initialize MQTT publisher", "error", err)
 	} else {
 		module.mqttPublisher = publisher
+		notificationPublisher = mqtt.NewNotificationPublisher(publisher.Client(), appLogger)
 		agentRuntime.SetAgentEventHandler(func(eventType string, agent *dto.AgentWithStats) {
 			mqtt.PublishAgentMQTTEvent(publisher.Client(), appLogger, eventType, agent)
 		})
 	}
 
 	agentRuntime.Register(grpcServer)
-	service.Register(grpcServer, service.NewServices(rds, db, appLogger, cfg, videoService, agentRuntime))
+	service.Register(grpcServer, service.NewServices(rds, db, appLogger, cfg, videoService, agentRuntime, notificationPublisher))
 	if module.mqttPublisher != nil {
 		module.mqttPublisher.Start(ctx)
 	}

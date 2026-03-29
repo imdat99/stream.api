@@ -36,15 +36,20 @@ func publishMQTTEvent(client pahomqtt.Client, appLogger logger.Logger, prefix st
 		return
 	}
 
-	encoded, err := json.Marshal(event)
-	if err != nil {
-		appLogger.Error("Failed to marshal MQTT event", "error", err, "type", event.Type)
-		return
-	}
-
-	if err := publishPahoMessage(client, fmt.Sprintf("%s/events", prefix), encoded); err != nil {
+	if err := publishMQTTJSON(client, fmt.Sprintf("%s/events", prefix), event); err != nil {
 		appLogger.Error("Failed to publish MQTT event", "error", err, "type", event.Type)
 	}
+}
+
+func publishMQTTJSON(client pahomqtt.Client, topic string, payload any) error {
+	if client == nil {
+		return nil
+	}
+	encoded, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	return publishPahoMessage(client, topic, encoded)
 }
 
 func publishPahoMessage(client pahomqtt.Client, topic string, payload []byte) error {

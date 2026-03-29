@@ -79,6 +79,17 @@ message AdTemplate {
   google.protobuf.Timestamp updated_at = 10;
 }
 
+message PopupAd {
+  string id = 1;
+  string type = 2;
+  string label = 3;
+  string value = 4;
+  bool is_active = 5;
+  int32 max_triggers_per_session = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
 message PlayerConfig {
   string id = 1;
   string name = 2;
@@ -329,6 +340,19 @@ message AdminAdTemplate {
   optional string owner_email = 10;
   google.protobuf.Timestamp created_at = 11;
   google.protobuf.Timestamp updated_at = 12;
+}
+
+message AdminPopupAd {
+  string id = 1;
+  string user_id = 2;
+  string type = 3;
+  string label = 4;
+  string value = 5;
+  bool is_active = 6;
+  int32 max_triggers_per_session = 7;
+  optional string owner_email = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
 }
 
 message AdminJob {

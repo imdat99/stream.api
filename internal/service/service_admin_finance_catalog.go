@@ -461,6 +461,150 @@ func (s *appServices) DeleteAdminAdTemplate(ctx context.Context, req *appv1.Dele
 	return &appv1.MessageResponse{Message: "Ad template deleted"}, nil
 }
 
+func (s *appServices) ListAdminPopupAds(ctx context.Context, req *appv1.ListAdminPopupAdsRequest) (*appv1.ListAdminPopupAdsResponse, error) {
+	if _, err := s.requireAdmin(ctx); err != nil {
+		return nil, err
+	}
+
+	page, limit, offset := adminPageLimitOffset(req.GetPage(), req.GetLimit())
+	search := strings.TrimSpace(protoStringValue(req.Search))
+	userID := strings.TrimSpace(protoStringValue(req.UserId))
+
+	items, total, err := s.popupAdRepository.ListForAdmin(ctx, search, userID, limit, offset)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to list popup ads")
+	}
+
+	payload := make([]*appv1.AdminPopupAd, 0, len(items))
+	for i := range items {
+		mapped, err := s.buildAdminPopupAd(ctx, &items[i])
+		if err != nil {
+			return nil, status.Error(codes.Internal, "Failed to list popup ads")
+		}
+		payload = append(payload, mapped)
+	}
+
+	return &appv1.ListAdminPopupAdsResponse{Items: payload, Total: total, Page: page, Limit: limit}, nil
+}
+func (s *appServices) GetAdminPopupAd(ctx context.Context, req *appv1.GetAdminPopupAdRequest) (*appv1.GetAdminPopupAdResponse, error) {
+	if _, err := s.requireAdmin(ctx); err != nil {
+		return nil, err
+	}
+	id := strings.TrimSpace(req.GetId())
+	if id == "" {
+		return nil, status.Error(codes.NotFound, "Popup ad not found")
+	}
+	item, err := s.popupAdRepository.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.NotFound, "Popup ad not found")
+		}
+		return nil, status.Error(codes.Internal, "Failed to load popup ad")
+	}
+	payload, err := s.buildAdminPopupAd(ctx, item)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to load popup ad")
+	}
+	return &appv1.GetAdminPopupAdResponse{Item: payload}, nil
+}
+func (s *appServices) CreateAdminPopupAd(ctx context.Context, req *appv1.CreateAdminPopupAdRequest) (*appv1.CreateAdminPopupAdResponse, error) {
+	if _, err := s.requireAdmin(ctx); err != nil {
+		return nil, err
+	}
+	if msg := validateAdminPopupAdInput(req.GetUserId(), req.GetType(), req.GetLabel(), req.GetValue(), req.MaxTriggersPerSession); msg != "" {
+		return nil, status.Error(codes.InvalidArgument, msg)
+	}
+	user, err := s.userRepository.GetByID(ctx, strings.TrimSpace(req.GetUserId()))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.InvalidArgument, "User not found")
+		}
+		return nil, status.Error(codes.Internal, "Failed to save popup ad")
+	}
+	maxTriggers := int32(3)
+	if req.MaxTriggersPerSession != nil {
+		maxTriggers = *req.MaxTriggersPerSession
+	}
+	item := &model.PopupAd{
+		ID:                    uuid.New().String(),
+		UserID:                user.ID,
+		Type:                  strings.ToLower(strings.TrimSpace(req.GetType())),
+		Label:                 strings.TrimSpace(req.GetLabel()),
+		Value:                 strings.TrimSpace(req.GetValue()),
+		IsActive:              model.BoolPtr(req.IsActive == nil || *req.IsActive),
+		MaxTriggersPerSession: int32Ptr(maxTriggers),
+	}
+	if err := s.popupAdRepository.Create(ctx, item); err != nil {
+		return nil, status.Error(codes.Internal, "Failed to save popup ad")
+	}
+	payload, err := s.buildAdminPopupAd(ctx, item)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to save popup ad")
+	}
+	return &appv1.CreateAdminPopupAdResponse{Item: payload}, nil
+}
+func (s *appServices) UpdateAdminPopupAd(ctx context.Context, req *appv1.UpdateAdminPopupAdRequest) (*appv1.UpdateAdminPopupAdResponse, error) {
+	if _, err := s.requireAdmin(ctx); err != nil {
+		return nil, err
+	}
+	id := strings.TrimSpace(req.GetId())
+	if id == "" {
+		return nil, status.Error(codes.NotFound, "Popup ad not found")
+	}
+	if msg := validateAdminPopupAdInput(req.GetUserId(), req.GetType(), req.GetLabel(), req.GetValue(), req.MaxTriggersPerSession); msg != "" {
+		return nil, status.Error(codes.InvalidArgument, msg)
+	}
+	user, err := s.userRepository.GetByID(ctx, strings.TrimSpace(req.GetUserId()))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.InvalidArgument, "User not found")
+		}
+		return nil, status.Error(codes.Internal, "Failed to save popup ad")
+	}
+	item, err := s.popupAdRepository.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.NotFound, "Popup ad not found")
+		}
+		return nil, status.Error(codes.Internal, "Failed to save popup ad")
+	}
+	item.UserID = user.ID
+	item.Type = strings.ToLower(strings.TrimSpace(req.GetType()))
+	item.Label = strings.TrimSpace(req.GetLabel())
+	item.Value = strings.TrimSpace(req.GetValue())
+	if req.IsActive != nil {
+		item.IsActive = model.BoolPtr(*req.IsActive)
+	}
+	if req.MaxTriggersPerSession != nil {
+		item.MaxTriggersPerSession = int32Ptr(*req.MaxTriggersPerSession)
+	}
+	if err := s.popupAdRepository.Save(ctx, item); err != nil {
+		return nil, status.Error(codes.Internal, "Failed to save popup ad")
+	}
+	payload, err := s.buildAdminPopupAd(ctx, item)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to save popup ad")
+	}
+	return &appv1.UpdateAdminPopupAdResponse{Item: payload}, nil
+}
+func (s *appServices) DeleteAdminPopupAd(ctx context.Context, req *appv1.DeleteAdminPopupAdRequest) (*appv1.MessageResponse, error) {
+	if _, err := s.requireAdmin(ctx); err != nil {
+		return nil, err
+	}
+	id := strings.TrimSpace(req.GetId())
+	if id == "" {
+		return nil, status.Error(codes.NotFound, "Popup ad not found")
+	}
+	rowsAffected, err := s.popupAdRepository.DeleteByID(ctx, id)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "Failed to delete popup ad")
+	}
+	if rowsAffected == 0 {
+		return nil, status.Error(codes.NotFound, "Popup ad not found")
+	}
+	return &appv1.MessageResponse{Message: "Popup ad deleted"}, nil
+}
+
 func (s *appServices) ListAdminPlayerConfigs(ctx context.Context, req *appv1.ListAdminPlayerConfigsRequest) (*appv1.ListAdminPlayerConfigsResponse, error) {
 	if _, err := s.requireAdmin(ctx); err != nil {
 		return nil, err

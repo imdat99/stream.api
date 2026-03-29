@@ -43,6 +43,10 @@ type PaymentRepository interface {
 	ExecuteSubscriptionPayment(ctx context.Context, userID string, plan *model.Plan, termMonths int32, paymentMethod string, paymentRecord *model.Payment, invoiceID string, now time.Time, validateFunding func(currentWalletBalance float64) (float64, error)) (*model.PlanSubscription, float64, error)
 }
 
+type NotificationEventPublisher interface {
+	PublishNotificationCreated(ctx context.Context, notification *model.Notification) error
+}
+
 type AccountRepository interface {
 	DeleteUserAccount(ctx context.Context, userID string) error
 	ClearUserData(ctx context.Context, userID string) error
@@ -74,6 +78,18 @@ type AdTemplateRepository interface {
 	SaveWithDefault(ctx context.Context, userID string, item *model.AdTemplate) error
 	DeleteByIDAndUserAndClearVideos(ctx context.Context, id string, userID string) error
 	DeleteByIDAndClearVideos(ctx context.Context, id string) error
+}
+
+type PopupAdRepository interface {
+	ListByUser(ctx context.Context, userID string, limit int32, offset int) ([]model.PopupAd, int64, error)
+	ListForAdmin(ctx context.Context, search string, userID string, limit int32, offset int) ([]model.PopupAd, int64, error)
+	GetByID(ctx context.Context, id string) (*model.PopupAd, error)
+	GetByIDAndUser(ctx context.Context, id string, userID string) (*model.PopupAd, error)
+	GetActiveByUser(ctx context.Context, userID string) (*model.PopupAd, error)
+	Create(ctx context.Context, item *model.PopupAd) error
+	Save(ctx context.Context, item *model.PopupAd) error
+	DeleteByIDAndUser(ctx context.Context, id string, userID string) (int64, error)
+	DeleteByID(ctx context.Context, id string) (int64, error)
 }
 
 type PlayerConfigRepository interface {

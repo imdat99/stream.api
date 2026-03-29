@@ -48,6 +48,7 @@ type Services struct {
 	appv1.NotificationsServer
 	appv1.DomainsServer
 	appv1.AdTemplatesServer
+	appv1.PopupAdsServer
 	appv1.PlayerConfigsServer
 	appv1.PlansServer
 	appv1.PaymentsServer
@@ -60,6 +61,7 @@ type accountAppService struct{ *appServices }
 type notificationsAppService struct{ *appServices }
 type domainsAppService struct{ *appServices }
 type adTemplatesAppService struct{ *appServices }
+type popupAdsAppService struct{ *appServices }
 type playerConfigsAppService struct{ *appServices }
 type plansAppService struct{ *appServices }
 type paymentsAppService struct{ *appServices }
@@ -72,6 +74,7 @@ type appServices struct {
 	appv1.UnimplementedNotificationsServer
 	appv1.UnimplementedDomainsServer
 	appv1.UnimplementedAdTemplatesServer
+	appv1.UnimplementedPopupAdsServer
 	appv1.UnimplementedPlayerConfigsServer
 	appv1.UnimplementedPlansServer
 	appv1.UnimplementedPaymentsServer
@@ -92,8 +95,10 @@ type appServices struct {
 	paymentRepository    PaymentRepository
 	accountRepository    AccountRepository
 	notificationRepo     NotificationRepository
+	notificationEvents   NotificationEventPublisher
 	domainRepository     DomainRepository
 	adTemplateRepository AdTemplateRepository
+	popupAdRepository    PopupAdRepository
 	playerConfigRepo     PlayerConfigRepository
 	agentRuntime         AgentRuntime
 	googleOauth          *oauth2.Config
@@ -138,7 +143,7 @@ type apiErrorBody struct {
 	Data    any    `json:"data,omitempty"`
 }
 
-func NewServices(c *redis.RedisAdapter, db *gorm.DB, l logger.Logger, cfg *config.Config, videoWorkflowService VideoWorkflow, agentRuntime AgentRuntime) *Services {
+func NewServices(c *redis.RedisAdapter, db *gorm.DB, l logger.Logger, cfg *config.Config, videoWorkflowService VideoWorkflow, agentRuntime AgentRuntime, notificationEvents NotificationEventPublisher) *Services {
 	var storageProvider storage.Provider
 	if cfg != nil {
 		provider, err := storage.NewS3Provider(cfg)
@@ -175,7 +180,7 @@ func NewServices(c *redis.RedisAdapter, db *gorm.DB, l logger.Logger, cfg *confi
 	service := &appServices{
 		db:                   db,
 		logger:               l,
-		authenticator:        middleware.NewAuthenticator(db, l, cfg.Internal.Marker),
+		authenticator:        middleware.NewAuthenticator(db, l, cfg.Internal.Marker, notificationEvents),
 		cache:                c,
 		storageProvider:      storageProvider,
 		videoWorkflowService: videoWorkflowService,
@@ -187,8 +192,10 @@ func NewServices(c *redis.RedisAdapter, db *gorm.DB, l logger.Logger, cfg *confi
 		paymentRepository:    repository.NewPaymentRepository(db),
 		accountRepository:    repository.NewAccountRepository(db),
 		notificationRepo:     repository.NewNotificationRepository(db),
+		notificationEvents:   notificationEvents,
 		domainRepository:     repository.NewDomainRepository(db),
 		adTemplateRepository: repository.NewAdTemplateRepository(db),
+		popupAdRepository:    repository.NewPopupAdRepository(db),
 		playerConfigRepo:     repository.NewPlayerConfigRepository(db),
 		jobRepository:        repository.NewJobRepository(db),
 		agentRuntime:         agentRuntime,
@@ -203,6 +210,7 @@ func NewServices(c *redis.RedisAdapter, db *gorm.DB, l logger.Logger, cfg *confi
 		NotificationsServer: &notificationsAppService{appServices: service},
 		DomainsServer:       &domainsAppService{appServices: service},
 		AdTemplatesServer:   &adTemplatesAppService{appServices: service},
+		PopupAdsServer:      &popupAdsAppService{appServices: service},
 		PlayerConfigsServer: &playerConfigsAppService{appServices: service},
 		PlansServer:         &plansAppService{appServices: service},
 		PaymentsServer:      &paymentsAppService{appServices: service},

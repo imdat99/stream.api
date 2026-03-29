@@ -12,17 +12,11 @@ import (
 	"stream.api/pkg/logger"
 )
 
-const (
-	defaultMQTTBrokerURL = "tcp://broker.mqtt-dashboard.com:1883"
-	defaultMQTTPrefix    = "picpic"
-	defaultPublishWait   = 5 * time.Second
-)
-
 type agentRuntime interface {
 	ListAgentsWithStats() []*dto.AgentWithStats
 }
 
-type mqttPublisher struct {
+type streamEventPublisher struct {
 	client     pahomqtt.Client
 	jobService *service.JobService
 	agentRT    agentRuntime
@@ -30,13 +24,13 @@ type mqttPublisher struct {
 	prefix     string
 }
 
-func newMQTTPublisher(jobService *service.JobService, agentRT agentRuntime, appLogger logger.Logger) (*mqttPublisher, error) {
+func newStreamEventPublisher(jobService *service.JobService, agentRT agentRuntime, appLogger logger.Logger) (*streamEventPublisher, error) {
 	client, err := connectPahoClient(defaultMQTTBrokerURL, fmt.Sprintf("stream-api-%d", time.Now().UnixNano()))
 	if err != nil {
 		return nil, err
 	}
 
-	return &mqttPublisher{
+	return &streamEventPublisher{
 		client:     client,
 		jobService: jobService,
 		agentRT:    agentRT,
@@ -45,7 +39,7 @@ func newMQTTPublisher(jobService *service.JobService, agentRT agentRuntime, appL
 	}, nil
 }
 
-func (p *mqttPublisher) start(ctx context.Context) {
+func (p *streamEventPublisher) start(ctx context.Context) {
 	if p == nil || p.jobService == nil {
 		return
 	}
@@ -54,7 +48,7 @@ func (p *mqttPublisher) start(ctx context.Context) {
 	go p.consumeResources(ctx)
 }
 
-func (p *mqttPublisher) consumeLogs(ctx context.Context) {
+func (p *streamEventPublisher) consumeLogs(ctx context.Context) {
 	ch, err := p.jobService.SubscribeJobLogs(ctx, "")
 	if err != nil {
 		p.logger.Error("Failed to subscribe job logs for MQTT", "error", err)
@@ -69,14 +63,14 @@ func (p *mqttPublisher) consumeLogs(ctx context.Context) {
 			if !ok {
 				return
 			}
-			if err := p.publishJSON(p.logTopic(entry.JobID), entry); err != nil {
+			if err := publishMQTTJSON(p.client, p.logTopic(entry.JobID), entry); err != nil {
 				p.logger.Error("Failed to publish MQTT job log", "error", err, "job_id", entry.JobID)
 			}
 		}
 	}
 }
 
-func (p *mqttPublisher) consumeJobUpdates(ctx context.Context) {
+func (p *streamEventPublisher) consumeJobUpdates(ctx context.Context) {
 	ch, err := p.jobService.SubscribeJobUpdates(ctx)
 	if err != nil {
 		p.logger.Error("Failed to subscribe job updates for MQTT", "error", err)
@@ -106,7 +100,7 @@ func (p *mqttPublisher) consumeJobUpdates(ctx context.Context) {
 	}
 }
 
-func (p *mqttPublisher) consumeResources(ctx context.Context) {
+func (p *streamEventPublisher) consumeResources(ctx context.Context) {
 	ch, err := p.jobService.SubscribeSystemResources(ctx)
 	if err != nil {
 		p.logger.Error("Failed to subscribe resources for MQTT", "error", err)
@@ -137,7 +131,7 @@ func (p *mqttPublisher) consumeResources(ctx context.Context) {
 	}
 }
 
-func (p *mqttPublisher) findAgent(agentID string) *dto.AgentWithStats {
+func (p *streamEventPublisher) findAgent(agentID string) *dto.AgentWithStats {
 	if p == nil || p.agentRT == nil {
 		return nil
 	}
@@ -149,40 +143,25 @@ func (p *mqttPublisher) findAgent(agentID string) *dto.AgentWithStats {
 	return nil
 }
 
-func (p *mqttPublisher) publishEvent(eventType string, payload any, jobID string) error {
+func (p *streamEventPublisher) publishEvent(eventType string, payload any, jobID string) error {
 	message := mqttEvent{Type: eventType, Payload: payload}
 	if jobID != "" {
-		if err := p.publishJSON(p.jobTopic(jobID), message); err != nil {
+		if err := publishMQTTJSON(p.client, p.jobTopic(jobID), message); err != nil {
 			return err
 		}
 	}
-	return p.publishJSON(p.eventsTopic(), message)
+	return publishMQTTJSON(p.client, p.eventsTopic(), message)
 }
 
-func (p *mqttPublisher) publishJSON(topic string, payload any) error {
-	encoded, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
-	return p.publish(topic, encoded)
-}
-
-func (p *mqttPublisher) publish(topic string, payload []byte) error {
-	if p == nil {
-		return nil
-	}
-	return publishPahoMessage(p.client, topic, payload)
-}
-
-func (p *mqttPublisher) logTopic(jobID string) string {
+func (p *streamEventPublisher) logTopic(jobID string) string {
 	return fmt.Sprintf("%s/logs/%s", p.prefix, jobID)
 }
 
-func (p *mqttPublisher) jobTopic(jobID string) string {
+func (p *streamEventPublisher) jobTopic(jobID string) string {
 	return fmt.Sprintf("%s/job/%s", p.prefix, jobID)
 }
 
-func (p *mqttPublisher) eventsTopic() string {
+func (p *streamEventPublisher) eventsTopic() string {
 	return fmt.Sprintf("%s/events", p.prefix)
 }
 
@@ -205,40 +184,4 @@ func mapAgentPayload(agent *dto.AgentWithStats) map[string]any {
 		"updated_at":       agent.UpdatedAt,
 		"active_job_count": agent.ActiveJobCount,
 	}
-}
-
-type mqttEvent struct {
-	Type    string `json:"type"`
-	Payload any    `json:"payload"`
-}
-
-type MQTTBootstrap struct{ *mqttPublisher }
-
-func NewMQTTBootstrap(jobService *service.JobService, agentRT agentRuntime, appLogger logger.Logger) (*MQTTBootstrap, error) {
-	publisher, err := newMQTTPublisher(jobService, agentRT, appLogger)
-	if err != nil {
-		return nil, err
-	}
-	return &MQTTBootstrap{mqttPublisher: publisher}, nil
-}
-
-func (b *MQTTBootstrap) Start(ctx context.Context) {
-	if b == nil || b.mqttPublisher == nil {
-		return
-	}
-	b.mqttPublisher.start(ctx)
-}
-
-func (b *MQTTBootstrap) Client() pahomqtt.Client {
-	if b == nil || b.mqttPublisher == nil {
-		return nil
-	}
-	return b.client
-}
-
-func PublishAgentMQTTEvent(client pahomqtt.Client, appLogger logger.Logger, eventType string, agent *dto.AgentWithStats) {
-	publishMQTTEvent(client, appLogger, defaultMQTTPrefix, mqttEvent{
-		Type:    eventType,
-		Payload: mapAgentPayload(agent),
-	})
 }

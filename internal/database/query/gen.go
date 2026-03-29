@@ -25,6 +25,7 @@ var (
 	Plan              *plan
 	PlanSubscription  *planSubscription
 	PlayerConfig      *playerConfig
+	PopupAd           *popupAd
 	User              *user
 	UserPreference    *userPreference
 	Video             *video
@@ -41,6 +42,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	Plan = &Q.Plan
 	PlanSubscription = &Q.PlanSubscription
 	PlayerConfig = &Q.PlayerConfig
+	PopupAd = &Q.PopupAd
 	User = &Q.User
 	UserPreference = &Q.UserPreference
 	Video = &Q.Video
@@ -58,6 +60,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Plan:              newPlan(db, opts...),
 		PlanSubscription:  newPlanSubscription(db, opts...),
 		PlayerConfig:      newPlayerConfig(db, opts...),
+		PopupAd:           newPopupAd(db, opts...),
 		User:              newUser(db, opts...),
 		UserPreference:    newUserPreference(db, opts...),
 		Video:             newVideo(db, opts...),
@@ -76,6 +79,7 @@ type Query struct {
 	Plan              plan
 	PlanSubscription  planSubscription
 	PlayerConfig      playerConfig
+	PopupAd           popupAd
 	User              user
 	UserPreference    userPreference
 	Video             video
@@ -95,6 +99,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Plan:              q.Plan.clone(db),
 		PlanSubscription:  q.PlanSubscription.clone(db),
 		PlayerConfig:      q.PlayerConfig.clone(db),
+		PopupAd:           q.PopupAd.clone(db),
 		User:              q.User.clone(db),
 		UserPreference:    q.UserPreference.clone(db),
 		Video:             q.Video.clone(db),
@@ -121,6 +126,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Plan:              q.Plan.replaceDB(db),
 		PlanSubscription:  q.PlanSubscription.replaceDB(db),
 		PlayerConfig:      q.PlayerConfig.replaceDB(db),
+		PopupAd:           q.PopupAd.replaceDB(db),
 		User:              q.User.replaceDB(db),
 		UserPreference:    q.UserPreference.replaceDB(db),
 		Video:             q.Video.replaceDB(db),
@@ -137,6 +143,7 @@ type queryCtx struct {
 	Plan              IPlanDo
 	PlanSubscription  IPlanSubscriptionDo
 	PlayerConfig      IPlayerConfigDo
+	PopupAd           IPopupAdDo
 	User              IUserDo
 	UserPreference    IUserPreferenceDo
 	Video             IVideoDo
@@ -153,6 +160,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Plan:              q.Plan.WithContext(ctx),
 		PlanSubscription:  q.PlanSubscription.WithContext(ctx),
 		PlayerConfig:      q.PlayerConfig.WithContext(ctx),
+		PopupAd:           q.PopupAd.WithContext(ctx),
 		User:              q.User.WithContext(ctx),
 		UserPreference:    q.UserPreference.WithContext(ctx),
 		Video:             q.Video.WithContext(ctx),

@@ -141,6 +141,7 @@ func (s *paymentsAppService) TopupWallet(ctx context.Context, req *appv1.TopupWa
 		s.logger.Error("Failed to top up wallet", "error", err)
 		return nil, status.Error(codes.Internal, "Failed to top up wallet")
 	}
+	s.publishNotificationCreated(ctx, notification)
 
 	balance, err := s.billingRepository.GetWalletBalance(ctx, result.UserID)
 	if err != nil {

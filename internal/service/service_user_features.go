@@ -318,6 +318,150 @@ func (s *adTemplatesAppService) DeleteAdTemplate(ctx context.Context, req *appv1
 
 	return messageResponse("Ad template deleted"), nil
 }
+func (s *popupAdsAppService) ListPopupAds(ctx context.Context, req *appv1.ListPopupAdsRequest) (*appv1.ListPopupAdsResponse, error) {
+	result, err := s.authenticate(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	page, limit, offset := adminPageLimitOffset(req.GetPage(), req.GetLimit())
+	items, total, err := s.popupAdRepository.ListByUser(ctx, result.UserID, limit, offset)
+	if err != nil {
+		s.logger.Error("Failed to list popup ads", "error", err)
+		return nil, status.Error(codes.Internal, "Failed to load popup ads")
+	}
+
+	payload := make([]*appv1.PopupAd, 0, len(items))
+	for _, item := range items {
+		copyItem := item
+		payload = append(payload, toProtoPopupAd(&copyItem))
+	}
+
+	return &appv1.ListPopupAdsResponse{Items: payload, Total: total, Page: page, Limit: limit}, nil
+}
+func (s *popupAdsAppService) CreatePopupAd(ctx context.Context, req *appv1.CreatePopupAdRequest) (*appv1.CreatePopupAdResponse, error) {
+	result, err := s.authenticate(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	popupType := strings.ToLower(strings.TrimSpace(req.GetType()))
+	label := strings.TrimSpace(req.GetLabel())
+	value := strings.TrimSpace(req.GetValue())
+	maxTriggers := int32(3)
+	if req.MaxTriggersPerSession != nil {
+		maxTriggers = *req.MaxTriggersPerSession
+	}
+	if popupType != "url" && popupType != "script" {
+		return nil, status.Error(codes.InvalidArgument, "Popup ad type must be url or script")
+	}
+	if label == "" || value == "" {
+		return nil, status.Error(codes.InvalidArgument, "Label and value are required")
+	}
+	if maxTriggers < 1 {
+		return nil, status.Error(codes.InvalidArgument, "Max triggers per session must be greater than 0")
+	}
+
+	item := &model.PopupAd{
+		ID:                    uuid.New().String(),
+		UserID:                result.UserID,
+		Type:                  popupType,
+		Label:                 label,
+		Value:                 value,
+		IsActive:              model.BoolPtr(req.IsActive == nil || *req.IsActive),
+		MaxTriggersPerSession: int32Ptr(maxTriggers),
+	}
+	if err := s.popupAdRepository.Create(ctx, item); err != nil {
+		s.logger.Error("Failed to create popup ad", "error", err)
+		return nil, status.Error(codes.Internal, "Failed to save popup ad")
+	}
+
+	return &appv1.CreatePopupAdResponse{Item: toProtoPopupAd(item)}, nil
+}
+func (s *popupAdsAppService) UpdatePopupAd(ctx context.Context, req *appv1.UpdatePopupAdRequest) (*appv1.UpdatePopupAdResponse, error) {
+	result, err := s.authenticate(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	id := strings.TrimSpace(req.GetId())
+	if id == "" {
+		return nil, status.Error(codes.NotFound, "Popup ad not found")
+	}
+	popupType := strings.ToLower(strings.TrimSpace(req.GetType()))
+	label := strings.TrimSpace(req.GetLabel())
+	value := strings.TrimSpace(req.GetValue())
+	if popupType != "url" && popupType != "script" {
+		return nil, status.Error(codes.InvalidArgument, "Popup ad type must be url or script")
+	}
+	if label == "" || value == "" {
+		return nil, status.Error(codes.InvalidArgument, "Label and value are required")
+	}
+	if req.MaxTriggersPerSession != nil && *req.MaxTriggersPerSession < 1 {
+		return nil, status.Error(codes.InvalidArgument, "Max triggers per session must be greater than 0")
+	}
+
+	item, err := s.popupAdRepository.GetByIDAndUser(ctx, id, result.UserID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, status.Error(codes.NotFound, "Popup ad not found")
+		}
+		s.logger.Error("Failed to load popup ad", "error", err)
+		return nil, status.Error(codes.Internal, "Failed to save popup ad")
+	}
+
+	item.Type = popupType
+	item.Label = label
+	item.Value = value
+	if req.IsActive != nil {
+		item.IsActive = model.BoolPtr(*req.IsActive)
+	}
+	if req.MaxTriggersPerSession != nil {
+		item.MaxTriggersPerSession = int32Ptr(*req.MaxTriggersPerSession)
+	}
+	if err := s.popupAdRepository.Save(ctx, item); err != nil {
+		s.logger.Error("Failed to update popup ad", "error", err)
+		return nil, status.Error(codes.Internal, "Failed to save popup ad")
+	}
+
+	return &appv1.UpdatePopupAdResponse{Item: toProtoPopupAd(item)}, nil
+}
+func (s *popupAdsAppService) DeletePopupAd(ctx context.Context, req *appv1.DeletePopupAdRequest) (*appv1.MessageResponse, error) {
+	result, err := s.authenticate(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	id := strings.TrimSpace(req.GetId())
+	if id == "" {
+		return nil, status.Error(codes.NotFound, "Popup ad not found")
+	}
+	rowsAffected, err := s.popupAdRepository.DeleteByIDAndUser(ctx, id, result.UserID)
+	if err != nil {
+		s.logger.Error("Failed to delete popup ad", "error", err)
+		return nil, status.Error(codes.Internal, "Failed to delete popup ad")
+	}
+	if rowsAffected == 0 {
+		return nil, status.Error(codes.NotFound, "Popup ad not found")
+	}
+	return messageResponse("Popup ad deleted"), nil
+}
+func (s *popupAdsAppService) GetActivePopupAd(ctx context.Context, _ *appv1.GetActivePopupAdRequest) (*appv1.GetActivePopupAdResponse, error) {
+	result, err := s.authenticate(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	item, err := s.popupAdRepository.GetActiveByUser(ctx, result.UserID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &appv1.GetActivePopupAdResponse{}, nil
+		}
+		s.logger.Error("Failed to load active popup ad", "error", err)
+		return nil, status.Error(codes.Internal, "Failed to load popup ad")
+	}
+	return &appv1.GetActivePopupAdResponse{Item: toProtoPopupAd(item)}, nil
+}
 func (s *plansAppService) ListPlans(ctx context.Context, _ *appv1.ListPlansRequest) (*appv1.ListPlansResponse, error) {
 	if _, err := s.authenticate(ctx); err != nil {
 		return nil, err

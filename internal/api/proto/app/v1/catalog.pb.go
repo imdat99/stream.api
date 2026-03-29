@@ -637,6 +637,498 @@ func (x *DeleteAdTemplateRequest) GetId() string {
 	return ""
 }
 
+type ListPopupAdsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Page          int32                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
+	Limit         int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListPopupAdsRequest) Reset() {
+	*x = ListPopupAdsRequest{}
+	mi := &file_app_v1_catalog_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPopupAdsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPopupAdsRequest) ProtoMessage() {}
+
+func (x *ListPopupAdsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_catalog_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPopupAdsRequest.ProtoReflect.Descriptor instead.
+func (*ListPopupAdsRequest) Descriptor() ([]byte, []int) {
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ListPopupAdsRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListPopupAdsRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type ListPopupAdsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*PopupAd             `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	Total         int64                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	Page          int32                  `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
+	Limit         int32                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListPopupAdsResponse) Reset() {
+	*x = ListPopupAdsResponse{}
+	mi := &file_app_v1_catalog_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPopupAdsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPopupAdsResponse) ProtoMessage() {}
+
+func (x *ListPopupAdsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_catalog_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPopupAdsResponse.ProtoReflect.Descriptor instead.
+func (*ListPopupAdsResponse) Descriptor() ([]byte, []int) {
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *ListPopupAdsResponse) GetItems() []*PopupAd {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+func (x *ListPopupAdsResponse) GetTotal() int64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *ListPopupAdsResponse) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListPopupAdsResponse) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type CreatePopupAdRequest struct {
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	Type                  string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Label                 string                 `protobuf:"bytes,2,opt,name=label,proto3" json:"label,omitempty"`
+	Value                 string                 `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
+	IsActive              *bool                  `protobuf:"varint,4,opt,name=is_active,json=isActive,proto3,oneof" json:"is_active,omitempty"`
+	MaxTriggersPerSession *int32                 `protobuf:"varint,5,opt,name=max_triggers_per_session,json=maxTriggersPerSession,proto3,oneof" json:"max_triggers_per_session,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *CreatePopupAdRequest) Reset() {
+	*x = CreatePopupAdRequest{}
+	mi := &file_app_v1_catalog_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreatePopupAdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreatePopupAdRequest) ProtoMessage() {}
+
+func (x *CreatePopupAdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_catalog_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreatePopupAdRequest.ProtoReflect.Descriptor instead.
+func (*CreatePopupAdRequest) Descriptor() ([]byte, []int) {
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *CreatePopupAdRequest) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *CreatePopupAdRequest) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *CreatePopupAdRequest) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *CreatePopupAdRequest) GetIsActive() bool {
+	if x != nil && x.IsActive != nil {
+		return *x.IsActive
+	}
+	return false
+}
+
+func (x *CreatePopupAdRequest) GetMaxTriggersPerSession() int32 {
+	if x != nil && x.MaxTriggersPerSession != nil {
+		return *x.MaxTriggersPerSession
+	}
+	return 0
+}
+
+type CreatePopupAdResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Item          *PopupAd               `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreatePopupAdResponse) Reset() {
+	*x = CreatePopupAdResponse{}
+	mi := &file_app_v1_catalog_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreatePopupAdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreatePopupAdResponse) ProtoMessage() {}
+
+func (x *CreatePopupAdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_catalog_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreatePopupAdResponse.ProtoReflect.Descriptor instead.
+func (*CreatePopupAdResponse) Descriptor() ([]byte, []int) {
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *CreatePopupAdResponse) GetItem() *PopupAd {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+type UpdatePopupAdRequest struct {
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	Id                    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Type                  string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	Label                 string                 `protobuf:"bytes,3,opt,name=label,proto3" json:"label,omitempty"`
+	Value                 string                 `protobuf:"bytes,4,opt,name=value,proto3" json:"value,omitempty"`
+	IsActive              *bool                  `protobuf:"varint,5,opt,name=is_active,json=isActive,proto3,oneof" json:"is_active,omitempty"`
+	MaxTriggersPerSession *int32                 `protobuf:"varint,6,opt,name=max_triggers_per_session,json=maxTriggersPerSession,proto3,oneof" json:"max_triggers_per_session,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *UpdatePopupAdRequest) Reset() {
+	*x = UpdatePopupAdRequest{}
+	mi := &file_app_v1_catalog_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdatePopupAdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdatePopupAdRequest) ProtoMessage() {}
+
+func (x *UpdatePopupAdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_catalog_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdatePopupAdRequest.ProtoReflect.Descriptor instead.
+func (*UpdatePopupAdRequest) Descriptor() ([]byte, []int) {
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *UpdatePopupAdRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdatePopupAdRequest) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *UpdatePopupAdRequest) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *UpdatePopupAdRequest) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *UpdatePopupAdRequest) GetIsActive() bool {
+	if x != nil && x.IsActive != nil {
+		return *x.IsActive
+	}
+	return false
+}
+
+func (x *UpdatePopupAdRequest) GetMaxTriggersPerSession() int32 {
+	if x != nil && x.MaxTriggersPerSession != nil {
+		return *x.MaxTriggersPerSession
+	}
+	return 0
+}
+
+type UpdatePopupAdResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Item          *PopupAd               `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdatePopupAdResponse) Reset() {
+	*x = UpdatePopupAdResponse{}
+	mi := &file_app_v1_catalog_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdatePopupAdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdatePopupAdResponse) ProtoMessage() {}
+
+func (x *UpdatePopupAdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_catalog_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdatePopupAdResponse.ProtoReflect.Descriptor instead.
+func (*UpdatePopupAdResponse) Descriptor() ([]byte, []int) {
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *UpdatePopupAdResponse) GetItem() *PopupAd {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+type DeletePopupAdRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeletePopupAdRequest) Reset() {
+	*x = DeletePopupAdRequest{}
+	mi := &file_app_v1_catalog_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeletePopupAdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeletePopupAdRequest) ProtoMessage() {}
+
+func (x *DeletePopupAdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_catalog_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeletePopupAdRequest.ProtoReflect.Descriptor instead.
+func (*DeletePopupAdRequest) Descriptor() ([]byte, []int) {
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *DeletePopupAdRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type GetActivePopupAdRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetActivePopupAdRequest) Reset() {
+	*x = GetActivePopupAdRequest{}
+	mi := &file_app_v1_catalog_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetActivePopupAdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetActivePopupAdRequest) ProtoMessage() {}
+
+func (x *GetActivePopupAdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_catalog_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetActivePopupAdRequest.ProtoReflect.Descriptor instead.
+func (*GetActivePopupAdRequest) Descriptor() ([]byte, []int) {
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{19}
+}
+
+type GetActivePopupAdResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Item          *PopupAd               `protobuf:"bytes,1,opt,name=item,proto3,oneof" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetActivePopupAdResponse) Reset() {
+	*x = GetActivePopupAdResponse{}
+	mi := &file_app_v1_catalog_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetActivePopupAdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetActivePopupAdResponse) ProtoMessage() {}
+
+func (x *GetActivePopupAdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_catalog_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetActivePopupAdResponse.ProtoReflect.Descriptor instead.
+func (*GetActivePopupAdResponse) Descriptor() ([]byte, []int) {
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *GetActivePopupAdResponse) GetItem() *PopupAd {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
 type ListPlayerConfigsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -645,7 +1137,7 @@ type ListPlayerConfigsRequest struct {
 
 func (x *ListPlayerConfigsRequest) Reset() {
 	*x = ListPlayerConfigsRequest{}
-	mi := &file_app_v1_catalog_proto_msgTypes[12]
+	mi := &file_app_v1_catalog_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -657,7 +1149,7 @@ func (x *ListPlayerConfigsRequest) String() string {
 func (*ListPlayerConfigsRequest) ProtoMessage() {}
 
 func (x *ListPlayerConfigsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_catalog_proto_msgTypes[12]
+	mi := &file_app_v1_catalog_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -670,7 +1162,7 @@ func (x *ListPlayerConfigsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPlayerConfigsRequest.ProtoReflect.Descriptor instead.
 func (*ListPlayerConfigsRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_catalog_proto_rawDescGZIP(), []int{12}
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{21}
 }
 
 type ListPlayerConfigsResponse struct {
@@ -682,7 +1174,7 @@ type ListPlayerConfigsResponse struct {
 
 func (x *ListPlayerConfigsResponse) Reset() {
 	*x = ListPlayerConfigsResponse{}
-	mi := &file_app_v1_catalog_proto_msgTypes[13]
+	mi := &file_app_v1_catalog_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -694,7 +1186,7 @@ func (x *ListPlayerConfigsResponse) String() string {
 func (*ListPlayerConfigsResponse) ProtoMessage() {}
 
 func (x *ListPlayerConfigsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_catalog_proto_msgTypes[13]
+	mi := &file_app_v1_catalog_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -707,7 +1199,7 @@ func (x *ListPlayerConfigsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPlayerConfigsResponse.ProtoReflect.Descriptor instead.
 func (*ListPlayerConfigsResponse) Descriptor() ([]byte, []int) {
-	return file_app_v1_catalog_proto_rawDescGZIP(), []int{13}
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *ListPlayerConfigsResponse) GetConfigs() []*PlayerConfig {
@@ -738,7 +1230,7 @@ type CreatePlayerConfigRequest struct {
 
 func (x *CreatePlayerConfigRequest) Reset() {
 	*x = CreatePlayerConfigRequest{}
-	mi := &file_app_v1_catalog_proto_msgTypes[14]
+	mi := &file_app_v1_catalog_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -750,7 +1242,7 @@ func (x *CreatePlayerConfigRequest) String() string {
 func (*CreatePlayerConfigRequest) ProtoMessage() {}
 
 func (x *CreatePlayerConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_catalog_proto_msgTypes[14]
+	mi := &file_app_v1_catalog_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -763,7 +1255,7 @@ func (x *CreatePlayerConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePlayerConfigRequest.ProtoReflect.Descriptor instead.
 func (*CreatePlayerConfigRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_catalog_proto_rawDescGZIP(), []int{14}
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *CreatePlayerConfigRequest) GetName() string {
@@ -866,7 +1358,7 @@ type CreatePlayerConfigResponse struct {
 
 func (x *CreatePlayerConfigResponse) Reset() {
 	*x = CreatePlayerConfigResponse{}
-	mi := &file_app_v1_catalog_proto_msgTypes[15]
+	mi := &file_app_v1_catalog_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -878,7 +1370,7 @@ func (x *CreatePlayerConfigResponse) String() string {
 func (*CreatePlayerConfigResponse) ProtoMessage() {}
 
 func (x *CreatePlayerConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_catalog_proto_msgTypes[15]
+	mi := &file_app_v1_catalog_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -891,7 +1383,7 @@ func (x *CreatePlayerConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePlayerConfigResponse.ProtoReflect.Descriptor instead.
 func (*CreatePlayerConfigResponse) Descriptor() ([]byte, []int) {
-	return file_app_v1_catalog_proto_rawDescGZIP(), []int{15}
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *CreatePlayerConfigResponse) GetConfig() *PlayerConfig {
@@ -923,7 +1415,7 @@ type UpdatePlayerConfigRequest struct {
 
 func (x *UpdatePlayerConfigRequest) Reset() {
 	*x = UpdatePlayerConfigRequest{}
-	mi := &file_app_v1_catalog_proto_msgTypes[16]
+	mi := &file_app_v1_catalog_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -935,7 +1427,7 @@ func (x *UpdatePlayerConfigRequest) String() string {
 func (*UpdatePlayerConfigRequest) ProtoMessage() {}
 
 func (x *UpdatePlayerConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_catalog_proto_msgTypes[16]
+	mi := &file_app_v1_catalog_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -948,7 +1440,7 @@ func (x *UpdatePlayerConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdatePlayerConfigRequest.ProtoReflect.Descriptor instead.
 func (*UpdatePlayerConfigRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_catalog_proto_rawDescGZIP(), []int{16}
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *UpdatePlayerConfigRequest) GetId() string {
@@ -1058,7 +1550,7 @@ type UpdatePlayerConfigResponse struct {
 
 func (x *UpdatePlayerConfigResponse) Reset() {
 	*x = UpdatePlayerConfigResponse{}
-	mi := &file_app_v1_catalog_proto_msgTypes[17]
+	mi := &file_app_v1_catalog_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1070,7 +1562,7 @@ func (x *UpdatePlayerConfigResponse) String() string {
 func (*UpdatePlayerConfigResponse) ProtoMessage() {}
 
 func (x *UpdatePlayerConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_catalog_proto_msgTypes[17]
+	mi := &file_app_v1_catalog_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1083,7 +1575,7 @@ func (x *UpdatePlayerConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdatePlayerConfigResponse.ProtoReflect.Descriptor instead.
 func (*UpdatePlayerConfigResponse) Descriptor() ([]byte, []int) {
-	return file_app_v1_catalog_proto_rawDescGZIP(), []int{17}
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *UpdatePlayerConfigResponse) GetConfig() *PlayerConfig {
@@ -1102,7 +1594,7 @@ type DeletePlayerConfigRequest struct {
 
 func (x *DeletePlayerConfigRequest) Reset() {
 	*x = DeletePlayerConfigRequest{}
-	mi := &file_app_v1_catalog_proto_msgTypes[18]
+	mi := &file_app_v1_catalog_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1114,7 +1606,7 @@ func (x *DeletePlayerConfigRequest) String() string {
 func (*DeletePlayerConfigRequest) ProtoMessage() {}
 
 func (x *DeletePlayerConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_catalog_proto_msgTypes[18]
+	mi := &file_app_v1_catalog_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1127,7 +1619,7 @@ func (x *DeletePlayerConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeletePlayerConfigRequest.ProtoReflect.Descriptor instead.
 func (*DeletePlayerConfigRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_catalog_proto_rawDescGZIP(), []int{18}
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *DeletePlayerConfigRequest) GetId() string {
@@ -1145,7 +1637,7 @@ type ListPlansRequest struct {
 
 func (x *ListPlansRequest) Reset() {
 	*x = ListPlansRequest{}
-	mi := &file_app_v1_catalog_proto_msgTypes[19]
+	mi := &file_app_v1_catalog_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1157,7 +1649,7 @@ func (x *ListPlansRequest) String() string {
 func (*ListPlansRequest) ProtoMessage() {}
 
 func (x *ListPlansRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_catalog_proto_msgTypes[19]
+	mi := &file_app_v1_catalog_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1170,7 +1662,7 @@ func (x *ListPlansRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPlansRequest.ProtoReflect.Descriptor instead.
 func (*ListPlansRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_catalog_proto_rawDescGZIP(), []int{19}
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{28}
 }
 
 type ListPlansResponse struct {
@@ -1182,7 +1674,7 @@ type ListPlansResponse struct {
 
 func (x *ListPlansResponse) Reset() {
 	*x = ListPlansResponse{}
-	mi := &file_app_v1_catalog_proto_msgTypes[20]
+	mi := &file_app_v1_catalog_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1194,7 +1686,7 @@ func (x *ListPlansResponse) String() string {
 func (*ListPlansResponse) ProtoMessage() {}
 
 func (x *ListPlansResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_catalog_proto_msgTypes[20]
+	mi := &file_app_v1_catalog_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1207,7 +1699,7 @@ func (x *ListPlansResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPlansResponse.ProtoReflect.Descriptor instead.
 func (*ListPlansResponse) Descriptor() ([]byte, []int) {
-	return file_app_v1_catalog_proto_rawDescGZIP(), []int{20}
+	return file_app_v1_catalog_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *ListPlansResponse) GetPlans() []*Plan {
@@ -1274,7 +1766,44 @@ const file_app_v1_catalog_proto_rawDesc = "" +
 	"\x18UpdateAdTemplateResponse\x125\n" +
 	"\btemplate\x18\x01 \x01(\v2\x19.stream.app.v1.AdTemplateR\btemplate\")\n" +
 	"\x17DeleteAdTemplateRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"\x1a\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"?\n" +
+	"\x13ListPopupAdsRequest\x12\x12\n" +
+	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x14\n" +
+	"\x05limit\x18\x02 \x01(\x05R\x05limit\"\x84\x01\n" +
+	"\x14ListPopupAdsResponse\x12,\n" +
+	"\x05items\x18\x01 \x03(\v2\x16.stream.app.v1.PopupAdR\x05items\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total\x12\x12\n" +
+	"\x04page\x18\x03 \x01(\x05R\x04page\x12\x14\n" +
+	"\x05limit\x18\x04 \x01(\x05R\x05limit\"\xe1\x01\n" +
+	"\x14CreatePopupAdRequest\x12\x12\n" +
+	"\x04type\x18\x01 \x01(\tR\x04type\x12\x14\n" +
+	"\x05label\x18\x02 \x01(\tR\x05label\x12\x14\n" +
+	"\x05value\x18\x03 \x01(\tR\x05value\x12 \n" +
+	"\tis_active\x18\x04 \x01(\bH\x00R\bisActive\x88\x01\x01\x12<\n" +
+	"\x18max_triggers_per_session\x18\x05 \x01(\x05H\x01R\x15maxTriggersPerSession\x88\x01\x01B\f\n" +
+	"\n" +
+	"_is_activeB\x1b\n" +
+	"\x19_max_triggers_per_session\"C\n" +
+	"\x15CreatePopupAdResponse\x12*\n" +
+	"\x04item\x18\x01 \x01(\v2\x16.stream.app.v1.PopupAdR\x04item\"\xf1\x01\n" +
+	"\x14UpdatePopupAdRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12\x14\n" +
+	"\x05label\x18\x03 \x01(\tR\x05label\x12\x14\n" +
+	"\x05value\x18\x04 \x01(\tR\x05value\x12 \n" +
+	"\tis_active\x18\x05 \x01(\bH\x00R\bisActive\x88\x01\x01\x12<\n" +
+	"\x18max_triggers_per_session\x18\x06 \x01(\x05H\x01R\x15maxTriggersPerSession\x88\x01\x01B\f\n" +
+	"\n" +
+	"_is_activeB\x1b\n" +
+	"\x19_max_triggers_per_session\"C\n" +
+	"\x15UpdatePopupAdResponse\x12*\n" +
+	"\x04item\x18\x01 \x01(\v2\x16.stream.app.v1.PopupAdR\x04item\"&\n" +
+	"\x14DeletePopupAdRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"\x19\n" +
+	"\x17GetActivePopupAdRequest\"T\n" +
+	"\x18GetActivePopupAdResponse\x12/\n" +
+	"\x04item\x18\x01 \x01(\v2\x16.stream.app.v1.PopupAdH\x00R\x04item\x88\x01\x01B\a\n" +
+	"\x05_item\"\x1a\n" +
 	"\x18ListPlayerConfigsRequest\"R\n" +
 	"\x19ListPlayerConfigsResponse\x125\n" +
 	"\aconfigs\x18\x01 \x03(\v2\x1b.stream.app.v1.PlayerConfigR\aconfigs\"\xec\x03\n" +
@@ -1344,7 +1873,13 @@ const file_app_v1_catalog_proto_rawDesc = "" +
 	"\x0fListAdTemplates\x12%.stream.app.v1.ListAdTemplatesRequest\x1a&.stream.app.v1.ListAdTemplatesResponse\x12c\n" +
 	"\x10CreateAdTemplate\x12&.stream.app.v1.CreateAdTemplateRequest\x1a'.stream.app.v1.CreateAdTemplateResponse\x12c\n" +
 	"\x10UpdateAdTemplate\x12&.stream.app.v1.UpdateAdTemplateRequest\x1a'.stream.app.v1.UpdateAdTemplateResponse\x12Z\n" +
-	"\x10DeleteAdTemplate\x12&.stream.app.v1.DeleteAdTemplateRequest\x1a\x1e.stream.app.v1.MessageResponse2\xad\x03\n" +
+	"\x10DeleteAdTemplate\x12&.stream.app.v1.DeleteAdTemplateRequest\x1a\x1e.stream.app.v1.MessageResponse2\xd6\x03\n" +
+	"\bPopupAds\x12W\n" +
+	"\fListPopupAds\x12\".stream.app.v1.ListPopupAdsRequest\x1a#.stream.app.v1.ListPopupAdsResponse\x12Z\n" +
+	"\rCreatePopupAd\x12#.stream.app.v1.CreatePopupAdRequest\x1a$.stream.app.v1.CreatePopupAdResponse\x12Z\n" +
+	"\rUpdatePopupAd\x12#.stream.app.v1.UpdatePopupAdRequest\x1a$.stream.app.v1.UpdatePopupAdResponse\x12T\n" +
+	"\rDeletePopupAd\x12#.stream.app.v1.DeletePopupAdRequest\x1a\x1e.stream.app.v1.MessageResponse\x12c\n" +
+	"\x10GetActivePopupAd\x12&.stream.app.v1.GetActivePopupAdRequest\x1a'.stream.app.v1.GetActivePopupAdResponse2\xad\x03\n" +
 	"\rPlayerConfigs\x12f\n" +
 	"\x11ListPlayerConfigs\x12'.stream.app.v1.ListPlayerConfigsRequest\x1a(.stream.app.v1.ListPlayerConfigsResponse\x12i\n" +
 	"\x12CreatePlayerConfig\x12(.stream.app.v1.CreatePlayerConfigRequest\x1a).stream.app.v1.CreatePlayerConfigResponse\x12i\n" +
@@ -1365,7 +1900,7 @@ func file_app_v1_catalog_proto_rawDescGZIP() []byte {
 	return file_app_v1_catalog_proto_rawDescData
 }
 
-var file_app_v1_catalog_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_app_v1_catalog_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
 var file_app_v1_catalog_proto_goTypes = []any{
 	(*ListDomainsRequest)(nil),         // 0: stream.app.v1.ListDomainsRequest
 	(*ListDomainsResponse)(nil),        // 1: stream.app.v1.ListDomainsResponse
@@ -1379,60 +1914,84 @@ var file_app_v1_catalog_proto_goTypes = []any{
 	(*UpdateAdTemplateRequest)(nil),    // 9: stream.app.v1.UpdateAdTemplateRequest
 	(*UpdateAdTemplateResponse)(nil),   // 10: stream.app.v1.UpdateAdTemplateResponse
 	(*DeleteAdTemplateRequest)(nil),    // 11: stream.app.v1.DeleteAdTemplateRequest
-	(*ListPlayerConfigsRequest)(nil),   // 12: stream.app.v1.ListPlayerConfigsRequest
-	(*ListPlayerConfigsResponse)(nil),  // 13: stream.app.v1.ListPlayerConfigsResponse
-	(*CreatePlayerConfigRequest)(nil),  // 14: stream.app.v1.CreatePlayerConfigRequest
-	(*CreatePlayerConfigResponse)(nil), // 15: stream.app.v1.CreatePlayerConfigResponse
-	(*UpdatePlayerConfigRequest)(nil),  // 16: stream.app.v1.UpdatePlayerConfigRequest
-	(*UpdatePlayerConfigResponse)(nil), // 17: stream.app.v1.UpdatePlayerConfigResponse
-	(*DeletePlayerConfigRequest)(nil),  // 18: stream.app.v1.DeletePlayerConfigRequest
-	(*ListPlansRequest)(nil),           // 19: stream.app.v1.ListPlansRequest
-	(*ListPlansResponse)(nil),          // 20: stream.app.v1.ListPlansResponse
-	(*Domain)(nil),                     // 21: stream.app.v1.Domain
-	(*AdTemplate)(nil),                 // 22: stream.app.v1.AdTemplate
-	(*PlayerConfig)(nil),               // 23: stream.app.v1.PlayerConfig
-	(*Plan)(nil),                       // 24: stream.app.v1.Plan
-	(*MessageResponse)(nil),            // 25: stream.app.v1.MessageResponse
+	(*ListPopupAdsRequest)(nil),        // 12: stream.app.v1.ListPopupAdsRequest
+	(*ListPopupAdsResponse)(nil),       // 13: stream.app.v1.ListPopupAdsResponse
+	(*CreatePopupAdRequest)(nil),       // 14: stream.app.v1.CreatePopupAdRequest
+	(*CreatePopupAdResponse)(nil),      // 15: stream.app.v1.CreatePopupAdResponse
+	(*UpdatePopupAdRequest)(nil),       // 16: stream.app.v1.UpdatePopupAdRequest
+	(*UpdatePopupAdResponse)(nil),      // 17: stream.app.v1.UpdatePopupAdResponse
+	(*DeletePopupAdRequest)(nil),       // 18: stream.app.v1.DeletePopupAdRequest
+	(*GetActivePopupAdRequest)(nil),    // 19: stream.app.v1.GetActivePopupAdRequest
+	(*GetActivePopupAdResponse)(nil),   // 20: stream.app.v1.GetActivePopupAdResponse
+	(*ListPlayerConfigsRequest)(nil),   // 21: stream.app.v1.ListPlayerConfigsRequest
+	(*ListPlayerConfigsResponse)(nil),  // 22: stream.app.v1.ListPlayerConfigsResponse
+	(*CreatePlayerConfigRequest)(nil),  // 23: stream.app.v1.CreatePlayerConfigRequest
+	(*CreatePlayerConfigResponse)(nil), // 24: stream.app.v1.CreatePlayerConfigResponse
+	(*UpdatePlayerConfigRequest)(nil),  // 25: stream.app.v1.UpdatePlayerConfigRequest
+	(*UpdatePlayerConfigResponse)(nil), // 26: stream.app.v1.UpdatePlayerConfigResponse
+	(*DeletePlayerConfigRequest)(nil),  // 27: stream.app.v1.DeletePlayerConfigRequest
+	(*ListPlansRequest)(nil),           // 28: stream.app.v1.ListPlansRequest
+	(*ListPlansResponse)(nil),          // 29: stream.app.v1.ListPlansResponse
+	(*Domain)(nil),                     // 30: stream.app.v1.Domain
+	(*AdTemplate)(nil),                 // 31: stream.app.v1.AdTemplate
+	(*PopupAd)(nil),                    // 32: stream.app.v1.PopupAd
+	(*PlayerConfig)(nil),               // 33: stream.app.v1.PlayerConfig
+	(*Plan)(nil),                       // 34: stream.app.v1.Plan
+	(*MessageResponse)(nil),            // 35: stream.app.v1.MessageResponse
 }
 var file_app_v1_catalog_proto_depIdxs = []int32{
-	21, // 0: stream.app.v1.ListDomainsResponse.domains:type_name -> stream.app.v1.Domain
-	21, // 1: stream.app.v1.CreateDomainResponse.domain:type_name -> stream.app.v1.Domain
-	22, // 2: stream.app.v1.ListAdTemplatesResponse.templates:type_name -> stream.app.v1.AdTemplate
-	22, // 3: stream.app.v1.CreateAdTemplateResponse.template:type_name -> stream.app.v1.AdTemplate
-	22, // 4: stream.app.v1.UpdateAdTemplateResponse.template:type_name -> stream.app.v1.AdTemplate
-	23, // 5: stream.app.v1.ListPlayerConfigsResponse.configs:type_name -> stream.app.v1.PlayerConfig
-	23, // 6: stream.app.v1.CreatePlayerConfigResponse.config:type_name -> stream.app.v1.PlayerConfig
-	23, // 7: stream.app.v1.UpdatePlayerConfigResponse.config:type_name -> stream.app.v1.PlayerConfig
-	24, // 8: stream.app.v1.ListPlansResponse.plans:type_name -> stream.app.v1.Plan
-	0,  // 9: stream.app.v1.Domains.ListDomains:input_type -> stream.app.v1.ListDomainsRequest
-	2,  // 10: stream.app.v1.Domains.CreateDomain:input_type -> stream.app.v1.CreateDomainRequest
-	4,  // 11: stream.app.v1.Domains.DeleteDomain:input_type -> stream.app.v1.DeleteDomainRequest
-	5,  // 12: stream.app.v1.AdTemplates.ListAdTemplates:input_type -> stream.app.v1.ListAdTemplatesRequest
-	7,  // 13: stream.app.v1.AdTemplates.CreateAdTemplate:input_type -> stream.app.v1.CreateAdTemplateRequest
-	9,  // 14: stream.app.v1.AdTemplates.UpdateAdTemplate:input_type -> stream.app.v1.UpdateAdTemplateRequest
-	11, // 15: stream.app.v1.AdTemplates.DeleteAdTemplate:input_type -> stream.app.v1.DeleteAdTemplateRequest
-	12, // 16: stream.app.v1.PlayerConfigs.ListPlayerConfigs:input_type -> stream.app.v1.ListPlayerConfigsRequest
-	14, // 17: stream.app.v1.PlayerConfigs.CreatePlayerConfig:input_type -> stream.app.v1.CreatePlayerConfigRequest
-	16, // 18: stream.app.v1.PlayerConfigs.UpdatePlayerConfig:input_type -> stream.app.v1.UpdatePlayerConfigRequest
-	18, // 19: stream.app.v1.PlayerConfigs.DeletePlayerConfig:input_type -> stream.app.v1.DeletePlayerConfigRequest
-	19, // 20: stream.app.v1.Plans.ListPlans:input_type -> stream.app.v1.ListPlansRequest
-	1,  // 21: stream.app.v1.Domains.ListDomains:output_type -> stream.app.v1.ListDomainsResponse
-	3,  // 22: stream.app.v1.Domains.CreateDomain:output_type -> stream.app.v1.CreateDomainResponse
-	25, // 23: stream.app.v1.Domains.DeleteDomain:output_type -> stream.app.v1.MessageResponse
-	6,  // 24: stream.app.v1.AdTemplates.ListAdTemplates:output_type -> stream.app.v1.ListAdTemplatesResponse
-	8,  // 25: stream.app.v1.AdTemplates.CreateAdTemplate:output_type -> stream.app.v1.CreateAdTemplateResponse
-	10, // 26: stream.app.v1.AdTemplates.UpdateAdTemplate:output_type -> stream.app.v1.UpdateAdTemplateResponse
-	25, // 27: stream.app.v1.AdTemplates.DeleteAdTemplate:output_type -> stream.app.v1.MessageResponse
-	13, // 28: stream.app.v1.PlayerConfigs.ListPlayerConfigs:output_type -> stream.app.v1.ListPlayerConfigsResponse
-	15, // 29: stream.app.v1.PlayerConfigs.CreatePlayerConfig:output_type -> stream.app.v1.CreatePlayerConfigResponse
-	17, // 30: stream.app.v1.PlayerConfigs.UpdatePlayerConfig:output_type -> stream.app.v1.UpdatePlayerConfigResponse
-	25, // 31: stream.app.v1.PlayerConfigs.DeletePlayerConfig:output_type -> stream.app.v1.MessageResponse
-	20, // 32: stream.app.v1.Plans.ListPlans:output_type -> stream.app.v1.ListPlansResponse
-	21, // [21:33] is the sub-list for method output_type
-	9,  // [9:21] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	30, // 0: stream.app.v1.ListDomainsResponse.domains:type_name -> stream.app.v1.Domain
+	30, // 1: stream.app.v1.CreateDomainResponse.domain:type_name -> stream.app.v1.Domain
+	31, // 2: stream.app.v1.ListAdTemplatesResponse.templates:type_name -> stream.app.v1.AdTemplate
+	31, // 3: stream.app.v1.CreateAdTemplateResponse.template:type_name -> stream.app.v1.AdTemplate
+	31, // 4: stream.app.v1.UpdateAdTemplateResponse.template:type_name -> stream.app.v1.AdTemplate
+	32, // 5: stream.app.v1.ListPopupAdsResponse.items:type_name -> stream.app.v1.PopupAd
+	32, // 6: stream.app.v1.CreatePopupAdResponse.item:type_name -> stream.app.v1.PopupAd
+	32, // 7: stream.app.v1.UpdatePopupAdResponse.item:type_name -> stream.app.v1.PopupAd
+	32, // 8: stream.app.v1.GetActivePopupAdResponse.item:type_name -> stream.app.v1.PopupAd
+	33, // 9: stream.app.v1.ListPlayerConfigsResponse.configs:type_name -> stream.app.v1.PlayerConfig
+	33, // 10: stream.app.v1.CreatePlayerConfigResponse.config:type_name -> stream.app.v1.PlayerConfig
+	33, // 11: stream.app.v1.UpdatePlayerConfigResponse.config:type_name -> stream.app.v1.PlayerConfig
+	34, // 12: stream.app.v1.ListPlansResponse.plans:type_name -> stream.app.v1.Plan
+	0,  // 13: stream.app.v1.Domains.ListDomains:input_type -> stream.app.v1.ListDomainsRequest
+	2,  // 14: stream.app.v1.Domains.CreateDomain:input_type -> stream.app.v1.CreateDomainRequest
+	4,  // 15: stream.app.v1.Domains.DeleteDomain:input_type -> stream.app.v1.DeleteDomainRequest
+	5,  // 16: stream.app.v1.AdTemplates.ListAdTemplates:input_type -> stream.app.v1.ListAdTemplatesRequest
+	7,  // 17: stream.app.v1.AdTemplates.CreateAdTemplate:input_type -> stream.app.v1.CreateAdTemplateRequest
+	9,  // 18: stream.app.v1.AdTemplates.UpdateAdTemplate:input_type -> stream.app.v1.UpdateAdTemplateRequest
+	11, // 19: stream.app.v1.AdTemplates.DeleteAdTemplate:input_type -> stream.app.v1.DeleteAdTemplateRequest
+	12, // 20: stream.app.v1.PopupAds.ListPopupAds:input_type -> stream.app.v1.ListPopupAdsRequest
+	14, // 21: stream.app.v1.PopupAds.CreatePopupAd:input_type -> stream.app.v1.CreatePopupAdRequest
+	16, // 22: stream.app.v1.PopupAds.UpdatePopupAd:input_type -> stream.app.v1.UpdatePopupAdRequest
+	18, // 23: stream.app.v1.PopupAds.DeletePopupAd:input_type -> stream.app.v1.DeletePopupAdRequest
+	19, // 24: stream.app.v1.PopupAds.GetActivePopupAd:input_type -> stream.app.v1.GetActivePopupAdRequest
+	21, // 25: stream.app.v1.PlayerConfigs.ListPlayerConfigs:input_type -> stream.app.v1.ListPlayerConfigsRequest
+	23, // 26: stream.app.v1.PlayerConfigs.CreatePlayerConfig:input_type -> stream.app.v1.CreatePlayerConfigRequest
+	25, // 27: stream.app.v1.PlayerConfigs.UpdatePlayerConfig:input_type -> stream.app.v1.UpdatePlayerConfigRequest
+	27, // 28: stream.app.v1.PlayerConfigs.DeletePlayerConfig:input_type -> stream.app.v1.DeletePlayerConfigRequest
+	28, // 29: stream.app.v1.Plans.ListPlans:input_type -> stream.app.v1.ListPlansRequest
+	1,  // 30: stream.app.v1.Domains.ListDomains:output_type -> stream.app.v1.ListDomainsResponse
+	3,  // 31: stream.app.v1.Domains.CreateDomain:output_type -> stream.app.v1.CreateDomainResponse
+	35, // 32: stream.app.v1.Domains.DeleteDomain:output_type -> stream.app.v1.MessageResponse
+	6,  // 33: stream.app.v1.AdTemplates.ListAdTemplates:output_type -> stream.app.v1.ListAdTemplatesResponse
+	8,  // 34: stream.app.v1.AdTemplates.CreateAdTemplate:output_type -> stream.app.v1.CreateAdTemplateResponse
+	10, // 35: stream.app.v1.AdTemplates.UpdateAdTemplate:output_type -> stream.app.v1.UpdateAdTemplateResponse
+	35, // 36: stream.app.v1.AdTemplates.DeleteAdTemplate:output_type -> stream.app.v1.MessageResponse
+	13, // 37: stream.app.v1.PopupAds.ListPopupAds:output_type -> stream.app.v1.ListPopupAdsResponse
+	15, // 38: stream.app.v1.PopupAds.CreatePopupAd:output_type -> stream.app.v1.CreatePopupAdResponse
+	17, // 39: stream.app.v1.PopupAds.UpdatePopupAd:output_type -> stream.app.v1.UpdatePopupAdResponse
+	35, // 40: stream.app.v1.PopupAds.DeletePopupAd:output_type -> stream.app.v1.MessageResponse
+	20, // 41: stream.app.v1.PopupAds.GetActivePopupAd:output_type -> stream.app.v1.GetActivePopupAdResponse
+	22, // 42: stream.app.v1.PlayerConfigs.ListPlayerConfigs:output_type -> stream.app.v1.ListPlayerConfigsResponse
+	24, // 43: stream.app.v1.PlayerConfigs.CreatePlayerConfig:output_type -> stream.app.v1.CreatePlayerConfigResponse
+	26, // 44: stream.app.v1.PlayerConfigs.UpdatePlayerConfig:output_type -> stream.app.v1.UpdatePlayerConfigResponse
+	35, // 45: stream.app.v1.PlayerConfigs.DeletePlayerConfig:output_type -> stream.app.v1.MessageResponse
+	29, // 46: stream.app.v1.Plans.ListPlans:output_type -> stream.app.v1.ListPlansResponse
+	30, // [30:47] is the sub-list for method output_type
+	13, // [13:30] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_app_v1_catalog_proto_init() }
@@ -1445,15 +2004,18 @@ func file_app_v1_catalog_proto_init() {
 	file_app_v1_catalog_proto_msgTypes[9].OneofWrappers = []any{}
 	file_app_v1_catalog_proto_msgTypes[14].OneofWrappers = []any{}
 	file_app_v1_catalog_proto_msgTypes[16].OneofWrappers = []any{}
+	file_app_v1_catalog_proto_msgTypes[20].OneofWrappers = []any{}
+	file_app_v1_catalog_proto_msgTypes[23].OneofWrappers = []any{}
+	file_app_v1_catalog_proto_msgTypes[25].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_v1_catalog_proto_rawDesc), len(file_app_v1_catalog_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   21,
+			NumMessages:   30,
 			NumExtensions: 0,
-			NumServices:   4,
+			NumServices:   5,
 		},
 		GoTypes:           file_app_v1_catalog_proto_goTypes,
 		DependencyIndexes: file_app_v1_catalog_proto_depIdxs,

@@ -36,17 +36,23 @@ type Actor struct {
 	Role   string
 }
 
-type Authenticator struct {
-	db            *gorm.DB
-	logger        logger.Logger
-	trustedMarker string
+type NotificationEventPublisher interface {
+	PublishNotificationCreated(ctx context.Context, notification *model.Notification) error
 }
 
-func NewAuthenticator(db *gorm.DB, l logger.Logger, trustedMarker string) *Authenticator {
+type Authenticator struct {
+	db                 *gorm.DB
+	logger             logger.Logger
+	trustedMarker      string
+	notificationEvents NotificationEventPublisher
+}
+
+func NewAuthenticator(db *gorm.DB, l logger.Logger, trustedMarker string, notificationEvents NotificationEventPublisher) *Authenticator {
 	return &Authenticator{
-		db:            db,
-		logger:        l,
-		trustedMarker: strings.TrimSpace(trustedMarker),
+		db:                 db,
+		logger:             l,
+		trustedMarker:      strings.TrimSpace(trustedMarker),
+		notificationEvents: notificationEvents,
 	}
 }
 
@@ -209,6 +215,11 @@ func (a *Authenticator) maybeCreateSubscriptionReminderPostAuth(ctx context.Cont
 	}
 	if err := tx.WithContext(ctx).Create(notification).Error; err != nil {
 		return err
+	}
+	if a.notificationEvents != nil {
+		if err := a.notificationEvents.PublishNotificationCreated(ctx, notification); err != nil {
+			a.logger.Error("Failed to publish notification MQTT event", "error", err, "notification_id", notification.ID, "user_id", notification.UserID)
+		}
 	}
 	return tx.WithContext(ctx).
 		Model(&model.PlanSubscription{}).

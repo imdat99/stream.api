@@ -106,7 +106,7 @@ func newTrustedContext(userID, role string) context.Context {
 
 func TestRequireActor(t *testing.T) {
 
-	auth := NewAuthenticator(newAuthenticatorTestDB(t), testLogger{}, "trusted-marker")
+	auth := NewAuthenticator(newAuthenticatorTestDB(t), testLogger{}, "trusted-marker", nil)
 
 	t.Run("thiếu metadata", func(t *testing.T) {
 		_, err := auth.RequireActor(context.Background())
@@ -146,7 +146,7 @@ func TestAuthenticate(t *testing.T) {
 
 	t.Run("user không tồn tại", func(t *testing.T) {
 		db := newAuthenticatorTestDB(t)
-		auth := NewAuthenticator(db, testLogger{}, "trusted-marker")
+		auth := NewAuthenticator(db, testLogger{}, "trusted-marker", nil)
 		_, err := auth.Authenticate(newTrustedContext(uuid.NewString(), "USER"))
 		if status.Code(err) != codes.Unauthenticated {
 			t.Fatalf("code = %v, want %v", status.Code(err), codes.Unauthenticated)
@@ -159,7 +159,7 @@ func TestAuthenticate(t *testing.T) {
 		if err := db.Create(&blocked).Error; err != nil {
 			t.Fatalf("create blocked user: %v", err)
 		}
-		auth := NewAuthenticator(db, testLogger{}, "trusted-marker")
+		auth := NewAuthenticator(db, testLogger{}, "trusted-marker", nil)
 		_, err := auth.Authenticate(newTrustedContext(blocked.ID, "USER"))
 		if status.Code(err) != codes.PermissionDenied {
 			t.Fatalf("code = %v, want %v", status.Code(err), codes.PermissionDenied)
@@ -188,7 +188,7 @@ func TestAuthenticate(t *testing.T) {
 		if err := db.Create(&subscription).Error; err != nil {
 			t.Fatalf("create subscription: %v", err)
 		}
-		auth := NewAuthenticator(db, testLogger{}, "trusted-marker")
+		auth := NewAuthenticator(db, testLogger{}, "trusted-marker", nil)
 
 		result, err := auth.Authenticate(newTrustedContext(user.ID, "USER"))
 		if err != nil {
@@ -221,7 +221,7 @@ func TestAuthenticate(t *testing.T) {
 		if err := db.Create(&subscription).Error; err != nil {
 			t.Fatalf("create subscription: %v", err)
 		}
-		auth := NewAuthenticator(db, testLogger{}, "trusted-marker")
+		auth := NewAuthenticator(db, testLogger{}, "trusted-marker", nil)
 
 		result, err := auth.Authenticate(newTrustedContext(user.ID, "USER"))
 		if err != nil {
@@ -268,7 +268,7 @@ func TestAuthenticate(t *testing.T) {
 					t.Fatalf("create subscription: %v", err)
 				}
 
-				auth := NewAuthenticator(db, testLogger{}, "trusted-marker")
+				auth := NewAuthenticator(db, testLogger{}, "trusted-marker", nil)
 				for range 2 {
 					if _, err := auth.Authenticate(newTrustedContext(user.ID, "USER")); err != nil {
 						t.Fatalf("Authenticate() error = %v", err)

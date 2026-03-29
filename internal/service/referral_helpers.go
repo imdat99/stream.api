@@ -205,9 +205,11 @@ func (s *appServices) maybeGrantReferralReward(ctx context.Context, tx *gorm.DB,
 	if err := s.paymentRepository.CreateWalletTransactionTx(tx, ctx, rewardTransaction); err != nil {
 		return nil, err
 	}
-	if err := s.paymentRepository.CreateNotificationTx(tx, ctx, buildReferralRewardNotification(referrer.ID, rewardAmount, referee, paymentRecord)); err != nil {
+	rewardNotification := buildReferralRewardNotification(referrer.ID, rewardAmount, referee, paymentRecord)
+	if err := s.paymentRepository.CreateNotificationTx(tx, ctx, rewardNotification); err != nil {
 		return nil, err
 	}
+	s.publishNotificationCreated(ctx, rewardNotification)
 
 	now := time.Now().UTC()
 	updates := map[string]any{

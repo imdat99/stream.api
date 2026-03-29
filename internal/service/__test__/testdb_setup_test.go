@@ -15,11 +15,12 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	_ "modernc.org/sqlite"
+	_ "github.com/mattn/go-sqlite3"
 	appv1 "stream.api/internal/api/proto/app/v1"
 	"stream.api/internal/database/model"
 	"stream.api/internal/database/query"
 	"stream.api/internal/middleware"
+	"stream.api/internal/repository"
 	"stream.api/pkg/logger"
 )
 
@@ -74,7 +75,7 @@ func newTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", uuid.NewString())
-	db, err := gorm.Open(sqlite.Dialector{DriverName: "sqlite", DSN: dsn}, &gorm.Config{})
+	db, err := gorm.Open(sqlite.Dialector{DriverName: "sqlite3", DSN: dsn}, &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open sqlite db: %v", err)
 	}
@@ -206,6 +207,21 @@ func newTestDB(t *testing.T) *gorm.DB {
 			encrytion_m3u8 BOOLEAN NOT NULL DEFAULT 1,
 			logo_url TEXT
 		)`,
+		`CREATE TABLE popup_ads (
+			id TEXT PRIMARY KEY,
+			user_id TEXT NOT NULL,
+			title TEXT NOT NULL,
+			image_url TEXT NOT NULL,
+			target_url TEXT NOT NULL,
+			is_active BOOLEAN NOT NULL DEFAULT 1,
+			start_at DATETIME,
+			end_at DATETIME,
+			priority INTEGER NOT NULL DEFAULT 0,
+			close_cooldown_minutes INTEGER NOT NULL DEFAULT 60,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME,
+			version INTEGER NOT NULL DEFAULT 1
+		)`,
 	} {
 		if err := db.Exec(stmt).Error; err != nil {
 			t.Fatalf("create test schema: %v", err)
@@ -226,9 +242,17 @@ func newTestAppServices(t *testing.T, db *gorm.DB) *appServices {
 	return &appServices{
 		db:            db,
 		logger:        testLogger{},
-		authenticator: middleware.NewAuthenticator(db, testLogger{}, testTrustedMarker),
+		authenticator: middleware.NewAuthenticator(db, testLogger{}, testTrustedMarker, nil),
 		// cache:             &fakeCache{values: map[string]string{}},
-		googleUserInfoURL: defaultGoogleUserInfoURL,
+		googleUserInfoURL:    defaultGoogleUserInfoURL,
+		userRepository:       repository.NewUserRepository(db),
+		planRepository:       repository.NewPlanRepository(db),
+		paymentRepository:    repository.NewPaymentRepository(db),
+		notificationRepo:     repository.NewNotificationRepository(db),
+		domainRepository:     repository.NewDomainRepository(db),
+		adTemplateRepository: repository.NewAdTemplateRepository(db),
+		popupAdRepository:    repository.NewPopupAdRepository(db),
+		playerConfigRepo:     repository.NewPlayerConfigRepository(db),
 	}
 }
 
@@ -244,6 +268,7 @@ func newTestGRPCServer(t *testing.T, services *appServices) (*grpc.ClientConn, f
 		NotificationsServer: services,
 		DomainsServer:       services,
 		AdTemplatesServer:   services,
+		PopupAdsServer:      services,
 		PlayerConfigsServer: services,
 		PlansServer:         services,
 		PaymentsServer:      services,
@@ -380,6 +405,35 @@ func newPaymentsClient(conn *grpc.ClientConn) appv1.PaymentsClient {
 
 func newAdminClient(conn *grpc.ClientConn) appv1.AdminClient {
 	return appv1.NewAdminClient(conn)
+}
+
+func ptrTime(v time.Time) *time.Time { return &v }
+
+func seedTestPopupAd(t *testing.T, db *gorm.DB, item model.PopupAd) model.PopupAd {
+	t.Helper()
+	if item.IsActive == nil {
+		item.IsActive = ptrBool(true)
+	}
+	if item.CreatedAt == nil {
+		now := time.Now().UTC()
+		item.CreatedAt = &now
+	}
+	if item.CloseCooldownMinutes == 0 {
+		item.CloseCooldownMinutes = 60
+	}
+	if err := db.Create(&item).Error; err != nil {
+		t.Fatalf("create popup ad: %v", err)
+	}
+	return item
+}
+
+func mustListPopupAdsByUser(t *testing.T, db *gorm.DB, userID string) []model.PopupAd {
+	t.Helper()
+	var items []model.PopupAd
+	if err := db.Order("priority DESC, created_at DESC").Find(&items, "user_id = ?", userID).Error; err != nil {
+		t.Fatalf("list popup ads for user %s: %v", userID, err)
+	}
+	return items
 }
 
 var _ logger.Logger = testLogger{}

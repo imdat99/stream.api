@@ -33,6 +33,11 @@ service Admin {
   rpc CreateAdminAdTemplate(CreateAdminAdTemplateRequest) returns (CreateAdminAdTemplateResponse);
   rpc UpdateAdminAdTemplate(UpdateAdminAdTemplateRequest) returns (UpdateAdminAdTemplateResponse);
   rpc DeleteAdminAdTemplate(DeleteAdminAdTemplateRequest) returns (MessageResponse);
+  rpc ListAdminPopupAds(ListAdminPopupAdsRequest) returns (ListAdminPopupAdsResponse);
+  rpc GetAdminPopupAd(GetAdminPopupAdRequest) returns (GetAdminPopupAdResponse);
+  rpc CreateAdminPopupAd(CreateAdminPopupAdRequest) returns (CreateAdminPopupAdResponse);
+  rpc UpdateAdminPopupAd(UpdateAdminPopupAdRequest) returns (UpdateAdminPopupAdResponse);
+  rpc DeleteAdminPopupAd(DeleteAdminPopupAdRequest) returns (MessageResponse);
   rpc ListAdminPlayerConfigs(ListAdminPlayerConfigsRequest) returns (ListAdminPlayerConfigsResponse);
   rpc GetAdminPlayerConfig(GetAdminPlayerConfigRequest) returns (GetAdminPlayerConfigResponse);
   rpc CreateAdminPlayerConfig(CreateAdminPlayerConfigRequest) returns (CreateAdminPlayerConfigResponse);
@@ -335,6 +340,59 @@ message UpdateAdminAdTemplateResponse {
 }
 
 message DeleteAdminAdTemplateRequest {
+  string id = 1;
+}
+
+message ListAdminPopupAdsRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  optional string user_id = 3;
+  optional string search = 4;
+}
+
+message ListAdminPopupAdsResponse {
+  repeated AdminPopupAd items = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 limit = 4;
+}
+
+message GetAdminPopupAdRequest {
+  string id = 1;
+}
+
+message GetAdminPopupAdResponse {
+  AdminPopupAd item = 1;
+}
+
+message CreateAdminPopupAdRequest {
+  string user_id = 1;
+  string type = 2;
+  string label = 3;
+  string value = 4;
+  optional bool is_active = 5;
+  optional int32 max_triggers_per_session = 6;
+}
+
+message CreateAdminPopupAdResponse {
+  AdminPopupAd item = 1;
+}
+
+message UpdateAdminPopupAdRequest {
+  string id = 1;
+  string user_id = 2;
+  string type = 3;
+  string label = 4;
+  string value = 5;
+  optional bool is_active = 6;
+  optional int32 max_triggers_per_session = 7;
+}
+
+message UpdateAdminPopupAdResponse {
+  AdminPopupAd item = 1;
+}
+
+message DeleteAdminPopupAdRequest {
   string id = 1;
 }
 

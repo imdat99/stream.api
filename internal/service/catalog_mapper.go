@@ -1,7 +1,9 @@
 package service
 
-import appv1 "stream.api/internal/api/proto/app/v1"
-import "stream.api/internal/database/model"
+import (
+	appv1 "stream.api/internal/api/proto/app/v1"
+	"stream.api/internal/database/model"
+)
 
 func toProtoDomain(item *model.Domain) *appv1.Domain {
 	if item == nil {
@@ -30,6 +32,22 @@ func toProtoAdTemplate(item *model.AdTemplate) *appv1.AdTemplate {
 		IsDefault:   item.IsDefault,
 		CreatedAt:   timeToProto(item.CreatedAt),
 		UpdatedAt:   timeToProto(item.UpdatedAt),
+	}
+}
+
+func toProtoPopupAd(item *model.PopupAd) *appv1.PopupAd {
+	if item == nil {
+		return nil
+	}
+	return &appv1.PopupAd{
+		Id:                   item.ID,
+		Type:                 item.Type,
+		Label:                item.Label,
+		Value:                item.Value,
+		IsActive:             boolValue(item.IsActive),
+		MaxTriggersPerSession: func() int32 { if item.MaxTriggersPerSession != nil { return *item.MaxTriggersPerSession }; return 0 }(),
+		CreatedAt:            timeToProto(item.CreatedAt),
+		UpdatedAt:            timeToProto(item.UpdatedAt),
 	}
 }
 

@@ -11,6 +11,7 @@ func Register(server grpc.ServiceRegistrar, services *Services) {
 	appv1.RegisterNotificationsServer(server, services.NotificationsServer)
 	appv1.RegisterDomainsServer(server, services.DomainsServer)
 	appv1.RegisterAdTemplatesServer(server, services.AdTemplatesServer)
+	appv1.RegisterPopupAdsServer(server, services.PopupAdsServer)
 	appv1.RegisterPlayerConfigsServer(server, services.PlayerConfigsServer)
 	appv1.RegisterPlansServer(server, services.PlansServer)
 	appv1.RegisterPaymentsServer(server, services.PaymentsServer)

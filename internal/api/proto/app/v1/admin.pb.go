@@ -2937,6 +2937,538 @@ func (x *DeleteAdminAdTemplateRequest) GetId() string {
 	return ""
 }
 
+type ListAdminPopupAdsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Page          int32                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
+	Limit         int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	UserId        *string                `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3,oneof" json:"user_id,omitempty"`
+	Search        *string                `protobuf:"bytes,4,opt,name=search,proto3,oneof" json:"search,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAdminPopupAdsRequest) Reset() {
+	*x = ListAdminPopupAdsRequest{}
+	mi := &file_app_v1_admin_proto_msgTypes[49]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAdminPopupAdsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAdminPopupAdsRequest) ProtoMessage() {}
+
+func (x *ListAdminPopupAdsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_admin_proto_msgTypes[49]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAdminPopupAdsRequest.ProtoReflect.Descriptor instead.
+func (*ListAdminPopupAdsRequest) Descriptor() ([]byte, []int) {
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{49}
+}
+
+func (x *ListAdminPopupAdsRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListAdminPopupAdsRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *ListAdminPopupAdsRequest) GetUserId() string {
+	if x != nil && x.UserId != nil {
+		return *x.UserId
+	}
+	return ""
+}
+
+func (x *ListAdminPopupAdsRequest) GetSearch() string {
+	if x != nil && x.Search != nil {
+		return *x.Search
+	}
+	return ""
+}
+
+type ListAdminPopupAdsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*AdminPopupAd        `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	Total         int64                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	Page          int32                  `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
+	Limit         int32                  `protobuf:"varint,4,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAdminPopupAdsResponse) Reset() {
+	*x = ListAdminPopupAdsResponse{}
+	mi := &file_app_v1_admin_proto_msgTypes[50]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAdminPopupAdsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAdminPopupAdsResponse) ProtoMessage() {}
+
+func (x *ListAdminPopupAdsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_admin_proto_msgTypes[50]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAdminPopupAdsResponse.ProtoReflect.Descriptor instead.
+func (*ListAdminPopupAdsResponse) Descriptor() ([]byte, []int) {
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{50}
+}
+
+func (x *ListAdminPopupAdsResponse) GetItems() []*AdminPopupAd {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+func (x *ListAdminPopupAdsResponse) GetTotal() int64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *ListAdminPopupAdsResponse) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListAdminPopupAdsResponse) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type GetAdminPopupAdRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetAdminPopupAdRequest) Reset() {
+	*x = GetAdminPopupAdRequest{}
+	mi := &file_app_v1_admin_proto_msgTypes[51]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetAdminPopupAdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAdminPopupAdRequest) ProtoMessage() {}
+
+func (x *GetAdminPopupAdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_admin_proto_msgTypes[51]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAdminPopupAdRequest.ProtoReflect.Descriptor instead.
+func (*GetAdminPopupAdRequest) Descriptor() ([]byte, []int) {
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{51}
+}
+
+func (x *GetAdminPopupAdRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type GetAdminPopupAdResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Item          *AdminPopupAd          `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetAdminPopupAdResponse) Reset() {
+	*x = GetAdminPopupAdResponse{}
+	mi := &file_app_v1_admin_proto_msgTypes[52]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetAdminPopupAdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAdminPopupAdResponse) ProtoMessage() {}
+
+func (x *GetAdminPopupAdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_admin_proto_msgTypes[52]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAdminPopupAdResponse.ProtoReflect.Descriptor instead.
+func (*GetAdminPopupAdResponse) Descriptor() ([]byte, []int) {
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{52}
+}
+
+func (x *GetAdminPopupAdResponse) GetItem() *AdminPopupAd {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+type CreateAdminPopupAdRequest struct {
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	UserId                string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Type                  string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	Label                 string                 `protobuf:"bytes,3,opt,name=label,proto3" json:"label,omitempty"`
+	Value                 string                 `protobuf:"bytes,4,opt,name=value,proto3" json:"value,omitempty"`
+	IsActive              *bool                  `protobuf:"varint,5,opt,name=is_active,json=isActive,proto3,oneof" json:"is_active,omitempty"`
+	MaxTriggersPerSession *int32                 `protobuf:"varint,6,opt,name=max_triggers_per_session,json=maxTriggersPerSession,proto3,oneof" json:"max_triggers_per_session,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *CreateAdminPopupAdRequest) Reset() {
+	*x = CreateAdminPopupAdRequest{}
+	mi := &file_app_v1_admin_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateAdminPopupAdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateAdminPopupAdRequest) ProtoMessage() {}
+
+func (x *CreateAdminPopupAdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_admin_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateAdminPopupAdRequest.ProtoReflect.Descriptor instead.
+func (*CreateAdminPopupAdRequest) Descriptor() ([]byte, []int) {
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *CreateAdminPopupAdRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *CreateAdminPopupAdRequest) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *CreateAdminPopupAdRequest) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *CreateAdminPopupAdRequest) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *CreateAdminPopupAdRequest) GetIsActive() bool {
+	if x != nil && x.IsActive != nil {
+		return *x.IsActive
+	}
+	return false
+}
+
+func (x *CreateAdminPopupAdRequest) GetMaxTriggersPerSession() int32 {
+	if x != nil && x.MaxTriggersPerSession != nil {
+		return *x.MaxTriggersPerSession
+	}
+	return 0
+}
+
+type CreateAdminPopupAdResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Item          *AdminPopupAd          `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateAdminPopupAdResponse) Reset() {
+	*x = CreateAdminPopupAdResponse{}
+	mi := &file_app_v1_admin_proto_msgTypes[54]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateAdminPopupAdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateAdminPopupAdResponse) ProtoMessage() {}
+
+func (x *CreateAdminPopupAdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_admin_proto_msgTypes[54]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateAdminPopupAdResponse.ProtoReflect.Descriptor instead.
+func (*CreateAdminPopupAdResponse) Descriptor() ([]byte, []int) {
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{54}
+}
+
+func (x *CreateAdminPopupAdResponse) GetItem() *AdminPopupAd {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+type UpdateAdminPopupAdRequest struct {
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	Id                    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	UserId                string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Type                  string                 `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
+	Label                 string                 `protobuf:"bytes,4,opt,name=label,proto3" json:"label,omitempty"`
+	Value                 string                 `protobuf:"bytes,5,opt,name=value,proto3" json:"value,omitempty"`
+	IsActive              *bool                  `protobuf:"varint,6,opt,name=is_active,json=isActive,proto3,oneof" json:"is_active,omitempty"`
+	MaxTriggersPerSession *int32                 `protobuf:"varint,7,opt,name=max_triggers_per_session,json=maxTriggersPerSession,proto3,oneof" json:"max_triggers_per_session,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *UpdateAdminPopupAdRequest) Reset() {
+	*x = UpdateAdminPopupAdRequest{}
+	mi := &file_app_v1_admin_proto_msgTypes[55]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateAdminPopupAdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateAdminPopupAdRequest) ProtoMessage() {}
+
+func (x *UpdateAdminPopupAdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_admin_proto_msgTypes[55]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateAdminPopupAdRequest.ProtoReflect.Descriptor instead.
+func (*UpdateAdminPopupAdRequest) Descriptor() ([]byte, []int) {
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{55}
+}
+
+func (x *UpdateAdminPopupAdRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdateAdminPopupAdRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *UpdateAdminPopupAdRequest) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *UpdateAdminPopupAdRequest) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *UpdateAdminPopupAdRequest) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *UpdateAdminPopupAdRequest) GetIsActive() bool {
+	if x != nil && x.IsActive != nil {
+		return *x.IsActive
+	}
+	return false
+}
+
+func (x *UpdateAdminPopupAdRequest) GetMaxTriggersPerSession() int32 {
+	if x != nil && x.MaxTriggersPerSession != nil {
+		return *x.MaxTriggersPerSession
+	}
+	return 0
+}
+
+type UpdateAdminPopupAdResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Item          *AdminPopupAd          `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateAdminPopupAdResponse) Reset() {
+	*x = UpdateAdminPopupAdResponse{}
+	mi := &file_app_v1_admin_proto_msgTypes[56]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateAdminPopupAdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateAdminPopupAdResponse) ProtoMessage() {}
+
+func (x *UpdateAdminPopupAdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_admin_proto_msgTypes[56]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateAdminPopupAdResponse.ProtoReflect.Descriptor instead.
+func (*UpdateAdminPopupAdResponse) Descriptor() ([]byte, []int) {
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{56}
+}
+
+func (x *UpdateAdminPopupAdResponse) GetItem() *AdminPopupAd {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+type DeleteAdminPopupAdRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteAdminPopupAdRequest) Reset() {
+	*x = DeleteAdminPopupAdRequest{}
+	mi := &file_app_v1_admin_proto_msgTypes[57]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteAdminPopupAdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteAdminPopupAdRequest) ProtoMessage() {}
+
+func (x *DeleteAdminPopupAdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_app_v1_admin_proto_msgTypes[57]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteAdminPopupAdRequest.ProtoReflect.Descriptor instead.
+func (*DeleteAdminPopupAdRequest) Descriptor() ([]byte, []int) {
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{57}
+}
+
+func (x *DeleteAdminPopupAdRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
 type ListAdminPlayerConfigsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Page          int32                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
@@ -2949,7 +3481,7 @@ type ListAdminPlayerConfigsRequest struct {
 
 func (x *ListAdminPlayerConfigsRequest) Reset() {
 	*x = ListAdminPlayerConfigsRequest{}
-	mi := &file_app_v1_admin_proto_msgTypes[49]
+	mi := &file_app_v1_admin_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2961,7 +3493,7 @@ func (x *ListAdminPlayerConfigsRequest) String() string {
 func (*ListAdminPlayerConfigsRequest) ProtoMessage() {}
 
 func (x *ListAdminPlayerConfigsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[49]
+	mi := &file_app_v1_admin_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2974,7 +3506,7 @@ func (x *ListAdminPlayerConfigsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAdminPlayerConfigsRequest.ProtoReflect.Descriptor instead.
 func (*ListAdminPlayerConfigsRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{49}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *ListAdminPlayerConfigsRequest) GetPage() int32 {
@@ -3017,7 +3549,7 @@ type ListAdminPlayerConfigsResponse struct {
 
 func (x *ListAdminPlayerConfigsResponse) Reset() {
 	*x = ListAdminPlayerConfigsResponse{}
-	mi := &file_app_v1_admin_proto_msgTypes[50]
+	mi := &file_app_v1_admin_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3029,7 +3561,7 @@ func (x *ListAdminPlayerConfigsResponse) String() string {
 func (*ListAdminPlayerConfigsResponse) ProtoMessage() {}
 
 func (x *ListAdminPlayerConfigsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[50]
+	mi := &file_app_v1_admin_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3042,7 +3574,7 @@ func (x *ListAdminPlayerConfigsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAdminPlayerConfigsResponse.ProtoReflect.Descriptor instead.
 func (*ListAdminPlayerConfigsResponse) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{50}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *ListAdminPlayerConfigsResponse) GetConfigs() []*AdminPlayerConfig {
@@ -3082,7 +3614,7 @@ type GetAdminPlayerConfigRequest struct {
 
 func (x *GetAdminPlayerConfigRequest) Reset() {
 	*x = GetAdminPlayerConfigRequest{}
-	mi := &file_app_v1_admin_proto_msgTypes[51]
+	mi := &file_app_v1_admin_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3094,7 +3626,7 @@ func (x *GetAdminPlayerConfigRequest) String() string {
 func (*GetAdminPlayerConfigRequest) ProtoMessage() {}
 
 func (x *GetAdminPlayerConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[51]
+	mi := &file_app_v1_admin_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3107,7 +3639,7 @@ func (x *GetAdminPlayerConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAdminPlayerConfigRequest.ProtoReflect.Descriptor instead.
 func (*GetAdminPlayerConfigRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{51}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *GetAdminPlayerConfigRequest) GetId() string {
@@ -3126,7 +3658,7 @@ type GetAdminPlayerConfigResponse struct {
 
 func (x *GetAdminPlayerConfigResponse) Reset() {
 	*x = GetAdminPlayerConfigResponse{}
-	mi := &file_app_v1_admin_proto_msgTypes[52]
+	mi := &file_app_v1_admin_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3138,7 +3670,7 @@ func (x *GetAdminPlayerConfigResponse) String() string {
 func (*GetAdminPlayerConfigResponse) ProtoMessage() {}
 
 func (x *GetAdminPlayerConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[52]
+	mi := &file_app_v1_admin_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3151,7 +3683,7 @@ func (x *GetAdminPlayerConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAdminPlayerConfigResponse.ProtoReflect.Descriptor instead.
 func (*GetAdminPlayerConfigResponse) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{52}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *GetAdminPlayerConfigResponse) GetConfig() *AdminPlayerConfig {
@@ -3183,7 +3715,7 @@ type CreateAdminPlayerConfigRequest struct {
 
 func (x *CreateAdminPlayerConfigRequest) Reset() {
 	*x = CreateAdminPlayerConfigRequest{}
-	mi := &file_app_v1_admin_proto_msgTypes[53]
+	mi := &file_app_v1_admin_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3195,7 +3727,7 @@ func (x *CreateAdminPlayerConfigRequest) String() string {
 func (*CreateAdminPlayerConfigRequest) ProtoMessage() {}
 
 func (x *CreateAdminPlayerConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[53]
+	mi := &file_app_v1_admin_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3208,7 +3740,7 @@ func (x *CreateAdminPlayerConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateAdminPlayerConfigRequest.ProtoReflect.Descriptor instead.
 func (*CreateAdminPlayerConfigRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{53}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *CreateAdminPlayerConfigRequest) GetUserId() string {
@@ -3318,7 +3850,7 @@ type CreateAdminPlayerConfigResponse struct {
 
 func (x *CreateAdminPlayerConfigResponse) Reset() {
 	*x = CreateAdminPlayerConfigResponse{}
-	mi := &file_app_v1_admin_proto_msgTypes[54]
+	mi := &file_app_v1_admin_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3330,7 +3862,7 @@ func (x *CreateAdminPlayerConfigResponse) String() string {
 func (*CreateAdminPlayerConfigResponse) ProtoMessage() {}
 
 func (x *CreateAdminPlayerConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[54]
+	mi := &file_app_v1_admin_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3343,7 +3875,7 @@ func (x *CreateAdminPlayerConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateAdminPlayerConfigResponse.ProtoReflect.Descriptor instead.
 func (*CreateAdminPlayerConfigResponse) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{54}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *CreateAdminPlayerConfigResponse) GetConfig() *AdminPlayerConfig {
@@ -3376,7 +3908,7 @@ type UpdateAdminPlayerConfigRequest struct {
 
 func (x *UpdateAdminPlayerConfigRequest) Reset() {
 	*x = UpdateAdminPlayerConfigRequest{}
-	mi := &file_app_v1_admin_proto_msgTypes[55]
+	mi := &file_app_v1_admin_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3388,7 +3920,7 @@ func (x *UpdateAdminPlayerConfigRequest) String() string {
 func (*UpdateAdminPlayerConfigRequest) ProtoMessage() {}
 
 func (x *UpdateAdminPlayerConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[55]
+	mi := &file_app_v1_admin_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3401,7 +3933,7 @@ func (x *UpdateAdminPlayerConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAdminPlayerConfigRequest.ProtoReflect.Descriptor instead.
 func (*UpdateAdminPlayerConfigRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{55}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *UpdateAdminPlayerConfigRequest) GetId() string {
@@ -3518,7 +4050,7 @@ type UpdateAdminPlayerConfigResponse struct {
 
 func (x *UpdateAdminPlayerConfigResponse) Reset() {
 	*x = UpdateAdminPlayerConfigResponse{}
-	mi := &file_app_v1_admin_proto_msgTypes[56]
+	mi := &file_app_v1_admin_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3530,7 +4062,7 @@ func (x *UpdateAdminPlayerConfigResponse) String() string {
 func (*UpdateAdminPlayerConfigResponse) ProtoMessage() {}
 
 func (x *UpdateAdminPlayerConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[56]
+	mi := &file_app_v1_admin_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3543,7 +4075,7 @@ func (x *UpdateAdminPlayerConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAdminPlayerConfigResponse.ProtoReflect.Descriptor instead.
 func (*UpdateAdminPlayerConfigResponse) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{56}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *UpdateAdminPlayerConfigResponse) GetConfig() *AdminPlayerConfig {
@@ -3562,7 +4094,7 @@ type DeleteAdminPlayerConfigRequest struct {
 
 func (x *DeleteAdminPlayerConfigRequest) Reset() {
 	*x = DeleteAdminPlayerConfigRequest{}
-	mi := &file_app_v1_admin_proto_msgTypes[57]
+	mi := &file_app_v1_admin_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3574,7 +4106,7 @@ func (x *DeleteAdminPlayerConfigRequest) String() string {
 func (*DeleteAdminPlayerConfigRequest) ProtoMessage() {}
 
 func (x *DeleteAdminPlayerConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[57]
+	mi := &file_app_v1_admin_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3587,7 +4119,7 @@ func (x *DeleteAdminPlayerConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAdminPlayerConfigRequest.ProtoReflect.Descriptor instead.
 func (*DeleteAdminPlayerConfigRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{57}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *DeleteAdminPlayerConfigRequest) GetId() string {
@@ -3612,7 +4144,7 @@ type ListAdminJobsRequest struct {
 
 func (x *ListAdminJobsRequest) Reset() {
 	*x = ListAdminJobsRequest{}
-	mi := &file_app_v1_admin_proto_msgTypes[58]
+	mi := &file_app_v1_admin_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3624,7 +4156,7 @@ func (x *ListAdminJobsRequest) String() string {
 func (*ListAdminJobsRequest) ProtoMessage() {}
 
 func (x *ListAdminJobsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[58]
+	mi := &file_app_v1_admin_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3637,7 +4169,7 @@ func (x *ListAdminJobsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAdminJobsRequest.ProtoReflect.Descriptor instead.
 func (*ListAdminJobsRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{58}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{67}
 }
 
 func (x *ListAdminJobsRequest) GetCursor() string {
@@ -3690,7 +4222,7 @@ type ListAdminJobsResponse struct {
 
 func (x *ListAdminJobsResponse) Reset() {
 	*x = ListAdminJobsResponse{}
-	mi := &file_app_v1_admin_proto_msgTypes[59]
+	mi := &file_app_v1_admin_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3702,7 +4234,7 @@ func (x *ListAdminJobsResponse) String() string {
 func (*ListAdminJobsResponse) ProtoMessage() {}
 
 func (x *ListAdminJobsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[59]
+	mi := &file_app_v1_admin_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3715,7 +4247,7 @@ func (x *ListAdminJobsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAdminJobsResponse.ProtoReflect.Descriptor instead.
 func (*ListAdminJobsResponse) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{59}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{68}
 }
 
 func (x *ListAdminJobsResponse) GetJobs() []*AdminJob {
@@ -3776,7 +4308,7 @@ type GetAdminJobRequest struct {
 
 func (x *GetAdminJobRequest) Reset() {
 	*x = GetAdminJobRequest{}
-	mi := &file_app_v1_admin_proto_msgTypes[60]
+	mi := &file_app_v1_admin_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3788,7 +4320,7 @@ func (x *GetAdminJobRequest) String() string {
 func (*GetAdminJobRequest) ProtoMessage() {}
 
 func (x *GetAdminJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[60]
+	mi := &file_app_v1_admin_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3801,7 +4333,7 @@ func (x *GetAdminJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAdminJobRequest.ProtoReflect.Descriptor instead.
 func (*GetAdminJobRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{60}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *GetAdminJobRequest) GetId() string {
@@ -3820,7 +4352,7 @@ type GetAdminJobResponse struct {
 
 func (x *GetAdminJobResponse) Reset() {
 	*x = GetAdminJobResponse{}
-	mi := &file_app_v1_admin_proto_msgTypes[61]
+	mi := &file_app_v1_admin_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3832,7 +4364,7 @@ func (x *GetAdminJobResponse) String() string {
 func (*GetAdminJobResponse) ProtoMessage() {}
 
 func (x *GetAdminJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[61]
+	mi := &file_app_v1_admin_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3845,7 +4377,7 @@ func (x *GetAdminJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAdminJobResponse.ProtoReflect.Descriptor instead.
 func (*GetAdminJobResponse) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{61}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{70}
 }
 
 func (x *GetAdminJobResponse) GetJob() *AdminJob {
@@ -3864,7 +4396,7 @@ type GetAdminJobLogsRequest struct {
 
 func (x *GetAdminJobLogsRequest) Reset() {
 	*x = GetAdminJobLogsRequest{}
-	mi := &file_app_v1_admin_proto_msgTypes[62]
+	mi := &file_app_v1_admin_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3876,7 +4408,7 @@ func (x *GetAdminJobLogsRequest) String() string {
 func (*GetAdminJobLogsRequest) ProtoMessage() {}
 
 func (x *GetAdminJobLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[62]
+	mi := &file_app_v1_admin_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3889,7 +4421,7 @@ func (x *GetAdminJobLogsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAdminJobLogsRequest.ProtoReflect.Descriptor instead.
 func (*GetAdminJobLogsRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{62}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{71}
 }
 
 func (x *GetAdminJobLogsRequest) GetId() string {
@@ -3908,7 +4440,7 @@ type GetAdminJobLogsResponse struct {
 
 func (x *GetAdminJobLogsResponse) Reset() {
 	*x = GetAdminJobLogsResponse{}
-	mi := &file_app_v1_admin_proto_msgTypes[63]
+	mi := &file_app_v1_admin_proto_msgTypes[72]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3920,7 +4452,7 @@ func (x *GetAdminJobLogsResponse) String() string {
 func (*GetAdminJobLogsResponse) ProtoMessage() {}
 
 func (x *GetAdminJobLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[63]
+	mi := &file_app_v1_admin_proto_msgTypes[72]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3933,7 +4465,7 @@ func (x *GetAdminJobLogsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAdminJobLogsResponse.ProtoReflect.Descriptor instead.
 func (*GetAdminJobLogsResponse) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{63}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{72}
 }
 
 func (x *GetAdminJobLogsResponse) GetLogs() string {
@@ -3959,7 +4491,7 @@ type CreateAdminJobRequest struct {
 
 func (x *CreateAdminJobRequest) Reset() {
 	*x = CreateAdminJobRequest{}
-	mi := &file_app_v1_admin_proto_msgTypes[64]
+	mi := &file_app_v1_admin_proto_msgTypes[73]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3971,7 +4503,7 @@ func (x *CreateAdminJobRequest) String() string {
 func (*CreateAdminJobRequest) ProtoMessage() {}
 
 func (x *CreateAdminJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[64]
+	mi := &file_app_v1_admin_proto_msgTypes[73]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3984,7 +4516,7 @@ func (x *CreateAdminJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateAdminJobRequest.ProtoReflect.Descriptor instead.
 func (*CreateAdminJobRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{64}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{73}
 }
 
 func (x *CreateAdminJobRequest) GetCommand() string {
@@ -4052,7 +4584,7 @@ type CreateAdminJobResponse struct {
 
 func (x *CreateAdminJobResponse) Reset() {
 	*x = CreateAdminJobResponse{}
-	mi := &file_app_v1_admin_proto_msgTypes[65]
+	mi := &file_app_v1_admin_proto_msgTypes[74]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4064,7 +4596,7 @@ func (x *CreateAdminJobResponse) String() string {
 func (*CreateAdminJobResponse) ProtoMessage() {}
 
 func (x *CreateAdminJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[65]
+	mi := &file_app_v1_admin_proto_msgTypes[74]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4077,7 +4609,7 @@ func (x *CreateAdminJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateAdminJobResponse.ProtoReflect.Descriptor instead.
 func (*CreateAdminJobResponse) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{65}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{74}
 }
 
 func (x *CreateAdminJobResponse) GetJob() *AdminJob {
@@ -4096,7 +4628,7 @@ type CancelAdminJobRequest struct {
 
 func (x *CancelAdminJobRequest) Reset() {
 	*x = CancelAdminJobRequest{}
-	mi := &file_app_v1_admin_proto_msgTypes[66]
+	mi := &file_app_v1_admin_proto_msgTypes[75]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4108,7 +4640,7 @@ func (x *CancelAdminJobRequest) String() string {
 func (*CancelAdminJobRequest) ProtoMessage() {}
 
 func (x *CancelAdminJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[66]
+	mi := &file_app_v1_admin_proto_msgTypes[75]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4121,7 +4653,7 @@ func (x *CancelAdminJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelAdminJobRequest.ProtoReflect.Descriptor instead.
 func (*CancelAdminJobRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{66}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{75}
 }
 
 func (x *CancelAdminJobRequest) GetId() string {
@@ -4141,7 +4673,7 @@ type CancelAdminJobResponse struct {
 
 func (x *CancelAdminJobResponse) Reset() {
 	*x = CancelAdminJobResponse{}
-	mi := &file_app_v1_admin_proto_msgTypes[67]
+	mi := &file_app_v1_admin_proto_msgTypes[76]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4153,7 +4685,7 @@ func (x *CancelAdminJobResponse) String() string {
 func (*CancelAdminJobResponse) ProtoMessage() {}
 
 func (x *CancelAdminJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[67]
+	mi := &file_app_v1_admin_proto_msgTypes[76]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4166,7 +4698,7 @@ func (x *CancelAdminJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelAdminJobResponse.ProtoReflect.Descriptor instead.
 func (*CancelAdminJobResponse) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{67}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{76}
 }
 
 func (x *CancelAdminJobResponse) GetStatus() string {
@@ -4192,7 +4724,7 @@ type RetryAdminJobRequest struct {
 
 func (x *RetryAdminJobRequest) Reset() {
 	*x = RetryAdminJobRequest{}
-	mi := &file_app_v1_admin_proto_msgTypes[68]
+	mi := &file_app_v1_admin_proto_msgTypes[77]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4204,7 +4736,7 @@ func (x *RetryAdminJobRequest) String() string {
 func (*RetryAdminJobRequest) ProtoMessage() {}
 
 func (x *RetryAdminJobRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[68]
+	mi := &file_app_v1_admin_proto_msgTypes[77]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4217,7 +4749,7 @@ func (x *RetryAdminJobRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RetryAdminJobRequest.ProtoReflect.Descriptor instead.
 func (*RetryAdminJobRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{68}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{77}
 }
 
 func (x *RetryAdminJobRequest) GetId() string {
@@ -4236,7 +4768,7 @@ type RetryAdminJobResponse struct {
 
 func (x *RetryAdminJobResponse) Reset() {
 	*x = RetryAdminJobResponse{}
-	mi := &file_app_v1_admin_proto_msgTypes[69]
+	mi := &file_app_v1_admin_proto_msgTypes[78]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4248,7 +4780,7 @@ func (x *RetryAdminJobResponse) String() string {
 func (*RetryAdminJobResponse) ProtoMessage() {}
 
 func (x *RetryAdminJobResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[69]
+	mi := &file_app_v1_admin_proto_msgTypes[78]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4261,7 +4793,7 @@ func (x *RetryAdminJobResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RetryAdminJobResponse.ProtoReflect.Descriptor instead.
 func (*RetryAdminJobResponse) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{69}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{78}
 }
 
 func (x *RetryAdminJobResponse) GetJob() *AdminJob {
@@ -4279,7 +4811,7 @@ type ListAdminAgentsRequest struct {
 
 func (x *ListAdminAgentsRequest) Reset() {
 	*x = ListAdminAgentsRequest{}
-	mi := &file_app_v1_admin_proto_msgTypes[70]
+	mi := &file_app_v1_admin_proto_msgTypes[79]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4291,7 +4823,7 @@ func (x *ListAdminAgentsRequest) String() string {
 func (*ListAdminAgentsRequest) ProtoMessage() {}
 
 func (x *ListAdminAgentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[70]
+	mi := &file_app_v1_admin_proto_msgTypes[79]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4304,7 +4836,7 @@ func (x *ListAdminAgentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAdminAgentsRequest.ProtoReflect.Descriptor instead.
 func (*ListAdminAgentsRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{70}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{79}
 }
 
 type ListAdminAgentsResponse struct {
@@ -4316,7 +4848,7 @@ type ListAdminAgentsResponse struct {
 
 func (x *ListAdminAgentsResponse) Reset() {
 	*x = ListAdminAgentsResponse{}
-	mi := &file_app_v1_admin_proto_msgTypes[71]
+	mi := &file_app_v1_admin_proto_msgTypes[80]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4328,7 +4860,7 @@ func (x *ListAdminAgentsResponse) String() string {
 func (*ListAdminAgentsResponse) ProtoMessage() {}
 
 func (x *ListAdminAgentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[71]
+	mi := &file_app_v1_admin_proto_msgTypes[80]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4341,7 +4873,7 @@ func (x *ListAdminAgentsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAdminAgentsResponse.ProtoReflect.Descriptor instead.
 func (*ListAdminAgentsResponse) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{71}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{80}
 }
 
 func (x *ListAdminAgentsResponse) GetAgents() []*AdminAgent {
@@ -4360,7 +4892,7 @@ type RestartAdminAgentRequest struct {
 
 func (x *RestartAdminAgentRequest) Reset() {
 	*x = RestartAdminAgentRequest{}
-	mi := &file_app_v1_admin_proto_msgTypes[72]
+	mi := &file_app_v1_admin_proto_msgTypes[81]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4372,7 +4904,7 @@ func (x *RestartAdminAgentRequest) String() string {
 func (*RestartAdminAgentRequest) ProtoMessage() {}
 
 func (x *RestartAdminAgentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[72]
+	mi := &file_app_v1_admin_proto_msgTypes[81]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4385,7 +4917,7 @@ func (x *RestartAdminAgentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RestartAdminAgentRequest.ProtoReflect.Descriptor instead.
 func (*RestartAdminAgentRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{72}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{81}
 }
 
 func (x *RestartAdminAgentRequest) GetId() string {
@@ -4404,7 +4936,7 @@ type UpdateAdminAgentRequest struct {
 
 func (x *UpdateAdminAgentRequest) Reset() {
 	*x = UpdateAdminAgentRequest{}
-	mi := &file_app_v1_admin_proto_msgTypes[73]
+	mi := &file_app_v1_admin_proto_msgTypes[82]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4416,7 +4948,7 @@ func (x *UpdateAdminAgentRequest) String() string {
 func (*UpdateAdminAgentRequest) ProtoMessage() {}
 
 func (x *UpdateAdminAgentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[73]
+	mi := &file_app_v1_admin_proto_msgTypes[82]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4429,7 +4961,7 @@ func (x *UpdateAdminAgentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAdminAgentRequest.ProtoReflect.Descriptor instead.
 func (*UpdateAdminAgentRequest) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{73}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{82}
 }
 
 func (x *UpdateAdminAgentRequest) GetId() string {
@@ -4448,7 +4980,7 @@ type AdminAgentCommandResponse struct {
 
 func (x *AdminAgentCommandResponse) Reset() {
 	*x = AdminAgentCommandResponse{}
-	mi := &file_app_v1_admin_proto_msgTypes[74]
+	mi := &file_app_v1_admin_proto_msgTypes[83]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4460,7 +4992,7 @@ func (x *AdminAgentCommandResponse) String() string {
 func (*AdminAgentCommandResponse) ProtoMessage() {}
 
 func (x *AdminAgentCommandResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_app_v1_admin_proto_msgTypes[74]
+	mi := &file_app_v1_admin_proto_msgTypes[83]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4473,7 +5005,7 @@ func (x *AdminAgentCommandResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminAgentCommandResponse.ProtoReflect.Descriptor instead.
 func (*AdminAgentCommandResponse) Descriptor() ([]byte, []int) {
-	return file_app_v1_admin_proto_rawDescGZIP(), []int{74}
+	return file_app_v1_admin_proto_rawDescGZIP(), []int{83}
 }
 
 func (x *AdminAgentCommandResponse) GetStatus() string {
@@ -4743,6 +5275,50 @@ const file_app_v1_admin_proto_rawDesc = "" +
 	"\x1dUpdateAdminAdTemplateResponse\x12:\n" +
 	"\btemplate\x18\x01 \x01(\v2\x1e.stream.app.v1.AdminAdTemplateR\btemplate\".\n" +
 	"\x1cDeleteAdminAdTemplateRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"\x96\x01\n" +
+	"\x18ListAdminPopupAdsRequest\x12\x12\n" +
+	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x14\n" +
+	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12\x1c\n" +
+	"\auser_id\x18\x03 \x01(\tH\x00R\x06userId\x88\x01\x01\x12\x1b\n" +
+	"\x06search\x18\x04 \x01(\tH\x01R\x06search\x88\x01\x01B\n" +
+	"\n" +
+	"\b_user_idB\t\n" +
+	"\a_search\"\x8e\x01\n" +
+	"\x19ListAdminPopupAdsResponse\x121\n" +
+	"\x05items\x18\x01 \x03(\v2\x1b.stream.app.v1.AdminPopupAdR\x05items\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total\x12\x12\n" +
+	"\x04page\x18\x03 \x01(\x05R\x04page\x12\x14\n" +
+	"\x05limit\x18\x04 \x01(\x05R\x05limit\"(\n" +
+	"\x16GetAdminPopupAdRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"J\n" +
+	"\x17GetAdminPopupAdResponse\x12/\n" +
+	"\x04item\x18\x01 \x01(\v2\x1b.stream.app.v1.AdminPopupAdR\x04item\"\xff\x01\n" +
+	"\x19CreateAdminPopupAdRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12\x14\n" +
+	"\x05label\x18\x03 \x01(\tR\x05label\x12\x14\n" +
+	"\x05value\x18\x04 \x01(\tR\x05value\x12 \n" +
+	"\tis_active\x18\x05 \x01(\bH\x00R\bisActive\x88\x01\x01\x12<\n" +
+	"\x18max_triggers_per_session\x18\x06 \x01(\x05H\x01R\x15maxTriggersPerSession\x88\x01\x01B\f\n" +
+	"\n" +
+	"_is_activeB\x1b\n" +
+	"\x19_max_triggers_per_session\"M\n" +
+	"\x1aCreateAdminPopupAdResponse\x12/\n" +
+	"\x04item\x18\x01 \x01(\v2\x1b.stream.app.v1.AdminPopupAdR\x04item\"\x8f\x02\n" +
+	"\x19UpdateAdminPopupAdRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x12\n" +
+	"\x04type\x18\x03 \x01(\tR\x04type\x12\x14\n" +
+	"\x05label\x18\x04 \x01(\tR\x05label\x12\x14\n" +
+	"\x05value\x18\x05 \x01(\tR\x05value\x12 \n" +
+	"\tis_active\x18\x06 \x01(\bH\x00R\bisActive\x88\x01\x01\x12<\n" +
+	"\x18max_triggers_per_session\x18\a \x01(\x05H\x01R\x15maxTriggersPerSession\x88\x01\x01B\f\n" +
+	"\n" +
+	"_is_activeB\x1b\n" +
+	"\x19_max_triggers_per_session\"M\n" +
+	"\x1aUpdateAdminPopupAdResponse\x12/\n" +
+	"\x04item\x18\x01 \x01(\v2\x1b.stream.app.v1.AdminPopupAdR\x04item\"+\n" +
+	"\x19DeleteAdminPopupAdRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x9b\x01\n" +
 	"\x1dListAdminPlayerConfigsRequest\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x14\n" +
@@ -4881,7 +5457,7 @@ const file_app_v1_admin_proto_rawDesc = "" +
 	"\x17UpdateAdminAgentRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"3\n" +
 	"\x19AdminAgentCommandResponse\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status2\x9d \n" +
+	"\x06status\x18\x01 \x01(\tR\x06status2\x9d$\n" +
 	"\x05Admin\x12f\n" +
 	"\x11GetAdminDashboard\x12'.stream.app.v1.GetAdminDashboardRequest\x1a(.stream.app.v1.GetAdminDashboardResponse\x12]\n" +
 	"\x0eListAdminUsers\x12$.stream.app.v1.ListAdminUsersRequest\x1a%.stream.app.v1.ListAdminUsersResponse\x12W\n" +
@@ -4908,7 +5484,12 @@ const file_app_v1_admin_proto_rawDesc = "" +
 	"\x12GetAdminAdTemplate\x12(.stream.app.v1.GetAdminAdTemplateRequest\x1a).stream.app.v1.GetAdminAdTemplateResponse\x12r\n" +
 	"\x15CreateAdminAdTemplate\x12+.stream.app.v1.CreateAdminAdTemplateRequest\x1a,.stream.app.v1.CreateAdminAdTemplateResponse\x12r\n" +
 	"\x15UpdateAdminAdTemplate\x12+.stream.app.v1.UpdateAdminAdTemplateRequest\x1a,.stream.app.v1.UpdateAdminAdTemplateResponse\x12d\n" +
-	"\x15DeleteAdminAdTemplate\x12+.stream.app.v1.DeleteAdminAdTemplateRequest\x1a\x1e.stream.app.v1.MessageResponse\x12u\n" +
+	"\x15DeleteAdminAdTemplate\x12+.stream.app.v1.DeleteAdminAdTemplateRequest\x1a\x1e.stream.app.v1.MessageResponse\x12f\n" +
+	"\x11ListAdminPopupAds\x12'.stream.app.v1.ListAdminPopupAdsRequest\x1a(.stream.app.v1.ListAdminPopupAdsResponse\x12`\n" +
+	"\x0fGetAdminPopupAd\x12%.stream.app.v1.GetAdminPopupAdRequest\x1a&.stream.app.v1.GetAdminPopupAdResponse\x12i\n" +
+	"\x12CreateAdminPopupAd\x12(.stream.app.v1.CreateAdminPopupAdRequest\x1a).stream.app.v1.CreateAdminPopupAdResponse\x12i\n" +
+	"\x12UpdateAdminPopupAd\x12(.stream.app.v1.UpdateAdminPopupAdRequest\x1a).stream.app.v1.UpdateAdminPopupAdResponse\x12^\n" +
+	"\x12DeleteAdminPopupAd\x12(.stream.app.v1.DeleteAdminPopupAdRequest\x1a\x1e.stream.app.v1.MessageResponse\x12u\n" +
 	"\x16ListAdminPlayerConfigs\x12,.stream.app.v1.ListAdminPlayerConfigsRequest\x1a-.stream.app.v1.ListAdminPlayerConfigsResponse\x12o\n" +
 	"\x14GetAdminPlayerConfig\x12*.stream.app.v1.GetAdminPlayerConfigRequest\x1a+.stream.app.v1.GetAdminPlayerConfigResponse\x12x\n" +
 	"\x17CreateAdminPlayerConfig\x12-.stream.app.v1.CreateAdminPlayerConfigRequest\x1a..stream.app.v1.CreateAdminPlayerConfigResponse\x12x\n" +
@@ -4936,7 +5517,7 @@ func file_app_v1_admin_proto_rawDescGZIP() []byte {
 	return file_app_v1_admin_proto_rawDescData
 }
 
-var file_app_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 76)
+var file_app_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 85)
 var file_app_v1_admin_proto_goTypes = []any{
 	(*GetAdminDashboardRequest)(nil),                // 0: stream.app.v1.GetAdminDashboardRequest
 	(*GetAdminDashboardResponse)(nil),               // 1: stream.app.v1.GetAdminDashboardResponse
@@ -4987,164 +5568,188 @@ var file_app_v1_admin_proto_goTypes = []any{
 	(*UpdateAdminAdTemplateRequest)(nil),            // 46: stream.app.v1.UpdateAdminAdTemplateRequest
 	(*UpdateAdminAdTemplateResponse)(nil),           // 47: stream.app.v1.UpdateAdminAdTemplateResponse
 	(*DeleteAdminAdTemplateRequest)(nil),            // 48: stream.app.v1.DeleteAdminAdTemplateRequest
-	(*ListAdminPlayerConfigsRequest)(nil),           // 49: stream.app.v1.ListAdminPlayerConfigsRequest
-	(*ListAdminPlayerConfigsResponse)(nil),          // 50: stream.app.v1.ListAdminPlayerConfigsResponse
-	(*GetAdminPlayerConfigRequest)(nil),             // 51: stream.app.v1.GetAdminPlayerConfigRequest
-	(*GetAdminPlayerConfigResponse)(nil),            // 52: stream.app.v1.GetAdminPlayerConfigResponse
-	(*CreateAdminPlayerConfigRequest)(nil),          // 53: stream.app.v1.CreateAdminPlayerConfigRequest
-	(*CreateAdminPlayerConfigResponse)(nil),         // 54: stream.app.v1.CreateAdminPlayerConfigResponse
-	(*UpdateAdminPlayerConfigRequest)(nil),          // 55: stream.app.v1.UpdateAdminPlayerConfigRequest
-	(*UpdateAdminPlayerConfigResponse)(nil),         // 56: stream.app.v1.UpdateAdminPlayerConfigResponse
-	(*DeleteAdminPlayerConfigRequest)(nil),          // 57: stream.app.v1.DeleteAdminPlayerConfigRequest
-	(*ListAdminJobsRequest)(nil),                    // 58: stream.app.v1.ListAdminJobsRequest
-	(*ListAdminJobsResponse)(nil),                   // 59: stream.app.v1.ListAdminJobsResponse
-	(*GetAdminJobRequest)(nil),                      // 60: stream.app.v1.GetAdminJobRequest
-	(*GetAdminJobResponse)(nil),                     // 61: stream.app.v1.GetAdminJobResponse
-	(*GetAdminJobLogsRequest)(nil),                  // 62: stream.app.v1.GetAdminJobLogsRequest
-	(*GetAdminJobLogsResponse)(nil),                 // 63: stream.app.v1.GetAdminJobLogsResponse
-	(*CreateAdminJobRequest)(nil),                   // 64: stream.app.v1.CreateAdminJobRequest
-	(*CreateAdminJobResponse)(nil),                  // 65: stream.app.v1.CreateAdminJobResponse
-	(*CancelAdminJobRequest)(nil),                   // 66: stream.app.v1.CancelAdminJobRequest
-	(*CancelAdminJobResponse)(nil),                  // 67: stream.app.v1.CancelAdminJobResponse
-	(*RetryAdminJobRequest)(nil),                    // 68: stream.app.v1.RetryAdminJobRequest
-	(*RetryAdminJobResponse)(nil),                   // 69: stream.app.v1.RetryAdminJobResponse
-	(*ListAdminAgentsRequest)(nil),                  // 70: stream.app.v1.ListAdminAgentsRequest
-	(*ListAdminAgentsResponse)(nil),                 // 71: stream.app.v1.ListAdminAgentsResponse
-	(*RestartAdminAgentRequest)(nil),                // 72: stream.app.v1.RestartAdminAgentRequest
-	(*UpdateAdminAgentRequest)(nil),                 // 73: stream.app.v1.UpdateAdminAgentRequest
-	(*AdminAgentCommandResponse)(nil),               // 74: stream.app.v1.AdminAgentCommandResponse
-	nil,                                             // 75: stream.app.v1.CreateAdminJobRequest.EnvEntry
-	(*AdminDashboard)(nil),                          // 76: stream.app.v1.AdminDashboard
-	(*AdminUser)(nil),                               // 77: stream.app.v1.AdminUser
-	(*AdminUserDetail)(nil),                         // 78: stream.app.v1.AdminUserDetail
-	(*AdminVideo)(nil),                              // 79: stream.app.v1.AdminVideo
-	(*AdminPayment)(nil),                            // 80: stream.app.v1.AdminPayment
-	(*PlanSubscription)(nil),                        // 81: stream.app.v1.PlanSubscription
-	(*AdminPlan)(nil),                               // 82: stream.app.v1.AdminPlan
-	(*AdminAdTemplate)(nil),                         // 83: stream.app.v1.AdminAdTemplate
-	(*AdminPlayerConfig)(nil),                       // 84: stream.app.v1.AdminPlayerConfig
-	(*AdminJob)(nil),                                // 85: stream.app.v1.AdminJob
-	(*AdminAgent)(nil),                              // 86: stream.app.v1.AdminAgent
-	(*MessageResponse)(nil),                         // 87: stream.app.v1.MessageResponse
+	(*ListAdminPopupAdsRequest)(nil),                // 49: stream.app.v1.ListAdminPopupAdsRequest
+	(*ListAdminPopupAdsResponse)(nil),               // 50: stream.app.v1.ListAdminPopupAdsResponse
+	(*GetAdminPopupAdRequest)(nil),                  // 51: stream.app.v1.GetAdminPopupAdRequest
+	(*GetAdminPopupAdResponse)(nil),                 // 52: stream.app.v1.GetAdminPopupAdResponse
+	(*CreateAdminPopupAdRequest)(nil),               // 53: stream.app.v1.CreateAdminPopupAdRequest
+	(*CreateAdminPopupAdResponse)(nil),              // 54: stream.app.v1.CreateAdminPopupAdResponse
+	(*UpdateAdminPopupAdRequest)(nil),               // 55: stream.app.v1.UpdateAdminPopupAdRequest
+	(*UpdateAdminPopupAdResponse)(nil),              // 56: stream.app.v1.UpdateAdminPopupAdResponse
+	(*DeleteAdminPopupAdRequest)(nil),               // 57: stream.app.v1.DeleteAdminPopupAdRequest
+	(*ListAdminPlayerConfigsRequest)(nil),           // 58: stream.app.v1.ListAdminPlayerConfigsRequest
+	(*ListAdminPlayerConfigsResponse)(nil),          // 59: stream.app.v1.ListAdminPlayerConfigsResponse
+	(*GetAdminPlayerConfigRequest)(nil),             // 60: stream.app.v1.GetAdminPlayerConfigRequest
+	(*GetAdminPlayerConfigResponse)(nil),            // 61: stream.app.v1.GetAdminPlayerConfigResponse
+	(*CreateAdminPlayerConfigRequest)(nil),          // 62: stream.app.v1.CreateAdminPlayerConfigRequest
+	(*CreateAdminPlayerConfigResponse)(nil),         // 63: stream.app.v1.CreateAdminPlayerConfigResponse
+	(*UpdateAdminPlayerConfigRequest)(nil),          // 64: stream.app.v1.UpdateAdminPlayerConfigRequest
+	(*UpdateAdminPlayerConfigResponse)(nil),         // 65: stream.app.v1.UpdateAdminPlayerConfigResponse
+	(*DeleteAdminPlayerConfigRequest)(nil),          // 66: stream.app.v1.DeleteAdminPlayerConfigRequest
+	(*ListAdminJobsRequest)(nil),                    // 67: stream.app.v1.ListAdminJobsRequest
+	(*ListAdminJobsResponse)(nil),                   // 68: stream.app.v1.ListAdminJobsResponse
+	(*GetAdminJobRequest)(nil),                      // 69: stream.app.v1.GetAdminJobRequest
+	(*GetAdminJobResponse)(nil),                     // 70: stream.app.v1.GetAdminJobResponse
+	(*GetAdminJobLogsRequest)(nil),                  // 71: stream.app.v1.GetAdminJobLogsRequest
+	(*GetAdminJobLogsResponse)(nil),                 // 72: stream.app.v1.GetAdminJobLogsResponse
+	(*CreateAdminJobRequest)(nil),                   // 73: stream.app.v1.CreateAdminJobRequest
+	(*CreateAdminJobResponse)(nil),                  // 74: stream.app.v1.CreateAdminJobResponse
+	(*CancelAdminJobRequest)(nil),                   // 75: stream.app.v1.CancelAdminJobRequest
+	(*CancelAdminJobResponse)(nil),                  // 76: stream.app.v1.CancelAdminJobResponse
+	(*RetryAdminJobRequest)(nil),                    // 77: stream.app.v1.RetryAdminJobRequest
+	(*RetryAdminJobResponse)(nil),                   // 78: stream.app.v1.RetryAdminJobResponse
+	(*ListAdminAgentsRequest)(nil),                  // 79: stream.app.v1.ListAdminAgentsRequest
+	(*ListAdminAgentsResponse)(nil),                 // 80: stream.app.v1.ListAdminAgentsResponse
+	(*RestartAdminAgentRequest)(nil),                // 81: stream.app.v1.RestartAdminAgentRequest
+	(*UpdateAdminAgentRequest)(nil),                 // 82: stream.app.v1.UpdateAdminAgentRequest
+	(*AdminAgentCommandResponse)(nil),               // 83: stream.app.v1.AdminAgentCommandResponse
+	nil,                                             // 84: stream.app.v1.CreateAdminJobRequest.EnvEntry
+	(*AdminDashboard)(nil),                          // 85: stream.app.v1.AdminDashboard
+	(*AdminUser)(nil),                               // 86: stream.app.v1.AdminUser
+	(*AdminUserDetail)(nil),                         // 87: stream.app.v1.AdminUserDetail
+	(*AdminVideo)(nil),                              // 88: stream.app.v1.AdminVideo
+	(*AdminPayment)(nil),                            // 89: stream.app.v1.AdminPayment
+	(*PlanSubscription)(nil),                        // 90: stream.app.v1.PlanSubscription
+	(*AdminPlan)(nil),                               // 91: stream.app.v1.AdminPlan
+	(*AdminAdTemplate)(nil),                         // 92: stream.app.v1.AdminAdTemplate
+	(*AdminPopupAd)(nil),                            // 93: stream.app.v1.AdminPopupAd
+	(*AdminPlayerConfig)(nil),                       // 94: stream.app.v1.AdminPlayerConfig
+	(*AdminJob)(nil),                                // 95: stream.app.v1.AdminJob
+	(*AdminAgent)(nil),                              // 96: stream.app.v1.AdminAgent
+	(*MessageResponse)(nil),                         // 97: stream.app.v1.MessageResponse
 }
 var file_app_v1_admin_proto_depIdxs = []int32{
-	76, // 0: stream.app.v1.GetAdminDashboardResponse.dashboard:type_name -> stream.app.v1.AdminDashboard
-	77, // 1: stream.app.v1.ListAdminUsersResponse.users:type_name -> stream.app.v1.AdminUser
-	78, // 2: stream.app.v1.GetAdminUserResponse.user:type_name -> stream.app.v1.AdminUserDetail
-	77, // 3: stream.app.v1.CreateAdminUserResponse.user:type_name -> stream.app.v1.AdminUser
-	77, // 4: stream.app.v1.UpdateAdminUserResponse.user:type_name -> stream.app.v1.AdminUser
-	78, // 5: stream.app.v1.UpdateAdminUserReferralSettingsResponse.user:type_name -> stream.app.v1.AdminUserDetail
-	79, // 6: stream.app.v1.ListAdminVideosResponse.videos:type_name -> stream.app.v1.AdminVideo
-	79, // 7: stream.app.v1.GetAdminVideoResponse.video:type_name -> stream.app.v1.AdminVideo
-	79, // 8: stream.app.v1.CreateAdminVideoResponse.video:type_name -> stream.app.v1.AdminVideo
-	79, // 9: stream.app.v1.UpdateAdminVideoResponse.video:type_name -> stream.app.v1.AdminVideo
-	80, // 10: stream.app.v1.ListAdminPaymentsResponse.payments:type_name -> stream.app.v1.AdminPayment
-	80, // 11: stream.app.v1.GetAdminPaymentResponse.payment:type_name -> stream.app.v1.AdminPayment
-	80, // 12: stream.app.v1.CreateAdminPaymentResponse.payment:type_name -> stream.app.v1.AdminPayment
-	81, // 13: stream.app.v1.CreateAdminPaymentResponse.subscription:type_name -> stream.app.v1.PlanSubscription
-	80, // 14: stream.app.v1.UpdateAdminPaymentResponse.payment:type_name -> stream.app.v1.AdminPayment
-	82, // 15: stream.app.v1.ListAdminPlansResponse.plans:type_name -> stream.app.v1.AdminPlan
-	82, // 16: stream.app.v1.CreateAdminPlanResponse.plan:type_name -> stream.app.v1.AdminPlan
-	82, // 17: stream.app.v1.UpdateAdminPlanResponse.plan:type_name -> stream.app.v1.AdminPlan
-	83, // 18: stream.app.v1.ListAdminAdTemplatesResponse.templates:type_name -> stream.app.v1.AdminAdTemplate
-	83, // 19: stream.app.v1.GetAdminAdTemplateResponse.template:type_name -> stream.app.v1.AdminAdTemplate
-	83, // 20: stream.app.v1.CreateAdminAdTemplateResponse.template:type_name -> stream.app.v1.AdminAdTemplate
-	83, // 21: stream.app.v1.UpdateAdminAdTemplateResponse.template:type_name -> stream.app.v1.AdminAdTemplate
-	84, // 22: stream.app.v1.ListAdminPlayerConfigsResponse.configs:type_name -> stream.app.v1.AdminPlayerConfig
-	84, // 23: stream.app.v1.GetAdminPlayerConfigResponse.config:type_name -> stream.app.v1.AdminPlayerConfig
-	84, // 24: stream.app.v1.CreateAdminPlayerConfigResponse.config:type_name -> stream.app.v1.AdminPlayerConfig
-	84, // 25: stream.app.v1.UpdateAdminPlayerConfigResponse.config:type_name -> stream.app.v1.AdminPlayerConfig
-	85, // 26: stream.app.v1.ListAdminJobsResponse.jobs:type_name -> stream.app.v1.AdminJob
-	85, // 27: stream.app.v1.GetAdminJobResponse.job:type_name -> stream.app.v1.AdminJob
-	75, // 28: stream.app.v1.CreateAdminJobRequest.env:type_name -> stream.app.v1.CreateAdminJobRequest.EnvEntry
-	85, // 29: stream.app.v1.CreateAdminJobResponse.job:type_name -> stream.app.v1.AdminJob
-	85, // 30: stream.app.v1.RetryAdminJobResponse.job:type_name -> stream.app.v1.AdminJob
-	86, // 31: stream.app.v1.ListAdminAgentsResponse.agents:type_name -> stream.app.v1.AdminAgent
-	0,  // 32: stream.app.v1.Admin.GetAdminDashboard:input_type -> stream.app.v1.GetAdminDashboardRequest
-	2,  // 33: stream.app.v1.Admin.ListAdminUsers:input_type -> stream.app.v1.ListAdminUsersRequest
-	4,  // 34: stream.app.v1.Admin.GetAdminUser:input_type -> stream.app.v1.GetAdminUserRequest
-	6,  // 35: stream.app.v1.Admin.CreateAdminUser:input_type -> stream.app.v1.CreateAdminUserRequest
-	8,  // 36: stream.app.v1.Admin.UpdateAdminUser:input_type -> stream.app.v1.UpdateAdminUserRequest
-	10, // 37: stream.app.v1.Admin.UpdateAdminUserReferralSettings:input_type -> stream.app.v1.UpdateAdminUserReferralSettingsRequest
-	12, // 38: stream.app.v1.Admin.UpdateAdminUserRole:input_type -> stream.app.v1.UpdateAdminUserRoleRequest
-	14, // 39: stream.app.v1.Admin.DeleteAdminUser:input_type -> stream.app.v1.DeleteAdminUserRequest
-	15, // 40: stream.app.v1.Admin.ListAdminVideos:input_type -> stream.app.v1.ListAdminVideosRequest
-	17, // 41: stream.app.v1.Admin.GetAdminVideo:input_type -> stream.app.v1.GetAdminVideoRequest
-	19, // 42: stream.app.v1.Admin.CreateAdminVideo:input_type -> stream.app.v1.CreateAdminVideoRequest
-	21, // 43: stream.app.v1.Admin.UpdateAdminVideo:input_type -> stream.app.v1.UpdateAdminVideoRequest
-	23, // 44: stream.app.v1.Admin.DeleteAdminVideo:input_type -> stream.app.v1.DeleteAdminVideoRequest
-	24, // 45: stream.app.v1.Admin.ListAdminPayments:input_type -> stream.app.v1.ListAdminPaymentsRequest
-	26, // 46: stream.app.v1.Admin.GetAdminPayment:input_type -> stream.app.v1.GetAdminPaymentRequest
-	28, // 47: stream.app.v1.Admin.CreateAdminPayment:input_type -> stream.app.v1.CreateAdminPaymentRequest
-	30, // 48: stream.app.v1.Admin.UpdateAdminPayment:input_type -> stream.app.v1.UpdateAdminPaymentRequest
-	32, // 49: stream.app.v1.Admin.ListAdminPlans:input_type -> stream.app.v1.ListAdminPlansRequest
-	34, // 50: stream.app.v1.Admin.CreateAdminPlan:input_type -> stream.app.v1.CreateAdminPlanRequest
-	36, // 51: stream.app.v1.Admin.UpdateAdminPlan:input_type -> stream.app.v1.UpdateAdminPlanRequest
-	38, // 52: stream.app.v1.Admin.DeleteAdminPlan:input_type -> stream.app.v1.DeleteAdminPlanRequest
-	40, // 53: stream.app.v1.Admin.ListAdminAdTemplates:input_type -> stream.app.v1.ListAdminAdTemplatesRequest
-	42, // 54: stream.app.v1.Admin.GetAdminAdTemplate:input_type -> stream.app.v1.GetAdminAdTemplateRequest
-	44, // 55: stream.app.v1.Admin.CreateAdminAdTemplate:input_type -> stream.app.v1.CreateAdminAdTemplateRequest
-	46, // 56: stream.app.v1.Admin.UpdateAdminAdTemplate:input_type -> stream.app.v1.UpdateAdminAdTemplateRequest
-	48, // 57: stream.app.v1.Admin.DeleteAdminAdTemplate:input_type -> stream.app.v1.DeleteAdminAdTemplateRequest
-	49, // 58: stream.app.v1.Admin.ListAdminPlayerConfigs:input_type -> stream.app.v1.ListAdminPlayerConfigsRequest
-	51, // 59: stream.app.v1.Admin.GetAdminPlayerConfig:input_type -> stream.app.v1.GetAdminPlayerConfigRequest
-	53, // 60: stream.app.v1.Admin.CreateAdminPlayerConfig:input_type -> stream.app.v1.CreateAdminPlayerConfigRequest
-	55, // 61: stream.app.v1.Admin.UpdateAdminPlayerConfig:input_type -> stream.app.v1.UpdateAdminPlayerConfigRequest
-	57, // 62: stream.app.v1.Admin.DeleteAdminPlayerConfig:input_type -> stream.app.v1.DeleteAdminPlayerConfigRequest
-	58, // 63: stream.app.v1.Admin.ListAdminJobs:input_type -> stream.app.v1.ListAdminJobsRequest
-	60, // 64: stream.app.v1.Admin.GetAdminJob:input_type -> stream.app.v1.GetAdminJobRequest
-	62, // 65: stream.app.v1.Admin.GetAdminJobLogs:input_type -> stream.app.v1.GetAdminJobLogsRequest
-	64, // 66: stream.app.v1.Admin.CreateAdminJob:input_type -> stream.app.v1.CreateAdminJobRequest
-	66, // 67: stream.app.v1.Admin.CancelAdminJob:input_type -> stream.app.v1.CancelAdminJobRequest
-	68, // 68: stream.app.v1.Admin.RetryAdminJob:input_type -> stream.app.v1.RetryAdminJobRequest
-	70, // 69: stream.app.v1.Admin.ListAdminAgents:input_type -> stream.app.v1.ListAdminAgentsRequest
-	72, // 70: stream.app.v1.Admin.RestartAdminAgent:input_type -> stream.app.v1.RestartAdminAgentRequest
-	73, // 71: stream.app.v1.Admin.UpdateAdminAgent:input_type -> stream.app.v1.UpdateAdminAgentRequest
-	1,  // 72: stream.app.v1.Admin.GetAdminDashboard:output_type -> stream.app.v1.GetAdminDashboardResponse
-	3,  // 73: stream.app.v1.Admin.ListAdminUsers:output_type -> stream.app.v1.ListAdminUsersResponse
-	5,  // 74: stream.app.v1.Admin.GetAdminUser:output_type -> stream.app.v1.GetAdminUserResponse
-	7,  // 75: stream.app.v1.Admin.CreateAdminUser:output_type -> stream.app.v1.CreateAdminUserResponse
-	9,  // 76: stream.app.v1.Admin.UpdateAdminUser:output_type -> stream.app.v1.UpdateAdminUserResponse
-	11, // 77: stream.app.v1.Admin.UpdateAdminUserReferralSettings:output_type -> stream.app.v1.UpdateAdminUserReferralSettingsResponse
-	13, // 78: stream.app.v1.Admin.UpdateAdminUserRole:output_type -> stream.app.v1.UpdateAdminUserRoleResponse
-	87, // 79: stream.app.v1.Admin.DeleteAdminUser:output_type -> stream.app.v1.MessageResponse
-	16, // 80: stream.app.v1.Admin.ListAdminVideos:output_type -> stream.app.v1.ListAdminVideosResponse
-	18, // 81: stream.app.v1.Admin.GetAdminVideo:output_type -> stream.app.v1.GetAdminVideoResponse
-	20, // 82: stream.app.v1.Admin.CreateAdminVideo:output_type -> stream.app.v1.CreateAdminVideoResponse
-	22, // 83: stream.app.v1.Admin.UpdateAdminVideo:output_type -> stream.app.v1.UpdateAdminVideoResponse
-	87, // 84: stream.app.v1.Admin.DeleteAdminVideo:output_type -> stream.app.v1.MessageResponse
-	25, // 85: stream.app.v1.Admin.ListAdminPayments:output_type -> stream.app.v1.ListAdminPaymentsResponse
-	27, // 86: stream.app.v1.Admin.GetAdminPayment:output_type -> stream.app.v1.GetAdminPaymentResponse
-	29, // 87: stream.app.v1.Admin.CreateAdminPayment:output_type -> stream.app.v1.CreateAdminPaymentResponse
-	31, // 88: stream.app.v1.Admin.UpdateAdminPayment:output_type -> stream.app.v1.UpdateAdminPaymentResponse
-	33, // 89: stream.app.v1.Admin.ListAdminPlans:output_type -> stream.app.v1.ListAdminPlansResponse
-	35, // 90: stream.app.v1.Admin.CreateAdminPlan:output_type -> stream.app.v1.CreateAdminPlanResponse
-	37, // 91: stream.app.v1.Admin.UpdateAdminPlan:output_type -> stream.app.v1.UpdateAdminPlanResponse
-	39, // 92: stream.app.v1.Admin.DeleteAdminPlan:output_type -> stream.app.v1.DeleteAdminPlanResponse
-	41, // 93: stream.app.v1.Admin.ListAdminAdTemplates:output_type -> stream.app.v1.ListAdminAdTemplatesResponse
-	43, // 94: stream.app.v1.Admin.GetAdminAdTemplate:output_type -> stream.app.v1.GetAdminAdTemplateResponse
-	45, // 95: stream.app.v1.Admin.CreateAdminAdTemplate:output_type -> stream.app.v1.CreateAdminAdTemplateResponse
-	47, // 96: stream.app.v1.Admin.UpdateAdminAdTemplate:output_type -> stream.app.v1.UpdateAdminAdTemplateResponse
-	87, // 97: stream.app.v1.Admin.DeleteAdminAdTemplate:output_type -> stream.app.v1.MessageResponse
-	50, // 98: stream.app.v1.Admin.ListAdminPlayerConfigs:output_type -> stream.app.v1.ListAdminPlayerConfigsResponse
-	52, // 99: stream.app.v1.Admin.GetAdminPlayerConfig:output_type -> stream.app.v1.GetAdminPlayerConfigResponse
-	54, // 100: stream.app.v1.Admin.CreateAdminPlayerConfig:output_type -> stream.app.v1.CreateAdminPlayerConfigResponse
-	56, // 101: stream.app.v1.Admin.UpdateAdminPlayerConfig:output_type -> stream.app.v1.UpdateAdminPlayerConfigResponse
-	87, // 102: stream.app.v1.Admin.DeleteAdminPlayerConfig:output_type -> stream.app.v1.MessageResponse
-	59, // 103: stream.app.v1.Admin.ListAdminJobs:output_type -> stream.app.v1.ListAdminJobsResponse
-	61, // 104: stream.app.v1.Admin.GetAdminJob:output_type -> stream.app.v1.GetAdminJobResponse
-	63, // 105: stream.app.v1.Admin.GetAdminJobLogs:output_type -> stream.app.v1.GetAdminJobLogsResponse
-	65, // 106: stream.app.v1.Admin.CreateAdminJob:output_type -> stream.app.v1.CreateAdminJobResponse
-	67, // 107: stream.app.v1.Admin.CancelAdminJob:output_type -> stream.app.v1.CancelAdminJobResponse
-	69, // 108: stream.app.v1.Admin.RetryAdminJob:output_type -> stream.app.v1.RetryAdminJobResponse
-	71, // 109: stream.app.v1.Admin.ListAdminAgents:output_type -> stream.app.v1.ListAdminAgentsResponse
-	74, // 110: stream.app.v1.Admin.RestartAdminAgent:output_type -> stream.app.v1.AdminAgentCommandResponse
-	74, // 111: stream.app.v1.Admin.UpdateAdminAgent:output_type -> stream.app.v1.AdminAgentCommandResponse
-	72, // [72:112] is the sub-list for method output_type
-	32, // [32:72] is the sub-list for method input_type
-	32, // [32:32] is the sub-list for extension type_name
-	32, // [32:32] is the sub-list for extension extendee
-	0,  // [0:32] is the sub-list for field type_name
+	85, // 0: stream.app.v1.GetAdminDashboardResponse.dashboard:type_name -> stream.app.v1.AdminDashboard
+	86, // 1: stream.app.v1.ListAdminUsersResponse.users:type_name -> stream.app.v1.AdminUser
+	87, // 2: stream.app.v1.GetAdminUserResponse.user:type_name -> stream.app.v1.AdminUserDetail
+	86, // 3: stream.app.v1.CreateAdminUserResponse.user:type_name -> stream.app.v1.AdminUser
+	86, // 4: stream.app.v1.UpdateAdminUserResponse.user:type_name -> stream.app.v1.AdminUser
+	87, // 5: stream.app.v1.UpdateAdminUserReferralSettingsResponse.user:type_name -> stream.app.v1.AdminUserDetail
+	88, // 6: stream.app.v1.ListAdminVideosResponse.videos:type_name -> stream.app.v1.AdminVideo
+	88, // 7: stream.app.v1.GetAdminVideoResponse.video:type_name -> stream.app.v1.AdminVideo
+	88, // 8: stream.app.v1.CreateAdminVideoResponse.video:type_name -> stream.app.v1.AdminVideo
+	88, // 9: stream.app.v1.UpdateAdminVideoResponse.video:type_name -> stream.app.v1.AdminVideo
+	89, // 10: stream.app.v1.ListAdminPaymentsResponse.payments:type_name -> stream.app.v1.AdminPayment
+	89, // 11: stream.app.v1.GetAdminPaymentResponse.payment:type_name -> stream.app.v1.AdminPayment
+	89, // 12: stream.app.v1.CreateAdminPaymentResponse.payment:type_name -> stream.app.v1.AdminPayment
+	90, // 13: stream.app.v1.CreateAdminPaymentResponse.subscription:type_name -> stream.app.v1.PlanSubscription
+	89, // 14: stream.app.v1.UpdateAdminPaymentResponse.payment:type_name -> stream.app.v1.AdminPayment
+	91, // 15: stream.app.v1.ListAdminPlansResponse.plans:type_name -> stream.app.v1.AdminPlan
+	91, // 16: stream.app.v1.CreateAdminPlanResponse.plan:type_name -> stream.app.v1.AdminPlan
+	91, // 17: stream.app.v1.UpdateAdminPlanResponse.plan:type_name -> stream.app.v1.AdminPlan
+	92, // 18: stream.app.v1.ListAdminAdTemplatesResponse.templates:type_name -> stream.app.v1.AdminAdTemplate
+	92, // 19: stream.app.v1.GetAdminAdTemplateResponse.template:type_name -> stream.app.v1.AdminAdTemplate
+	92, // 20: stream.app.v1.CreateAdminAdTemplateResponse.template:type_name -> stream.app.v1.AdminAdTemplate
+	92, // 21: stream.app.v1.UpdateAdminAdTemplateResponse.template:type_name -> stream.app.v1.AdminAdTemplate
+	93, // 22: stream.app.v1.ListAdminPopupAdsResponse.items:type_name -> stream.app.v1.AdminPopupAd
+	93, // 23: stream.app.v1.GetAdminPopupAdResponse.item:type_name -> stream.app.v1.AdminPopupAd
+	93, // 24: stream.app.v1.CreateAdminPopupAdResponse.item:type_name -> stream.app.v1.AdminPopupAd
+	93, // 25: stream.app.v1.UpdateAdminPopupAdResponse.item:type_name -> stream.app.v1.AdminPopupAd
+	94, // 26: stream.app.v1.ListAdminPlayerConfigsResponse.configs:type_name -> stream.app.v1.AdminPlayerConfig
+	94, // 27: stream.app.v1.GetAdminPlayerConfigResponse.config:type_name -> stream.app.v1.AdminPlayerConfig
+	94, // 28: stream.app.v1.CreateAdminPlayerConfigResponse.config:type_name -> stream.app.v1.AdminPlayerConfig
+	94, // 29: stream.app.v1.UpdateAdminPlayerConfigResponse.config:type_name -> stream.app.v1.AdminPlayerConfig
+	95, // 30: stream.app.v1.ListAdminJobsResponse.jobs:type_name -> stream.app.v1.AdminJob
+	95, // 31: stream.app.v1.GetAdminJobResponse.job:type_name -> stream.app.v1.AdminJob
+	84, // 32: stream.app.v1.CreateAdminJobRequest.env:type_name -> stream.app.v1.CreateAdminJobRequest.EnvEntry
+	95, // 33: stream.app.v1.CreateAdminJobResponse.job:type_name -> stream.app.v1.AdminJob
+	95, // 34: stream.app.v1.RetryAdminJobResponse.job:type_name -> stream.app.v1.AdminJob
+	96, // 35: stream.app.v1.ListAdminAgentsResponse.agents:type_name -> stream.app.v1.AdminAgent
+	0,  // 36: stream.app.v1.Admin.GetAdminDashboard:input_type -> stream.app.v1.GetAdminDashboardRequest
+	2,  // 37: stream.app.v1.Admin.ListAdminUsers:input_type -> stream.app.v1.ListAdminUsersRequest
+	4,  // 38: stream.app.v1.Admin.GetAdminUser:input_type -> stream.app.v1.GetAdminUserRequest
+	6,  // 39: stream.app.v1.Admin.CreateAdminUser:input_type -> stream.app.v1.CreateAdminUserRequest
+	8,  // 40: stream.app.v1.Admin.UpdateAdminUser:input_type -> stream.app.v1.UpdateAdminUserRequest
+	10, // 41: stream.app.v1.Admin.UpdateAdminUserReferralSettings:input_type -> stream.app.v1.UpdateAdminUserReferralSettingsRequest
+	12, // 42: stream.app.v1.Admin.UpdateAdminUserRole:input_type -> stream.app.v1.UpdateAdminUserRoleRequest
+	14, // 43: stream.app.v1.Admin.DeleteAdminUser:input_type -> stream.app.v1.DeleteAdminUserRequest
+	15, // 44: stream.app.v1.Admin.ListAdminVideos:input_type -> stream.app.v1.ListAdminVideosRequest
+	17, // 45: stream.app.v1.Admin.GetAdminVideo:input_type -> stream.app.v1.GetAdminVideoRequest
+	19, // 46: stream.app.v1.Admin.CreateAdminVideo:input_type -> stream.app.v1.CreateAdminVideoRequest
+	21, // 47: stream.app.v1.Admin.UpdateAdminVideo:input_type -> stream.app.v1.UpdateAdminVideoRequest
+	23, // 48: stream.app.v1.Admin.DeleteAdminVideo:input_type -> stream.app.v1.DeleteAdminVideoRequest
+	24, // 49: stream.app.v1.Admin.ListAdminPayments:input_type -> stream.app.v1.ListAdminPaymentsRequest
+	26, // 50: stream.app.v1.Admin.GetAdminPayment:input_type -> stream.app.v1.GetAdminPaymentRequest
+	28, // 51: stream.app.v1.Admin.CreateAdminPayment:input_type -> stream.app.v1.CreateAdminPaymentRequest
+	30, // 52: stream.app.v1.Admin.UpdateAdminPayment:input_type -> stream.app.v1.UpdateAdminPaymentRequest
+	32, // 53: stream.app.v1.Admin.ListAdminPlans:input_type -> stream.app.v1.ListAdminPlansRequest
+	34, // 54: stream.app.v1.Admin.CreateAdminPlan:input_type -> stream.app.v1.CreateAdminPlanRequest
+	36, // 55: stream.app.v1.Admin.UpdateAdminPlan:input_type -> stream.app.v1.UpdateAdminPlanRequest
+	38, // 56: stream.app.v1.Admin.DeleteAdminPlan:input_type -> stream.app.v1.DeleteAdminPlanRequest
+	40, // 57: stream.app.v1.Admin.ListAdminAdTemplates:input_type -> stream.app.v1.ListAdminAdTemplatesRequest
+	42, // 58: stream.app.v1.Admin.GetAdminAdTemplate:input_type -> stream.app.v1.GetAdminAdTemplateRequest
+	44, // 59: stream.app.v1.Admin.CreateAdminAdTemplate:input_type -> stream.app.v1.CreateAdminAdTemplateRequest
+	46, // 60: stream.app.v1.Admin.UpdateAdminAdTemplate:input_type -> stream.app.v1.UpdateAdminAdTemplateRequest
+	48, // 61: stream.app.v1.Admin.DeleteAdminAdTemplate:input_type -> stream.app.v1.DeleteAdminAdTemplateRequest
+	49, // 62: stream.app.v1.Admin.ListAdminPopupAds:input_type -> stream.app.v1.ListAdminPopupAdsRequest
+	51, // 63: stream.app.v1.Admin.GetAdminPopupAd:input_type -> stream.app.v1.GetAdminPopupAdRequest
+	53, // 64: stream.app.v1.Admin.CreateAdminPopupAd:input_type -> stream.app.v1.CreateAdminPopupAdRequest
+	55, // 65: stream.app.v1.Admin.UpdateAdminPopupAd:input_type -> stream.app.v1.UpdateAdminPopupAdRequest
+	57, // 66: stream.app.v1.Admin.DeleteAdminPopupAd:input_type -> stream.app.v1.DeleteAdminPopupAdRequest
+	58, // 67: stream.app.v1.Admin.ListAdminPlayerConfigs:input_type -> stream.app.v1.ListAdminPlayerConfigsRequest
+	60, // 68: stream.app.v1.Admin.GetAdminPlayerConfig:input_type -> stream.app.v1.GetAdminPlayerConfigRequest
+	62, // 69: stream.app.v1.Admin.CreateAdminPlayerConfig:input_type -> stream.app.v1.CreateAdminPlayerConfigRequest
+	64, // 70: stream.app.v1.Admin.UpdateAdminPlayerConfig:input_type -> stream.app.v1.UpdateAdminPlayerConfigRequest
+	66, // 71: stream.app.v1.Admin.DeleteAdminPlayerConfig:input_type -> stream.app.v1.DeleteAdminPlayerConfigRequest
+	67, // 72: stream.app.v1.Admin.ListAdminJobs:input_type -> stream.app.v1.ListAdminJobsRequest
+	69, // 73: stream.app.v1.Admin.GetAdminJob:input_type -> stream.app.v1.GetAdminJobRequest
+	71, // 74: stream.app.v1.Admin.GetAdminJobLogs:input_type -> stream.app.v1.GetAdminJobLogsRequest
+	73, // 75: stream.app.v1.Admin.CreateAdminJob:input_type -> stream.app.v1.CreateAdminJobRequest
+	75, // 76: stream.app.v1.Admin.CancelAdminJob:input_type -> stream.app.v1.CancelAdminJobRequest
+	77, // 77: stream.app.v1.Admin.RetryAdminJob:input_type -> stream.app.v1.RetryAdminJobRequest
+	79, // 78: stream.app.v1.Admin.ListAdminAgents:input_type -> stream.app.v1.ListAdminAgentsRequest
+	81, // 79: stream.app.v1.Admin.RestartAdminAgent:input_type -> stream.app.v1.RestartAdminAgentRequest
+	82, // 80: stream.app.v1.Admin.UpdateAdminAgent:input_type -> stream.app.v1.UpdateAdminAgentRequest
+	1,  // 81: stream.app.v1.Admin.GetAdminDashboard:output_type -> stream.app.v1.GetAdminDashboardResponse
+	3,  // 82: stream.app.v1.Admin.ListAdminUsers:output_type -> stream.app.v1.ListAdminUsersResponse
+	5,  // 83: stream.app.v1.Admin.GetAdminUser:output_type -> stream.app.v1.GetAdminUserResponse
+	7,  // 84: stream.app.v1.Admin.CreateAdminUser:output_type -> stream.app.v1.CreateAdminUserResponse
+	9,  // 85: stream.app.v1.Admin.UpdateAdminUser:output_type -> stream.app.v1.UpdateAdminUserResponse
+	11, // 86: stream.app.v1.Admin.UpdateAdminUserReferralSettings:output_type -> stream.app.v1.UpdateAdminUserReferralSettingsResponse
+	13, // 87: stream.app.v1.Admin.UpdateAdminUserRole:output_type -> stream.app.v1.UpdateAdminUserRoleResponse
+	97, // 88: stream.app.v1.Admin.DeleteAdminUser:output_type -> stream.app.v1.MessageResponse
+	16, // 89: stream.app.v1.Admin.ListAdminVideos:output_type -> stream.app.v1.ListAdminVideosResponse
+	18, // 90: stream.app.v1.Admin.GetAdminVideo:output_type -> stream.app.v1.GetAdminVideoResponse
+	20, // 91: stream.app.v1.Admin.CreateAdminVideo:output_type -> stream.app.v1.CreateAdminVideoResponse
+	22, // 92: stream.app.v1.Admin.UpdateAdminVideo:output_type -> stream.app.v1.UpdateAdminVideoResponse
+	97, // 93: stream.app.v1.Admin.DeleteAdminVideo:output_type -> stream.app.v1.MessageResponse
+	25, // 94: stream.app.v1.Admin.ListAdminPayments:output_type -> stream.app.v1.ListAdminPaymentsResponse
+	27, // 95: stream.app.v1.Admin.GetAdminPayment:output_type -> stream.app.v1.GetAdminPaymentResponse
+	29, // 96: stream.app.v1.Admin.CreateAdminPayment:output_type -> stream.app.v1.CreateAdminPaymentResponse
+	31, // 97: stream.app.v1.Admin.UpdateAdminPayment:output_type -> stream.app.v1.UpdateAdminPaymentResponse
+	33, // 98: stream.app.v1.Admin.ListAdminPlans:output_type -> stream.app.v1.ListAdminPlansResponse
+	35, // 99: stream.app.v1.Admin.CreateAdminPlan:output_type -> stream.app.v1.CreateAdminPlanResponse
+	37, // 100: stream.app.v1.Admin.UpdateAdminPlan:output_type -> stream.app.v1.UpdateAdminPlanResponse
+	39, // 101: stream.app.v1.Admin.DeleteAdminPlan:output_type -> stream.app.v1.DeleteAdminPlanResponse
+	41, // 102: stream.app.v1.Admin.ListAdminAdTemplates:output_type -> stream.app.v1.ListAdminAdTemplatesResponse
+	43, // 103: stream.app.v1.Admin.GetAdminAdTemplate:output_type -> stream.app.v1.GetAdminAdTemplateResponse
+	45, // 104: stream.app.v1.Admin.CreateAdminAdTemplate:output_type -> stream.app.v1.CreateAdminAdTemplateResponse
+	47, // 105: stream.app.v1.Admin.UpdateAdminAdTemplate:output_type -> stream.app.v1.UpdateAdminAdTemplateResponse
+	97, // 106: stream.app.v1.Admin.DeleteAdminAdTemplate:output_type -> stream.app.v1.MessageResponse
+	50, // 107: stream.app.v1.Admin.ListAdminPopupAds:output_type -> stream.app.v1.ListAdminPopupAdsResponse
+	52, // 108: stream.app.v1.Admin.GetAdminPopupAd:output_type -> stream.app.v1.GetAdminPopupAdResponse
+	54, // 109: stream.app.v1.Admin.CreateAdminPopupAd:output_type -> stream.app.v1.CreateAdminPopupAdResponse
+	56, // 110: stream.app.v1.Admin.UpdateAdminPopupAd:output_type -> stream.app.v1.UpdateAdminPopupAdResponse
+	97, // 111: stream.app.v1.Admin.DeleteAdminPopupAd:output_type -> stream.app.v1.MessageResponse
+	59, // 112: stream.app.v1.Admin.ListAdminPlayerConfigs:output_type -> stream.app.v1.ListAdminPlayerConfigsResponse
+	61, // 113: stream.app.v1.Admin.GetAdminPlayerConfig:output_type -> stream.app.v1.GetAdminPlayerConfigResponse
+	63, // 114: stream.app.v1.Admin.CreateAdminPlayerConfig:output_type -> stream.app.v1.CreateAdminPlayerConfigResponse
+	65, // 115: stream.app.v1.Admin.UpdateAdminPlayerConfig:output_type -> stream.app.v1.UpdateAdminPlayerConfigResponse
+	97, // 116: stream.app.v1.Admin.DeleteAdminPlayerConfig:output_type -> stream.app.v1.MessageResponse
+	68, // 117: stream.app.v1.Admin.ListAdminJobs:output_type -> stream.app.v1.ListAdminJobsResponse
+	70, // 118: stream.app.v1.Admin.GetAdminJob:output_type -> stream.app.v1.GetAdminJobResponse
+	72, // 119: stream.app.v1.Admin.GetAdminJobLogs:output_type -> stream.app.v1.GetAdminJobLogsResponse
+	74, // 120: stream.app.v1.Admin.CreateAdminJob:output_type -> stream.app.v1.CreateAdminJobResponse
+	76, // 121: stream.app.v1.Admin.CancelAdminJob:output_type -> stream.app.v1.CancelAdminJobResponse
+	78, // 122: stream.app.v1.Admin.RetryAdminJob:output_type -> stream.app.v1.RetryAdminJobResponse
+	80, // 123: stream.app.v1.Admin.ListAdminAgents:output_type -> stream.app.v1.ListAdminAgentsResponse
+	83, // 124: stream.app.v1.Admin.RestartAdminAgent:output_type -> stream.app.v1.AdminAgentCommandResponse
+	83, // 125: stream.app.v1.Admin.UpdateAdminAgent:output_type -> stream.app.v1.AdminAgentCommandResponse
+	81, // [81:126] is the sub-list for method output_type
+	36, // [36:81] is the sub-list for method input_type
+	36, // [36:36] is the sub-list for extension type_name
+	36, // [36:36] is the sub-list for extension extendee
+	0,  // [0:36] is the sub-list for field type_name
 }
 
 func init() { file_app_v1_admin_proto_init() }
@@ -5171,15 +5776,18 @@ func file_app_v1_admin_proto_init() {
 	file_app_v1_admin_proto_msgTypes[53].OneofWrappers = []any{}
 	file_app_v1_admin_proto_msgTypes[55].OneofWrappers = []any{}
 	file_app_v1_admin_proto_msgTypes[58].OneofWrappers = []any{}
-	file_app_v1_admin_proto_msgTypes[59].OneofWrappers = []any{}
+	file_app_v1_admin_proto_msgTypes[62].OneofWrappers = []any{}
 	file_app_v1_admin_proto_msgTypes[64].OneofWrappers = []any{}
+	file_app_v1_admin_proto_msgTypes[67].OneofWrappers = []any{}
+	file_app_v1_admin_proto_msgTypes[68].OneofWrappers = []any{}
+	file_app_v1_admin_proto_msgTypes[73].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_app_v1_admin_proto_rawDesc), len(file_app_v1_admin_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   76,
+			NumMessages:   85,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

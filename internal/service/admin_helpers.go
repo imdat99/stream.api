@@ -464,6 +464,23 @@ func validateAdminAdTemplateInput(userID, name, vastTagURL, adFormat string, dur
 	return ""
 }
 
+func validateAdminPopupAdInput(userID, popupType, label, value string, maxTriggersPerSession *int32) string {
+	if strings.TrimSpace(userID) == "" {
+		return "User ID is required"
+	}
+	popupType = strings.ToLower(strings.TrimSpace(popupType))
+	if popupType != "url" && popupType != "script" {
+		return "Popup ad type must be url or script"
+	}
+	if strings.TrimSpace(label) == "" || strings.TrimSpace(value) == "" {
+		return "Label and value are required"
+	}
+	if maxTriggersPerSession != nil && *maxTriggersPerSession < 1 {
+		return "Max triggers per session must be greater than 0"
+	}
+	return ""
+}
+
 func validateAdminPlayerConfigInput(userID, name string) string {
 	if strings.TrimSpace(userID) == "" {
 		return "User ID is required"
@@ -500,6 +517,32 @@ func (s *appServices) buildAdminPlan(ctx context.Context, plan *model.Plan) (*ap
 		PaymentCount:      paymentCount,
 		SubscriptionCount: subscriptionCount,
 	}
+	return payload, nil
+}
+
+func (s *appServices) buildAdminPopupAd(ctx context.Context, item *model.PopupAd) (*appv1.AdminPopupAd, error) {
+	if item == nil {
+		return nil, nil
+	}
+
+	payload := &appv1.AdminPopupAd{
+		Id:                   item.ID,
+		UserId:               item.UserID,
+		Type:                 item.Type,
+		Label:                item.Label,
+		Value:                item.Value,
+		IsActive:             boolValue(item.IsActive),
+		MaxTriggersPerSession: func() int32 { if item.MaxTriggersPerSession != nil { return *item.MaxTriggersPerSession }; return 0 }(),
+		CreatedAt:            timeToProto(item.CreatedAt),
+		UpdatedAt:            timeToProto(item.UpdatedAt),
+	}
+
+	ownerEmail, err := s.loadAdminUserEmail(ctx, item.UserID)
+	if err != nil {
+		return nil, err
+	}
+	payload.OwnerEmail = ownerEmail
+
 	return payload, nil
 }
 

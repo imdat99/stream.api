@@ -53,6 +53,14 @@ func int32Ptr(value int32) *int32 {
 	return &value
 }
 
+func protoTimestampToTime(value *timestamppb.Timestamp) *time.Time {
+	if value == nil {
+		return nil
+	}
+	timeValue := value.AsTime().UTC()
+	return &timeValue
+}
+
 func protoStringValue(value *string) string {
 	if value == nil {
 		return ""
